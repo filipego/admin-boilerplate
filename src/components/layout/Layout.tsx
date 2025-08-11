@@ -1,7 +1,6 @@
 import Sidebar from "@/components/layout/Sidebar";
 import Header from "@/components/layout/Header";
 import MainContent from "@/components/layout/MainContent";
-import MobileSidebar from "@/components/layout/MobileSidebar";
 
 type AppLayoutProps = {
   title?: string;

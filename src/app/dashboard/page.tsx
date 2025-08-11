@@ -1,9 +1,16 @@
 import AppLayout from "@/components/layout/Layout";
+import { getSupabaseServerClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { stats, recentClients, recentProjects, nextTasks } from "@/data/dashboard";
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const supabase = getSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
   return (
     <AppLayout title="Overview">
       <div className="grid gap-6 md:grid-cols-3">
