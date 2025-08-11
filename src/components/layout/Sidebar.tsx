@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import SidebarThemeControl from "@/components/sidebar/SidebarThemeControl";
 import { useEffect, useMemo, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 import { cn } from "@/utils/cn";
 import {
   Home,
@@ -25,8 +26,8 @@ type NavItem = { href: string; label: string; icon: LucideIcon };
 const mainItems: NavItem[] = [
   { href: "/dashboard", label: "Overview", icon: Home },
   { href: "/projects", label: "Projects", icon: Briefcase },
-  { href: "/users", label: "Users", icon: Users },
   { href: "/reports", label: "Reports / Analytics", icon: BarChart3 },
+  { href: "/users", label: "Users", icon: Users },
   { href: "/profile", label: "Profile", icon: User },
 ];
 
@@ -39,6 +40,7 @@ const bottomItems: NavItem[] = [
 const Sidebar = () => {
   const { collapsed, toggle, showProfile, showSidebarTheme, showBottomActions, hasHydrated, setHasHydrated } = useSidebarStore();
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
+  const router = useRouter();
   type Profile = { username: string | null; email: string | null; avatar_url: string | null };
   const [profile, setProfile] = useState<Profile | null>(null);
 
@@ -92,6 +94,11 @@ const Sidebar = () => {
     const second = src.trim().split(" ")[1]?.[0]?.toUpperCase();
     return `${first || "U"}${second || ""}`;
   }, [profile]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.replace("/login");
+  };
 
   return (
     <aside
@@ -180,22 +187,20 @@ const Sidebar = () => {
               {showSidebarTheme ? <SidebarThemeControl collapsed={collapsed} /> : null}
             </div>
             {showBottomActions ? (
-              <ul className="space-y-1">
-                {bottomItems.map(({ href, label, icon: Icon }) => (
-                  <li key={href}>
-                    <Link
-                      href={href}
-                      className={cn(
-                        "flex items-center gap-3 rounded-md px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground",
-                        collapsed && "justify-center"
-                      )}
-                    >
-                      <Icon className="h-5 w-5" aria-hidden />
-                      <span className={cn(collapsed && "sr-only")}>{label}</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+              <div className="space-y-1">
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className={cn(
+                    "w-full flex items-center gap-3 rounded-md px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground cursor-pointer",
+                    collapsed && "justify-center"
+                  )}
+                  aria-label="Logout"
+                >
+                  <LogOut className="h-5 w-5" aria-hidden />
+                  <span className={cn(collapsed && "sr-only")}>Logout</span>
+                </button>
+              </div>
             ) : null}
           </div>
         </nav>

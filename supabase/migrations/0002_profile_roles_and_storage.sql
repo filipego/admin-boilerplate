@@ -18,33 +18,43 @@ drop policy if exists "Admin update any profile" on public.profiles;
 create policy "Admin update any profile" on public.profiles
 for update using ( exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin') );
 
--- Create storage bucket 'avatars' if it doesn't exist and set to public
-do $$
-begin
-  perform 1 from storage.buckets where id = 'avatars';
-  if not found then
-    perform storage.create_bucket('avatars', public => true);
-  end if;
-end $$;
+-- Create storage bucket 'avatars' if it doesn't exist (set public true)
+insert into storage.buckets (id, name, public) values ('avatars','avatars', true)
+on conflict (id) do nothing;
 
 -- Storage policies for avatars
 -- Allow public read
 do $$ begin
   begin
-    create policy "Public read avatars" on storage.objects
+    create policy "avatars read public" on storage.objects
     for select using ( bucket_id = 'avatars' );
   exception when duplicate_object then null; end;
 end $$;
 
 -- Allow authenticated users to insert/update/delete only their folder avatars/{uid}/...
+-- Insert/update/delete only in own folder avatars/{uid}/...
 do $$ begin
   begin
-    create policy "Users manage own avatars" on storage.objects
-    for all using (
-      bucket_id = 'avatars' and (auth.uid()::text = (regexp_matches(name, '^([^/]+)/'))[1])
-    ) with check (
-      bucket_id = 'avatars' and (auth.uid()::text = (regexp_matches(name, '^([^/]+)/'))[1])
-    );
+    create policy "avatars insert own" on storage.objects
+    for insert to authenticated
+    with check ( bucket_id = 'avatars' and split_part(name, '/', 1) = auth.uid()::text );
+  exception when duplicate_object then null; end;
+end $$;
+
+do $$ begin
+  begin
+    create policy "avatars update own" on storage.objects
+    for update to authenticated
+    using ( bucket_id = 'avatars' and split_part(name, '/', 1) = auth.uid()::text )
+    with check ( bucket_id = 'avatars' and split_part(name, '/', 1) = auth.uid()::text );
+  exception when duplicate_object then null; end;
+end $$;
+
+do $$ begin
+  begin
+    create policy "avatars delete own" on storage.objects
+    for delete to authenticated
+    using ( bucket_id = 'avatars' and split_part(name, '/', 1) = auth.uid()::text );
   exception when duplicate_object then null; end;
 end $$;
 

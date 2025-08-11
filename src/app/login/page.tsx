@@ -16,9 +16,6 @@ export default async function LoginPage() {
         </CardHeader>
         <CardContent>
           <LoginForm />
-          <div className="mt-2 text-xs">
-            <Link href="/dashboard" className="underline">Skip to dashboard</Link>
-          </div>
         </CardContent>
       </Card>
     </div>
