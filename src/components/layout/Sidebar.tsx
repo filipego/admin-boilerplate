@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useSidebarStore } from "@/store/sidebar";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import SidebarThemeControl from "@/components/sidebar/SidebarThemeControl";
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { cn } from "@/utils/cn";
 import {
   Home,
@@ -37,6 +38,9 @@ const bottomItems: NavItem[] = [
 
 const Sidebar = () => {
   const { collapsed, toggle, showProfile, showSidebarTheme, showBottomActions, hasHydrated, setHasHydrated } = useSidebarStore();
+  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
+  type Profile = { username: string | null; email: string | null; avatar_url: string | null };
+  const [profile, setProfile] = useState<Profile | null>(null);
 
   useEffect(() => {
     // ensure hydration flag in case onRehydrateStorage didn't run
@@ -44,6 +48,50 @@ const Sidebar = () => {
   }, [hasHydrated, setHasHydrated]);
 
   const handleToggle = () => toggle();
+
+  useEffect(() => {
+    let isMounted = true;
+    const load = async () => {
+      const { data } = await supabase.auth.getUser();
+      const user = data.user;
+      if (!user) {
+        if (isMounted) setProfile(null);
+        return;
+      }
+      const { data: p } = await supabase
+        .from("profiles")
+        .select("username, email, avatar_url")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (isMounted) setProfile(p ?? { username: null, email: user.email ?? null, avatar_url: null });
+    };
+    load();
+    const channel = supabase
+      .channel("public:profiles")
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, (payload: { new?: { id?: string; email?: string; username?: string | null; avatar_url?: string | null } }) => {
+        const row = payload.new;
+        if (row && row.email && profile && row.email === profile.email) {
+          const next: Profile = {
+            username: row.username ?? profile.username ?? null,
+            email: row.email ?? profile.email ?? null,
+            avatar_url: row.avatar_url ?? profile.avatar_url ?? null,
+          };
+          setProfile(next);
+        }
+      })
+      .subscribe();
+    return () => {
+      isMounted = false;
+      channel.unsubscribe();
+    };
+  }, [supabase, profile]);
+
+  const initials = useMemo(() => {
+    const src = profile?.username || profile?.email || "";
+    const first = src.trim()[0]?.toUpperCase();
+    const second = src.trim().split(" ")[1]?.[0]?.toUpperCase();
+    return `${first || "U"}${second || ""}`;
+  }, [profile]);
 
   return (
     <aside
@@ -117,11 +165,14 @@ const Sidebar = () => {
                 )}
               >
                 <Avatar className="h-8 w-8">
-                  <AvatarFallback>ST</AvatarFallback>
+                  {profile?.avatar_url ? (
+                    <AvatarImage src={profile.avatar_url} alt={profile?.username ?? profile?.email ?? ""} />
+                  ) : null}
+                  <AvatarFallback>{initials}</AvatarFallback>
                 </Avatar>
                 <div className={cn("text-sm", collapsed && "sr-only")}>
-                  <div className="font-medium">Sam Taylor</div>
-                  <div className="text-xs text-muted-foreground">sam@example.com</div>
+                  <div className="font-medium">{profile?.username || "Profile"}</div>
+                  <div className="text-xs text-muted-foreground">{profile?.email || ""}</div>
                 </div>
               </div>
             ) : null}

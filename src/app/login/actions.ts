@@ -42,6 +42,24 @@ export async function loginAction(_: LoginResult, formData: FormData): Promise<L
     return { error: signInError.message || "Invalid credentials." };
   }
 
+  // Ensure a profiles row exists for this user and set admin role if configured
+  const {
+    data: { user: signedInUser },
+  } = await supabase.auth.getUser();
+  if (signedInUser) {
+    await supabase
+      .from("profiles")
+      .upsert({ id: signedInUser.id, email: signedInUser.email ?? email }, { onConflict: "id" });
+
+    const adminEmails = (process.env.ADMIN_EMAILS || "")
+      .split(",")
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean);
+    if (adminEmails.includes((signedInUser.email ?? email).toLowerCase())) {
+      await supabase.from("profiles").update({ role: "admin" }).eq("id", signedInUser.id);
+    }
+  }
+
   return { success: true };
 }
 

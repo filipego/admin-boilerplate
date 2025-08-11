@@ -13,22 +13,22 @@ export function getSupabaseServerClient() {
 
   type CookiePair = { name: string; value: string };
   type PossibleCookiesStore = {
-    getAll?: () => CookiePair[];
-    set?: (name: string, value: string, options?: Record<string, unknown>) => void;
+    getAll?: () => CookiePair[] | Promise<CookiePair[]>;
+    set?: (name: string, value: string, options?: Record<string, unknown>) => void | Promise<void>;
   };
 
   const cookieMethods: CookieMethodsServer = {
-    getAll() {
-      const store = cookies() as unknown as PossibleCookiesStore;
-      const all = typeof store.getAll === "function" ? store.getAll() ?? [] : [];
+    async getAll() {
+      const store = (await (cookies() as unknown as Promise<ReturnType<typeof cookies>>)) as unknown as PossibleCookiesStore;
+      const all = typeof store.getAll === "function" ? await store.getAll() : [];
       return all.map((c) => ({ name: c.name, value: c.value }));
     },
-    setAll(cookiesToSet) {
-      const store = cookies() as unknown as PossibleCookiesStore;
+    async setAll(cookiesToSet) {
+      const store = (await (cookies() as unknown as Promise<ReturnType<typeof cookies>>)) as unknown as PossibleCookiesStore;
       if (typeof store.set !== "function") return;
-      cookiesToSet.forEach(({ name, value, options }) => {
-        store.set?.(name, value, options as Record<string, unknown>);
-      });
+      for (const { name, value, options } of cookiesToSet) {
+        await store.set?.(name, value, options as Record<string, unknown>);
+      }
     },
   };
 

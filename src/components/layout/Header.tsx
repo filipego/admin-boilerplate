@@ -3,7 +3,7 @@
 import Link from "next/link";
 import MobileSidebar from "@/components/layout/MobileSidebar";
 import ModeToggle from "@/components/theme/ModeToggle";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -14,9 +14,58 @@ import {
 import { Bell, LogOut } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 
 const Header = () => {
   const router = useRouter();
+  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
+
+  type Profile = { username: string | null; email: string | null; avatar_url: string | null };
+  const [profile, setProfile] = useState<Profile | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const load = async () => {
+      const { data } = await supabase.auth.getUser();
+      const user = data.user;
+      if (!user) {
+        if (isMounted) setProfile(null);
+        return;
+      }
+      const { data: p } = await supabase
+        .from("profiles")
+        .select("username, email, avatar_url")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (isMounted) setProfile(p ?? { username: null, email: user.email ?? null, avatar_url: null });
+    };
+    load();
+    const channel = supabase
+      .channel("public:profiles")
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, (payload: { new?: { id?: string; email?: string; username?: string | null; avatar_url?: string | null } }) => {
+        const row = payload.new;
+        if (row && row.email && profile && row.email === profile.email) {
+          const next: Profile = {
+            username: row.username ?? profile.username ?? null,
+            email: row.email ?? profile.email ?? null,
+            avatar_url: row.avatar_url ?? profile.avatar_url ?? null,
+          };
+          setProfile(next);
+        }
+      })
+      .subscribe();
+    return () => {
+      isMounted = false;
+      channel.unsubscribe();
+    };
+  }, [supabase, profile]);
+
+  const initials = useMemo(() => {
+    const src = profile?.username || profile?.email || "";
+    const first = src.trim()[0]?.toUpperCase();
+    const second = src.trim().split(" ")[1]?.[0]?.toUpperCase();
+    return `${first || "U"}${second || ""}`;
+  }, [profile]);
   const handleLogout = async () => {
     const supabase = getSupabaseBrowserClient();
     await supabase.auth.signOut();
@@ -38,9 +87,12 @@ const Header = () => {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="gap-2 h-8 md:h-10">
                 <Avatar className="h-6 w-6">
-                  <AvatarFallback>ST</AvatarFallback>
+                  {profile?.avatar_url ? (
+                    <AvatarImage src={profile.avatar_url} alt={profile.username ?? profile?.email ?? ""} />
+                  ) : null}
+                  <AvatarFallback>{initials}</AvatarFallback>
                 </Avatar>
-                <span className="sr-only sm:not-sr-only">Profile</span>
+                <span className="sr-only sm:not-sr-only">{profile?.username || profile?.email || "Profile"}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">

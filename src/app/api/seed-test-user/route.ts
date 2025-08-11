@@ -27,6 +27,7 @@ export async function POST() {
         id: userId,
         email,
         username,
+        role: "admin",
       });
     }
 

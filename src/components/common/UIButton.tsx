@@ -1,15 +1,13 @@
 "use client";
 
-import { Button as ShadButton, type ButtonProps as ShadButtonProps } from "@/components/ui/button";
-import { cn } from "@/utils/cn";
+import { Button as ShadButton } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export type UIButtonSize = "sm" | "md" | "lg";
-export type UIButtonVariant = ShadButtonProps["variant"];
 
-type UIButtonProps = {
-  size?: UIButtonSize;
-  className?: string;
-} & Omit<ShadButtonProps, "size">;
+type UIButtonProps = React.ComponentProps<typeof ShadButton> & {
+  uiSize?: UIButtonSize;
+};
 
 const sizeToClass: Record<UIButtonSize, string> = {
   sm: "h-8 px-3 text-sm",
@@ -17,8 +15,10 @@ const sizeToClass: Record<UIButtonSize, string> = {
   lg: "h-12 px-6 text-base",
 };
 
-export default function UIButton({ size = "md", className, ...props }: UIButtonProps) {
-  return <ShadButton {...props} className={cn(sizeToClass[size], className)} />;
+export default function UIButton({ uiSize = "md", className, ...props }: UIButtonProps) {
+  const buttonProps = props as React.ComponentProps<typeof ShadButton>;
+  const type = (buttonProps.type as React.ButtonHTMLAttributes<HTMLButtonElement>["type"]) ?? "button";
+  return <ShadButton {...buttonProps} type={type} className={cn(sizeToClass[uiSize], className)} />;
 }
 
 
