@@ -31,7 +31,7 @@ const ModeToggle = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label="Theme">
+        <Button variant="ghost" size="icon" aria-label="Theme" className="h-8 w-8 md:h-10 md:w-10">
           {currentIcon}
         </Button>
       </DropdownMenuTrigger>
