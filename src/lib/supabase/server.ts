@@ -23,13 +23,6 @@ export function getSupabaseServerClient() {
       const all = typeof store.getAll === "function" ? await store.getAll() : [];
       return all.map((c) => ({ name: c.name, value: c.value }));
     },
-    async setAll(cookiesToSet) {
-      const store = (await (cookies() as unknown as Promise<ReturnType<typeof cookies>>)) as unknown as PossibleCookiesStore;
-      if (typeof store.set !== "function") return;
-      for (const { name, value, options } of cookiesToSet) {
-        await store.set?.(name, value, options as Record<string, unknown>);
-      }
-    },
   };
 
   return createServerClient(supabaseUrl, supabaseAnonKey, {
