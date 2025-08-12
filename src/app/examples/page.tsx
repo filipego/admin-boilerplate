@@ -7,13 +7,19 @@ import UIModal from "@/components/common/UIModal";
 import UIModalTwoColumn from "@/components/common/UIModalTwoColumn";
 import UIConfirm from "@/components/common/UIConfirm";
 import { MESSAGES } from "@/lib/messages";
-import { useState } from "react";
+import UICard from "@/components/common/UICard";
+import SearchBar from "@/components/common/SearchBar";
+import ViewFilters from "@/components/common/ViewFilters";
+import { useMemo, useState } from "react";
+import CardsShowcase from "./CardsShowcase";
 
 export default function ExamplesPage() {
   const [openFull, setOpenFull] = useState(false);
   const [openContent, setOpenContent] = useState(false);
   const [openTwoCol, setOpenTwoCol] = useState(false);
   const [openConfirm, setOpenConfirm] = useState(false);
+  const [query, setQuery] = useState("");
+  const [mode, setMode] = useState<"list" | "grid-2" | "grid-3" | "grid-4" | "masonry">("grid-3");
   return (
     <AppLayout title="Examples">
       <Card>
@@ -85,6 +91,43 @@ export default function ExamplesPage() {
         </CardContent>
       </Card>
 
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="text-base">Searchbar and View List</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <SearchBar query={query} onQueryChange={setQuery} rightContent={<ViewFilters mode={mode} onModeChange={setMode} />} />
+          <div className="h-3" />
+          <CardsShowcase query={query} mode={mode} />
+        </CardContent>
+      </Card>
+
+      {/* Basic cards demo kept */}
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="text-base">UICard (Basic Examples)</CardTitle>
+        </CardHeader>
+        <CardContent className="grid md:grid-cols-2 gap-4">
+          <UICard
+            title="Card with Image"
+            description="This card shows a full-bleed thumbnail at the top."
+            imageUrl="https://cdn.midjourney.com/73e48e39-046e-4033-808a-577d4b3ad526/0_0.png"
+            unoptimizedImage
+            onEdit={() => console.log("edit")}
+            onDelete={() => console.log("delete")}
+            buttonHref="/users"
+            buttonLabel="Open"
+          />
+          <UICard
+            title="Card without Image"
+            description="When there is no image, content has extra top padding for balance."
+            onEdit={() => console.log("edit")}
+            onDelete={() => console.log("delete")}
+            href="/dashboard"
+          />
+        </CardContent>
+      </Card>
+
       <UIConfirm
         open={openConfirm}
         onOpenChange={setOpenConfirm}
@@ -126,6 +169,9 @@ export default function ExamplesPage() {
           </div>
         </div>
       </UIModal>
+
+      {/* Showcase helper */}
+      <CardsShowcase.Definitions />
     </AppLayout>
   );
 }

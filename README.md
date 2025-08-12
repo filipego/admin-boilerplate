@@ -113,6 +113,43 @@ import { MESSAGES } from "@/lib/messages";
 /> 
 ```
 
+### UICard
+`src/components/common/UICard.tsx`
+
+Content card with optional full-bleed top image, 3-dots menu (edit/delete), and linking options.
+
+Props: `{ title, description?, imageUrl?, onEdit?, onDelete?, href?, buttonHref?, buttonLabel? }`
+
+Rules:
+- If `imageUrl` is present, the image fills full width at the top with no padding; the card automatically removes its default top padding (`pt-0`) so the image is truly flush. Menu appears over the image.
+- If no `imageUrl`, content area has extra top padding so text layout looks balanced; menu appears in header row.
+- Use `href` for full-card link overlay; or `buttonHref`/`buttonLabel` for a button link in the footer.
+- For external images, make sure the domain is allowed in `next.config.ts` under `images.domains`. Example in this repo allows `cdn.midjourney.com`. You can add more as needed.
+- If you run into optimization/CDN issues during development, pass `unoptimizedImage` to bypass Next Image optimization for that card.
+
+```tsx
+import UICard from "@/components/common/UICard";
+
+<UICard
+  title="Card with Image"
+  description="Description"
+  imageUrl="https://cdn.midjourney.com/73e48e39-046e-4033-808a-577d4b3ad526/0_0.png"
+  unoptimizedImage
+  onEdit={() => {}}
+  onDelete={() => {}}
+  buttonHref="/users"
+  buttonLabel="Open"
+/>
+
+<UICard
+  title="Card without Image"
+  description="Description"
+  href="/dashboard"
+  onEdit={() => {}}
+  onDelete={() => {}}
+/>
+```
+
 ### Toasts (centralized)
 `src/lib/toast.ts`
 
@@ -135,6 +172,53 @@ import ImageCropUpload from "@/components/uploader/ImageCropUpload";
   initialUrl={profile.avatar_url}
   onUploaded={(url) => setAvatarUrl(url)}
 /> 
+```
+
+### SearchBar
+`src/components/common/SearchBar.tsx`
+
+Universal search input with an optional right slot for actions (e.g., view filters).
+
+Props: `{ query: string, onQueryChange: (q: string) => void, placeholder?, rightContent?, className? }`
+
+```tsx
+import SearchBar from "@/components/common/SearchBar";
+import ViewFilters from "@/components/common/ViewFilters";
+
+const [query, setQuery] = useState("");
+const [mode, setMode] = useState<"list"|"grid-2"|"grid-3"|"grid-4"|"masonry">("grid-3");
+
+<SearchBar
+  query={query}
+  onQueryChange={setQuery}
+  rightContent={<ViewFilters mode={mode} onModeChange={setMode} />}
+/>;
+```
+
+### ViewFilters
+`src/components/common/ViewFilters.tsx`
+
+Icon-only view mode selector. Supports list, 2/3/4-column grids, and masonry. Masonry is off by default.
+
+Props: `{ mode: "list"|"grid-2"|"grid-3"|"grid-4"|"masonry", onModeChange: (m) => void }`
+
+Icon legend:
+- List: lines icon
+- 2 columns: two vertical rectangles icon
+- 3 columns: three vertical rectangles icon
+- 4 columns: four vertical rectangles icon
+- Masonry: grid of small squares icon
+
+Example usage with cards:
+
+```tsx
+<SearchBar
+  query={query}
+  onQueryChange={setQuery}
+  rightContent={<ViewFilters mode={mode} onModeChange={setMode} />}
+/>
+<div className="mt-3" />
+{/* Render your items according to `mode` */}
 ```
 
 Notes:
@@ -188,4 +272,4 @@ Route handlers:
 
 ## Examples
 
-Visit `/examples` to see usage of UIButton and both modals.
+Visit `/examples` to see usage of UIButton, modals, SearchBar, ViewFilters, and cards in grid/masonry layouts.
