@@ -9,33 +9,11 @@ import { useEffect, useMemo, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { cn } from "@/utils/cn";
-import {
-  Home,
-  Users,
-  Briefcase,
-  User,
-  ChevronLeft,
-  ChevronRight,
-  BarChart3,
-  LogOut,
-  type LucideIcon,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, LogOut } from "lucide-react";
+import { mainItems as configMainItems, personalItems as configPersonalItems } from "@/components/layout/sidebar.config";
 
-type NavItem = { href: string; label: string; icon: LucideIcon };
-
-const mainItems: NavItem[] = [
-  { href: "/dashboard", label: "Overview", icon: Home },
-  { href: "/projects", label: "Projects", icon: Briefcase },
-  { href: "/reports", label: "Reports / Analytics", icon: BarChart3 },
-  { href: "/users", label: "Users", icon: Users },
-  { href: "/profile", label: "Profile", icon: User },
-];
-
-const personalItems: NavItem[] = [];
-
-const bottomItems: NavItem[] = [
-  { href: "/login", label: "Logout", icon: LogOut },
-];
+const mainItems = configMainItems;
+const personalItems = configPersonalItems;
 
 const Sidebar = () => {
   const { collapsed, toggle, showProfile, showSidebarTheme, showBottomActions, hasHydrated, setHasHydrated } = useSidebarStore();
