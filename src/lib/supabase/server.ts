@@ -11,16 +11,10 @@ export function getSupabaseServerClient() {
     );
   }
 
-  type CookiePair = { name: string; value: string };
-  type PossibleCookiesStore = {
-    getAll?: () => CookiePair[] | Promise<CookiePair[]>;
-    set?: (name: string, value: string, options?: Record<string, unknown>) => void | Promise<void>;
-  };
-
   const cookieMethods: CookieMethodsServer = {
     async getAll() {
-      const store = (await (cookies() as unknown as Promise<ReturnType<typeof cookies>>)) as unknown as PossibleCookiesStore;
-      const all = typeof store.getAll === "function" ? await store.getAll() : [];
+      const store = await cookies();
+      const all = store.getAll();
       return all.map((c) => ({ name: c.name, value: c.value }));
     },
   };
@@ -41,23 +35,16 @@ export function getSupabaseServerClientWritable() {
     );
   }
 
-  type CookiePair = { name: string; value: string };
-  type PossibleCookiesStore = {
-    getAll?: () => CookiePair[] | Promise<CookiePair[]>;
-    set?: (name: string, value: string, options?: Record<string, unknown>) => void | Promise<void>;
-  };
-
   const cookieMethods: CookieMethodsServer = {
     async getAll() {
-      const store = (await (cookies() as unknown as Promise<ReturnType<typeof cookies>>)) as unknown as PossibleCookiesStore;
-      const all = typeof store.getAll === "function" ? await store.getAll() : [];
+      const store = await cookies();
+      const all = store.getAll();
       return all.map((c) => ({ name: c.name, value: c.value }));
     },
     async setAll(cookiesToSet) {
-      const store = (await (cookies() as unknown as Promise<ReturnType<typeof cookies>>)) as unknown as PossibleCookiesStore;
-      if (typeof store.set !== "function") return;
+      const store = await cookies();
       for (const { name, value, options } of cookiesToSet) {
-        await store.set?.(name, value, options as Record<string, unknown>);
+        store.set(name, value, options as Record<string, unknown>);
       }
     },
   };

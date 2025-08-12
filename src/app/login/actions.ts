@@ -1,5 +1,5 @@
 "use server";
-import { getSupabaseServerClient } from "@/lib/supabase/server";
+import { getSupabaseServerClientWritable } from "@/lib/supabase/server";
 
 export type LoginResult = {
   error?: string;
@@ -14,7 +14,8 @@ export async function loginAction(_: LoginResult, formData: FormData): Promise<L
     return { error: "Please enter your email/username and password." };
   }
 
-  const supabase = getSupabaseServerClient();
+  // Use writable client so Vercel SSR can set auth cookies correctly
+  const supabase = getSupabaseServerClientWritable();
 
   let email = identifier;
   const looksLikeEmail = identifier.includes("@");

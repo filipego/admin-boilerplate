@@ -292,3 +292,7 @@ Route handlers:
 ## Examples
 
 Visit `/examples` to see usage of UIButton, modals, SearchBar, ViewFilters, and cards in grid/masonry layouts.
+
+### Live Demo
+
+Check the hosted demo here: [admin-boilerplate demo](https://admin-boilerplate-blond.vercel.app/)
