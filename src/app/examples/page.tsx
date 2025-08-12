@@ -5,12 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import UIButton from "@/components/common/UIButton";
 import UIModal from "@/components/common/UIModal";
 import UIModalTwoColumn from "@/components/common/UIModalTwoColumn";
+import UIConfirm from "@/components/common/UIConfirm";
+import { MESSAGES } from "@/lib/messages";
 import { useState } from "react";
 
 export default function ExamplesPage() {
   const [openFull, setOpenFull] = useState(false);
   const [openContent, setOpenContent] = useState(false);
   const [openTwoCol, setOpenTwoCol] = useState(false);
+  const [openConfirm, setOpenConfirm] = useState(false);
   return (
     <AppLayout title="Examples">
       <Card>
@@ -71,6 +74,26 @@ export default function ExamplesPage() {
             </div>
           </div>
         }
+      />
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="text-base">Alerts</CardTitle>
+        </CardHeader>
+        <CardContent className="flex gap-3">
+          <UIButton variant="destructive" onClick={() => setOpenConfirm(true)}>Open Confirm</UIButton>
+        </CardContent>
+      </Card>
+
+      <UIConfirm
+        open={openConfirm}
+        onOpenChange={setOpenConfirm}
+        title={MESSAGES.confirmDelete.title}
+        description={MESSAGES.confirmDelete.description}
+        confirmLabel={MESSAGES.confirmDelete.confirmLabel}
+        cancelLabel={MESSAGES.confirmDelete.cancelLabel}
+        destructive
+        onConfirm={() => setOpenConfirm(false)}
       />
 
       <UIModal open={openContent} onOpenChange={setOpenContent} size="content" title="Content Modal" description="Auto-sized to content" className="max-w-3xl">
