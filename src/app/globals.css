@@ -120,3 +120,17 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Masonry (react-masonry-css) helpers */
+.my-masonry-grid {
+  display: -webkit-box; /* Not needed if autoprefixer is enabled */
+  display: -ms-flexbox; /* Not needed if autoprefixer is enabled */
+  display: flex;
+  margin-left: -1rem; /* gutter compensation */
+  width: auto;
+}
+
+.my-masonry-grid_column {
+  padding-left: 1rem; /* gutter */
+  background-clip: padding-box;
+}

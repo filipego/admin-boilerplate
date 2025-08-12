@@ -19,7 +19,8 @@ export default function ExamplesPage() {
   const [openTwoCol, setOpenTwoCol] = useState(false);
   const [openConfirm, setOpenConfirm] = useState(false);
   const [query, setQuery] = useState("");
-  const [mode, setMode] = useState<"list" | "grid-2" | "grid-3" | "grid-4" | "masonry">("grid-3");
+  const [layout, setLayout] = useState<"list" | "grid" | "masonry">("grid");
+  const [columns, setColumns] = useState<2 | 3 | 4>(3);
   return (
     <AppLayout title="Examples">
       <Card>
@@ -96,9 +97,26 @@ export default function ExamplesPage() {
           <CardTitle className="text-base">Searchbar and View List</CardTitle>
         </CardHeader>
         <CardContent>
-          <SearchBar query={query} onQueryChange={setQuery} rightContent={<ViewFilters mode={mode} onModeChange={setMode} />} />
+          <SearchBar
+            query={query}
+            onQueryChange={setQuery}
+            rightContent={
+              <ViewFilters
+                layout={layout}
+                onLayoutChange={setLayout}
+                columns={columns}
+                onColumnsChange={setColumns}
+                enableList
+                enableGrid
+                enableMasonry
+                enableCols2
+                enableCols3
+                enableCols4
+              />
+            }
+          />
           <div className="h-3" />
-          <CardsShowcase query={query} mode={mode} />
+          <CardsShowcase query={query} layout={layout} columns={columns} />
         </CardContent>
       </Card>
 

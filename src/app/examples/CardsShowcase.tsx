@@ -2,24 +2,24 @@
 
 import { useMemo } from "react";
 import UICard from "@/components/common/UICard";
+import dynamic from "next/dynamic";
+const Masonry = dynamic(() => import("react-masonry-css"), { ssr: false });
 
-type Mode = "list" | "grid-2" | "grid-3" | "grid-4" | "masonry";
+type LayoutMode = "list" | "grid" | "masonry";
 
-export default function CardsShowcase({ query, mode }: { query: string; mode: Mode }) {
+export default function CardsShowcase({ query, layout, columns }: { query: string; layout: LayoutMode; columns: 2 | 3 | 4 }) {
   const items = useMemo(() => demoItems.filter((i) => i.title.toLowerCase().includes(query.toLowerCase())), [query]);
 
-  const gridClass =
-    mode === "list" ? "grid-cols-1" :
-    mode === "grid-2" ? "grid-cols-1 sm:grid-cols-2" :
-    mode === "grid-3" ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" :
-    mode === "grid-4" ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" :
-    "";
-
-  if (mode === "masonry") {
+  if (layout === "masonry") {
+    const breakpointCols = { default: columns, 1100: Math.min(columns, 3), 700: Math.min(columns, 2), 500: 1 };
     return (
-      <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 [column-fill:balance]">
+      <Masonry
+        breakpointCols={breakpointCols}
+        className="my-masonry-grid"
+        columnClassName="my-masonry-grid_column"
+      >
         {items.map((i) => (
-          <div key={i.id} className="mb-4 [break-inside:avoid]">
+          <div key={i.id} className="mb-4">
             <UICard
               title={i.title}
               description={i.description}
@@ -28,12 +28,19 @@ export default function CardsShowcase({ query, mode }: { query: string; mode: Mo
             />
           </div>
         ))}
-      </div>
+      </Masonry>
     );
   }
 
+  const gridClass =
+    columns === 2 ? "grid-cols-1 sm:grid-cols-2" :
+    columns === 3 ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" :
+    "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4";
+
+  const containerClass = layout === "list" ? "grid grid-cols-1 gap-4" : `grid ${gridClass} gap-4`;
+
   return (
-    <div className={`grid ${gridClass} gap-4`}>
+    <div className={containerClass}>
       {items.map((i) => (
         <UICard
           key={i.id}

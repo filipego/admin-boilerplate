@@ -198,9 +198,15 @@ const [mode, setMode] = useState<"list"|"grid-2"|"grid-3"|"grid-4"|"masonry">("g
 ### ViewFilters
 `src/components/common/ViewFilters.tsx`
 
-Icon-only view mode selector. Supports list, 2/3/4-column grids, and masonry. Masonry is off by default.
+Icon-only view mode selector. Separates layout type from column count.
 
-Props: `{ mode: "list"|"grid-2"|"grid-3"|"grid-4"|"masonry", onModeChange: (m) => void }`
+Defaults:
+- Layout: list
+- Columns: 3
+- Enabled controls: list and 3 columns only (others are disabled by default; enable per usage)
+
+Props:
+`{ layout: "list"|"grid"|"masonry", onLayoutChange, columns: 2|3|4, onColumnsChange, enableList?, enableGrid?, enableMasonry?, enableCols2?, enableCols3?, enableCols4? }`
 
 Icon legend:
 - List: lines icon
@@ -215,7 +221,20 @@ Example usage with cards:
 <SearchBar
   query={query}
   onQueryChange={setQuery}
-  rightContent={<ViewFilters mode={mode} onModeChange={setMode} />}
+  rightContent={
+    <ViewFilters
+      layout={layout}
+      onLayoutChange={setLayout}
+      columns={columns}
+      onColumnsChange={setColumns}
+      enableList
+      enableGrid
+      enableMasonry
+      enableCols2
+      enableCols3
+      enableCols4
+    />
+  }
 />
 <div className="mt-3" />
 {/* Render your items according to `mode` */}
