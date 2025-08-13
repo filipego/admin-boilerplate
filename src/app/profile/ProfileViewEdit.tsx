@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useMemo, useState } from "react";
 import UIButton from "@/components/common/UIButton";
 import { showSaved, showError } from "@/lib/toast";
+import UIModal from "@/components/common/UIModal";
 import ImageCropUpload from "@/components/uploader/ImageCropUpload";
 import { updateProfileAction } from "./actions";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -57,14 +58,11 @@ export default function ProfileViewEdit({ profile }: { profile: Profile }) {
   }, [username, editing, profile.username]);
 
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
-
-  const handlePasswordChange = async () => {
-    const newPassword = prompt("Enter new password");
-    if (!newPassword) return;
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    if (error) alert(error.message);
-    else alert("Password updated");
-  };
+  const [pwOpen, setPwOpen] = useState(false);
+  const [pw1, setPw1] = useState("");
+  const [pw2, setPw2] = useState("");
+  const [pwPending, setPwPending] = useState(false);
+  const handlePasswordChange = async () => setPwOpen(true);
 
   if (!editing) {
     return (
@@ -84,6 +82,41 @@ export default function ProfileViewEdit({ profile }: { profile: Profile }) {
           <UIButton onClick={() => setEditing(true)}>Edit</UIButton>
           <UIButton variant="outline" onClick={handlePasswordChange}>Change Password</UIButton>
         </div>
+        <UIModal open={pwOpen} onOpenChange={setPwOpen} title="Change Password" description="Set a new password">
+          <div className="grid gap-3">
+            <div className="grid gap-1">
+              <label className="text-sm" htmlFor="pw1">New password</label>
+              <input id="pw1" type="password" className="px-3 py-2 rounded-md border bg-background" value={pw1} onChange={(e) => setPw1(e.target.value)} />
+            </div>
+            <div className="grid gap-1">
+              <label className="text-sm" htmlFor="pw2">Confirm password</label>
+              <input id="pw2" type="password" className="px-3 py-2 rounded-md border bg-background" value={pw2} onChange={(e) => setPw2(e.target.value)} />
+            </div>
+            <div className="flex justify-end gap-2">
+              <UIButton variant="outline" type="button" onClick={() => setPwOpen(false)} disabled={pwPending}>Cancel</UIButton>
+              <UIButton
+                type="button"
+                onClick={async () => {
+                  if (pw1.length < 6) { showError("Password too short"); return; }
+                  if (pw1 !== pw2) { showError("Passwords do not match"); return; }
+                  try {
+                    setPwPending(true);
+                    const { error } = await supabase.auth.updateUser({ password: pw1 });
+                    if (error) { showError(error.message); return; }
+                    showSaved("Password updated");
+                    setPwOpen(false);
+                    setPw1(""); setPw2("");
+                  } finally {
+                    setPwPending(false);
+                  }
+                }}
+                disabled={pwPending}
+              >
+                Save
+              </UIButton>
+            </div>
+          </div>
+        </UIModal>
       </div>
     );
   }
