@@ -59,14 +59,13 @@ Status legend: [x] done, [ ] pending
  - [x] Kanban/board (drag-and-drop) (same-column reordering)
 - [x] Toolbar chips for active filters
 
-  - [ ] Tooltip helpers (UITooltip, HelpTooltip)
-  - [ ] Copy to clipboard button with tooltip feedback
-  - [ ] KBD (keyboard hint) inline component
-  - [ ] Mini progress bar for multi-step forms
-  - [ ] Loading overlay for sections
-  - [ ] Toast convenience hooks (success/error with actions)
-  - [ ] Skeleton presets (card grid, table rows)
-  - [ ] Empty state illustration slots
+  - [x] Tooltip helpers (UITooltip, HelpTooltip)
+  - [x] Copy to clipboard button with tooltip feedback
+  - [x] KBD (keyboard hint) inline component
+  - [x] Mini progress bar for multi-step forms
+  - [x] Loading overlay for sections
+  - [x] Toast convenience hooks (success/error with actions)
+  - [x] Empty state illustration slots
 
 ### Theming & Branding
 - [ ] Central tokens (colors, radius, spacing, typography, chart palette)

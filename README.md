@@ -315,7 +315,7 @@ const data = [
 import { LoadingListSkeleton, EmptyState, ErrorState } from "@/components/common/AsyncStates";
 
 <LoadingListSkeleton rows={4} />
-<EmptyState actionLabel="Create Item" onAction={() => {}} />
+<EmptyState actionLabel="Create Item" onAction={() => {}} illustration={<YourSvg />} />
 <ErrorState onRetry={() => {}} />
 ```
 
@@ -395,6 +395,75 @@ import TagInput from "@/components/common/TagInput";
 ```tsx
 import NotificationBell from "@/components/common/Notifications";
 <NotificationBell items={[{ id: '1', title: 'Welcome', time: 'Just now' }]} />
+```
+
+### Tooltip Helpers
+`src/components/common/UITooltip.tsx`
+
+Lightweight wrappers around shadcn Tooltip for consistent styling.
+
+```tsx
+import UITooltip, { HelpTooltip } from "@/components/common/UITooltip";
+
+<HelpTooltip content="Explains what this section does" />
+
+<UITooltip content="Click to save">
+  <UIButton>Save</UIButton>
+</UITooltip>
+```
+
+### Copy to Clipboard Button
+`src/components/common/CopyButton.tsx`
+
+```tsx
+import CopyButton from "@/components/common/CopyButton";
+
+<CopyButton value="https://example.com" withTooltip />
+<CopyButton value="secret" label="Copy token" copiedLabel="Token copied" />
+```
+
+### KBD (keyboard hint)
+`src/components/common/Kbd.tsx`
+
+```tsx
+import Kbd from "@/components/common/Kbd";
+
+// Platform-aware: Mod → ⌘ on macOS, Ctrl elsewhere
+<Kbd keys={["Mod", "K"]} />
+<Kbd keys={["Shift", "Enter"]} size="sm" />
+```
+
+### Mini Progress Bar
+`src/components/common/ProgressMini.tsx`
+
+Variants:
+- Steps: `variant="steps" current={n} total={m}`
+- Percent: `variant="percent" value={0..100}`
+
+```tsx
+import ProgressMini from "@/components/common/ProgressMini";
+
+// For a stepper wizard
+<ProgressMini variant="steps" current={2} total={5} showLabel />
+
+// For a task progress indicator
+<ProgressMini variant="percent" value={64} showLabel />
+```
+
+### Loading Overlay + Loader
+`src/components/common/LoadingOverlay.tsx`, `src/components/common/Loader.tsx`
+
+```tsx
+import LoadingOverlay from "@/components/common/LoadingOverlay";
+import Loader from "@/components/common/Loader";
+
+// Section loading overlay
+<LoadingOverlay loading={isLoading}>
+  <Chart data={data} />
+</LoadingOverlay>
+
+// Inline spinner
+<Loader size="sm" />
 ```
 
 ### UserAvatarMenu
@@ -520,6 +589,15 @@ Notes:
 Helpers: `showSaved, showError, showAvatarUpdated, showUploadFailed, showBucketMissing, showBucketCreated`
 
 Toaster is mounted in `src/components/providers/ThemeProvider.tsx` (top-center, rich colors).
+
+Action variants:
+
+```tsx
+import { showSuccessWithAction, showErrorWithRetry } from "@/lib/toast";
+
+showSuccessWithAction("Profile updated", "View", () => router.push("/profile"));
+showErrorWithRetry("Failed to save", () => retrySave(), { secondaryLabel: "Dismiss", onSecondary: () => {} });
+```
 
 ### ImageCropUpload
 `src/components/uploader/ImageCropUpload.tsx`

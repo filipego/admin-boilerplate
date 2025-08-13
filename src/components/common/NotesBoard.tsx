@@ -3,7 +3,7 @@
 import { DndContext, DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, rectSortingStrategy, useSortable, arrayMove } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import UIButton from "@/components/common/UIButton";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
@@ -53,6 +53,9 @@ function SortableNote({ note, onDelete, onChange }: { note: Note; onDelete: (id:
 export default function NotesBoard({ initial }: { initial: Note[] }) {
   const [notes, setNotes] = useState<Note[]>(initial);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
 
   const onDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;

@@ -15,20 +15,22 @@ type UserRow = {
   created_at?: string;
 };
 
-export default function UsersTable() {
+export default function UsersTable({ initial }: { initial?: UserRow[] }) {
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
-  const [rows, setRows] = useState<UserRow[]>([]);
+  const [rows, setRows] = useState<UserRow[]>(initial ?? []);
 
   useEffect(() => {
     let mounted = true;
-    const load = async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("id, email, username, role, avatar_url, created_at")
-        .order("created_at", { ascending: false });
-      if (mounted && data) setRows(data as UserRow[]);
-    };
-    load();
+    if (!initial || initial.length === 0) {
+      const load = async () => {
+        const { data } = await supabase
+          .from("profiles")
+          .select("id, email, username, role, avatar_url, created_at")
+          .order("created_at", { ascending: false });
+        if (mounted && data) setRows(data as UserRow[]);
+      };
+      load();
+    }
 
     const channel = supabase
       .channel("realtime:profiles")

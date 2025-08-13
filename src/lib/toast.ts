@@ -14,4 +14,42 @@ export const showBucketCreated = () => toast.success("Bucket created. Please ret
 // Expose the base API if custom usage is ever needed in a component
 export { toast };
 
+// Convenience hooks with actions
+export const showSuccessWithAction = (
+  message: string,
+  actionLabel: string,
+  onAction: () => void,
+  options?: { description?: string }
+) =>
+  toast.success(message, {
+    description: options?.description,
+    action: {
+      label: actionLabel,
+      onClick: onAction,
+    },
+    position: "top-center",
+  });
+
+export const showErrorWithRetry = (
+  message: string = "Something went wrong",
+  onRetry?: () => void,
+  options?: { description?: string; secondaryLabel?: string; onSecondary?: () => void }
+) =>
+  toast.error(message, {
+    description: options?.description,
+    action: onRetry
+      ? {
+          label: "Retry",
+          onClick: onRetry,
+        }
+      : undefined,
+    cancel: options?.secondaryLabel && options?.onSecondary
+      ? {
+          label: options.secondaryLabel,
+          onClick: options.onSecondary,
+        }
+      : undefined,
+    position: "top-center",
+  });
+
 

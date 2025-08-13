@@ -1,9 +1,12 @@
 import AppLayout from "@/components/layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import UIButton from "@/components/common/UIButton";
+import PageHeader from "@/components/common/PageHeader";
+import UserCreateForm from "./UserCreateForm";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export default async function NewUserPage() {
   const supabase = getSupabaseServerClient();
@@ -14,17 +17,13 @@ export default async function NewUserPage() {
 
   return (
     <AppLayout title="New User">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Create User</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-sm text-muted-foreground">Coming soon. For now, create users via Supabase Auth and then edit here.</div>
-          <div className="mt-4">
-            <UIButton asChild uiSize="sm" variant="outline"><Link href="/users">Back</Link></UIButton>
-          </div>
-        </CardContent>
-      </Card>
+      <PageHeader title="Create User" description="Create a new account and profile" />
+      <div className="max-w-md">
+        <UserCreateForm />
+        <div className="mt-4">
+          <UIButton asChild uiSize="sm" variant="outline"><Link href="/users">Back</Link></UIButton>
+        </div>
+      </div>
     </AppLayout>
   );
 }

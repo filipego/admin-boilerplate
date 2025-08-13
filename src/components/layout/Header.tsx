@@ -16,43 +16,42 @@ const Header = () => {
 
   type Profile = { username: string | null; email: string | null; avatar_url: string | null };
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
+  // Initial load of current user's profile
   useEffect(() => {
     let isMounted = true;
-    const load = async () => {
-      const { data } = await supabase.auth.getUser();
-      const user = data.user;
-      if (!user) {
-        if (isMounted) setProfile(null);
-        return;
+    (async () => {
+      const res = await fetch('/api/me', { cache: 'no-store' });
+      if (!res.ok) { if (isMounted) setProfile(null); return; }
+      const json = await res.json();
+      const p = json.profile as { id: string; email: string | null; username: string | null; avatar_url: string | null } | null;
+      if (isMounted) {
+        setCurrentUserId(p?.id ?? null);
+        setProfile(p ? { username: p.username, email: p.email, avatar_url: p.avatar_url } : null);
       }
-      const { data: p } = await supabase
-        .from("profiles")
-        .select("username, email, avatar_url")
-        .eq("id", user.id)
-        .maybeSingle();
-      if (isMounted) setProfile(p ?? { username: null, email: user.email ?? null, avatar_url: null });
-    };
-    load();
+    })();
+    return () => { isMounted = false; };
+  }, [supabase]);
+
+  // Realtime updates (subscribe once per user id)
+  useEffect(() => {
+    if (!currentUserId) return;
     const channel = supabase
       .channel("public:profiles")
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, (payload: { new?: { id?: string; email?: string; username?: string | null; avatar_url?: string | null } }) => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, (payload: { new?: { id?: string } }) => {
         const row = payload.new;
-        if (row && row.email && profile && row.email === profile.email) {
-          const next: Profile = {
-            username: row.username ?? profile.username ?? null,
-            email: row.email ?? profile.email ?? null,
-            avatar_url: row.avatar_url ?? profile.avatar_url ?? null,
-          };
-          setProfile(next);
-        }
+        if (!row || row.id !== currentUserId) return;
+        supabase
+          .from("profiles")
+          .select("username, email, avatar_url")
+          .eq("id", currentUserId)
+          .maybeSingle()
+          .then(({ data: p }) => { if (p) setProfile(p); });
       })
       .subscribe();
-    return () => {
-      isMounted = false;
-      channel.unsubscribe();
-    };
-  }, [supabase, profile]);
+    return () => { channel.unsubscribe(); };
+  }, [supabase, currentUserId]);
 
   // initials and handleLogout kept previously; remove unused to satisfy linter
 

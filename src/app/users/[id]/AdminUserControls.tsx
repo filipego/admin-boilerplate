@@ -8,10 +8,10 @@ import { adminUpdateUserAction } from "./actions";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import Link from "next/link";
 
-export default function AdminUserControls({ userId }: { userId: string }) {
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [username, setUsername] = useState("");
-  const [role, setRole] = useState<"admin" | "client">("client");
+export default function AdminUserControls({ userId, initialUsername = "", initialAvatarUrl = null, initialRole = "client" }: { userId: string; initialUsername?: string; initialAvatarUrl?: string | null; initialRole?: "admin" | "client" }) {
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(initialAvatarUrl);
+  const [username, setUsername] = useState(initialUsername);
+  const [role, setRole] = useState<"admin" | "client">(initialRole);
   const [state, formAction] = useActionState(adminUpdateUserAction, {} as { success?: boolean; error?: string });
 
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
@@ -20,12 +20,12 @@ export default function AdminUserControls({ userId }: { userId: string }) {
     // Load current user data into admin edit controls
     const load = async () => {
       const { data } = await supabase.from("profiles").select("username, avatar_url, role").eq("id", userId).single();
-      setUsername(data?.username ?? "");
-      setAvatarUrl(data?.avatar_url ?? null);
-      setRole(data?.role === "admin" ? "admin" : "client");
+      setUsername(data?.username ?? initialUsername ?? "");
+      setAvatarUrl(data?.avatar_url ?? initialAvatarUrl ?? null);
+      setRole(data?.role === "admin" ? "admin" : initialRole);
     };
     load();
-  }, [supabase, userId]);
+  }, [supabase, userId, initialUsername, initialAvatarUrl, initialRole]);
 
   useEffect(() => {
     if (state?.success) showSaved();

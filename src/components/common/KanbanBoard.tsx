@@ -4,7 +4,7 @@ import { DndContext, DragEndEvent, PointerSensor, useSensor, useSensors } from "
 import { SortableContext, verticalListSortingStrategy, arrayMove, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import UIButton from "@/components/common/UIButton";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type Card = { id: string; title: string };
 type Column = { id: string; title: string; cards: Card[] };
@@ -22,6 +22,9 @@ function SortableCard({ card }: { card: Card }) {
 export default function KanbanBoard({ initial }: { initial: Column[] }) {
   const [columns, setColumns] = useState<Column[]>(initial);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
 
   const findCard = (id: string) => {
     for (const col of columns) {

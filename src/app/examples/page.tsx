@@ -15,6 +15,7 @@ import CardsShowcase from "./CardsShowcase";
 import PageHeader from "@/components/common/PageHeader";
 import ContentTabs, { type TabItem } from "@/components/common/ContentTabs";
 import DataTable from "@/components/common/DataTable";
+import type { DataTableStateSnapshot } from "@/components/common/DataTable";
 import type { ColumnDef } from "@tanstack/react-table";
 import { RHFForm } from "@/components/common/form/Form";
 import { TextField, TextAreaField } from "@/components/common/form/Fields";
@@ -38,6 +39,7 @@ import DateRangePicker from "@/components/common/DateRangePicker";
 import DrawerForm from "@/components/common/DrawerForm";
 import SidePanel from "@/components/common/SidePanel";
 import ToolbarChips from "@/components/common/ToolbarChips";
+import SavedViews from "@/components/common/SavedViews";
 import NotificationBell from "@/components/common/Notifications";
 import CsvImport from "@/components/common/CsvImport";
 import UserAvatarMenu from "@/components/common/UserAvatarMenu";
@@ -46,6 +48,12 @@ import FeatureFlags from "@/components/common/FeatureFlags";
 import ErrorBoundary from "@/components/common/ErrorBoundary";
 import KanbanBoard from "@/components/common/KanbanBoard";
 import NotesBoard from "@/components/common/NotesBoard";
+import UITooltip, { HelpTooltip } from "@/components/common/UITooltip";
+import CopyButton from "@/components/common/CopyButton";
+import Kbd from "@/components/common/Kbd";
+import ProgressMini from "@/components/common/ProgressMini";
+import LoadingOverlay from "@/components/common/LoadingOverlay";
+import Loader from "@/components/common/Loader";
 
 export default function ExamplesPage() {
   const [openFull, setOpenFull] = useState(false);
@@ -94,6 +102,9 @@ export default function ExamplesPage() {
   const [chips, setChips] = useState([{ id: "status", label: "Status: Active" }, { id: "role", label: "Role: Admin" }]);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
+  const [sectionLoading, setSectionLoading] = useState(false);
+  const [tableViewState, setTableViewState] = useState<DataTableStateSnapshot>({ sorting: [], globalFilter: "", columnVisibility: {} });
+  const [tableKey, setTableKey] = useState(0);
   return (
     <AppLayout title="Examples">
       <PageHeader
@@ -117,10 +128,10 @@ export default function ExamplesPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">UIButton</CardTitle>
+          <CardTitle className="text-base">UIButton <span className="align-middle ml-1 inline-block"><HelpTooltip content="Universal button wrapper for consistent sizing and styling." /></span></CardTitle>
         </CardHeader>
         <CardContent className="space-x-2">
-          <UIButton uiSize="sm">Small</UIButton>
+          <UITooltip content="Small size"><UIButton uiSize="sm">Small</UIButton></UITooltip>
           <UIButton>Medium</UIButton>
           <UIButton uiSize="lg">Large</UIButton>
         </CardContent>
@@ -132,6 +143,9 @@ export default function ExamplesPage() {
         </CardHeader>
         <CardContent>
           <Stepper steps={steps} active={activeStep} onActiveChange={setActiveStep} />
+          <div className="mt-3">
+            <ProgressMini variant="steps" current={activeStep + 1} total={steps.length} showLabel />
+          </div>
         </CardContent>
       </Card>
 
@@ -216,12 +230,30 @@ export default function ExamplesPage() {
 
       <Card className="mt-6">
         <CardHeader>
-          <CardTitle className="text-base">Breadcrumbs + Chart</CardTitle>
+          <CardTitle className="text-base">Breadcrumbs + Chart <span className="align-middle ml-1 inline-block"><HelpTooltip content="Simple breadcrumbs and a themed chart wrapper." /></span></CardTitle>
         </CardHeader>
         <CardContent>
-          <Breadcrumbs items={[{ label: "Dashboard", href: "/dashboard" }, { label: "Analytics" }]} />
+          <div className="flex items-center justify-between">
+            <UITooltip content="Navigate back to Dashboard">
+              <div>
+                <Breadcrumbs items={[{ label: "Dashboard", href: "/dashboard" }, { label: "Analytics" }]} />
+              </div>
+            </UITooltip>
+            <UIButton uiSize="sm" variant="outline" onClick={async () => { setSectionLoading(true); await new Promise((r) => setTimeout(r, 1200)); setSectionLoading(false); }}>Simulate Load</UIButton>
+          </div>
           <div className="mt-4">
-            <Chart data={chartData} />
+            <LoadingOverlay loading={sectionLoading}>
+              <Chart data={chartData} />
+            </LoadingOverlay>
+          </div>
+          <div className="mt-4 flex items-center gap-2">
+            <CopyButton value="https://admin-boilerplate-blond.vercel.app/" withTooltip />
+            <CopyButton value="secret-token-123" label="Copy token" copiedLabel="Token copied" />
+            <span className="text-xs text-muted-foreground">Open palette</span>
+            <Kbd keys={["Mod", "K"]} />
+            <div className="ml-auto w-48">
+              <ProgressMini variant="percent" value={64} showLabel />
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -237,6 +269,7 @@ export default function ExamplesPage() {
               { id: "preferences", title: "Preferences", content: <div className="grid gap-2"><label className="inline-flex items-center gap-2 text-sm"><input type="checkbox" name="notifications" /> Enable notifications</label></div> },
               { id: "security", title: "Security", content: <div className="grid gap-2"><input name="2fa" className="px-3 py-2 rounded-md border bg-background" placeholder="2FA Code" /></div> },
             ]}
+            className="h-[70vh]"
           />
         </CardContent>
       </Card>
@@ -369,7 +402,21 @@ export default function ExamplesPage() {
           <CardTitle className="text-base">DataTable</CardTitle>
         </CardHeader>
         <CardContent>
-          <DataTable columns={tableColumns} data={people} />
+          <SavedViews
+            storageKey="examples-people-table"
+            current={tableViewState}
+            onLoad={(s) => { setTableViewState(s); setTableKey((k) => k + 1); }}
+            className="mb-3"
+          />
+          <DataTable
+            key={tableKey}
+            columns={tableColumns}
+            data={people}
+            initialSorting={tableViewState.sorting}
+            initialGlobalFilter={tableViewState.globalFilter}
+            initialColumnVisibility={tableViewState.columnVisibility}
+            onStateChange={setTableViewState}
+          />
           <div className="mt-3">
             <PaginationBar page={pageIdx} pageCount={5} onPrev={() => setPageIdx((p) => Math.max(1, p - 1))} onNext={() => setPageIdx((p) => Math.min(5, p + 1))} />
           </div>
@@ -591,6 +638,29 @@ export default function ExamplesPage() {
           <p className="text-sm text-muted-foreground">This side panel can show row details.</p>
         </div>
       </SidePanel>
+
+      {/* Empty State (Illustration) standalone demo */}
+      <Card className="mt-6 mb-10">
+        <CardHeader>
+          <CardTitle className="text-base">Empty State (Illustration)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <EmptyState
+            title="No projects yet"
+            description="Create your first project to get started."
+            actionLabel="New Project"
+            onAction={() => console.log("new project")}
+            illustration={
+              <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-muted-foreground/40">
+                <rect x="3" y="3" width="18" height="14" rx="2" ry="2" />
+                <path d="M7 7h6M7 11h10" />
+                <circle cx="8" cy="20" r="2" />
+                <circle cx="17" cy="20" r="2" />
+              </svg>
+            }
+          />
+        </CardContent>
+      </Card>
     </AppLayout>
   );
 }

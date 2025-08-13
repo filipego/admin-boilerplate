@@ -10,18 +10,19 @@ export async function adminUpdateUserAction(
   formData: FormData
 ): Promise<AdminUpdateUserResult> {
   const supabase = getSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData.user;
   if (!user) return { error: "Not authenticated" };
 
-  const { data: me, error: meErr } = await supabase
+  // Use admin client for the role check to avoid RLS latency
+  const admin = getSupabaseAdminClient();
+  const { data: meAdmin, error: meAdminErr } = await admin
     .from("profiles")
     .select("role")
     .eq("id", user.id)
-    .single();
-  if (meErr) return { error: meErr.message };
-  if (me?.role !== "admin") return { error: "Forbidden" };
+    .maybeSingle();
+  if (meAdminErr) return { error: meAdminErr.message };
+  if (meAdmin?.role !== "admin") return { error: "Forbidden" };
 
   const targetId = String(formData.get("id") || "");
   if (!targetId) return { error: "Missing target id" };
@@ -33,8 +34,13 @@ export async function adminUpdateUserAction(
   const avatar_url = typeof avatarUrlRaw === "string" ? avatarUrlRaw.trim() || null : null;
   const role = typeof roleRaw === "string" && (roleRaw === "admin" || roleRaw === "client") ? roleRaw : undefined;
 
-  const admin = getSupabaseAdminClient();
-  const { error } = await admin.from("profiles").update({ username, avatar_url, role }).eq("id", targetId);
+  const update: Record<string, unknown> = {};
+  if (username !== null) update.username = username;
+  if (avatar_url !== null) update.avatar_url = avatar_url;
+  if (role) update.role = role;
+  if (Object.keys(update).length === 0) return { success: true };
+
+  const { error } = await admin.from("profiles").update(update).eq("id", targetId);
   if (error) return { error: error.message };
   return { success: true };
 }

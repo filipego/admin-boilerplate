@@ -31,6 +31,18 @@ export default function UserAvatarMenu({ user, showTheme = false, fallbackTransp
     if (user || !autoLoad) return;
     let mounted = true;
     (async () => {
+      try {
+        const res = await fetch('/api/me', { cache: 'no-store' });
+        if (res.ok) {
+          const json = await res.json();
+          const p = json.profile as { username?: string | null; email?: string | null; avatar_url?: string | null } | null;
+          if (mounted) {
+            setLoaded({ name: p?.username ?? null, email: p?.email ?? null, avatarUrl: p?.avatar_url ?? null });
+            return;
+          }
+        }
+      } catch {}
+      // Fallback: client Supabase
       const { data } = await supabase.auth.getUser();
       const u = data.user;
       if (!u) {

@@ -13,9 +13,10 @@ export function LoadingListSkeleton({ rows = 5 }: { rows?: number }) {
   );
 }
 
-export function EmptyState({ title = "No data", description = "Try adjusting your filters or add a new item.", actionLabel, onAction }: { title?: string; description?: string; actionLabel?: string; onAction?: () => void }) {
+export function EmptyState({ title = "No data", description = "Try adjusting your filters or add a new item.", actionLabel, onAction, illustration }: { title?: string; description?: string; actionLabel?: string; onAction?: () => void; illustration?: React.ReactNode }) {
   return (
     <div className="text-center py-10">
+      {illustration ? <div className="mx-auto mb-3 flex items-center justify-center">{illustration}</div> : null}
       <div className="text-sm text-muted-foreground">{title}</div>
       <div className="mt-1 text-xs text-muted-foreground/80">{description}</div>
       {actionLabel ? (

@@ -1,6 +1,7 @@
 import AppLayout from "@/components/layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { redirect } from "next/navigation";
 import ProfileViewEdit from "./ProfileViewEdit";
 export const dynamic = "force-dynamic";
@@ -10,21 +11,15 @@ export default async function ProfilePage() {
   const { data } = await supabase.auth.getUser();
   const user = data.user;
   if (!user) redirect("/login");
-  // Ensure a row exists and sync role from env-admins if needed
-  await supabase.from("profiles").upsert({ id: user.id, email: user.email ?? "" }, { onConflict: "id" });
-  const adminEmails = (process.env.ADMIN_EMAILS || "")
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
-  if (user.email && adminEmails.includes(user.email.toLowerCase())) {
-    await supabase.from("profiles").update({ role: "admin" }).eq("id", user.id);
-  }
+  // Fast path: no writes here to avoid any RLS-induced latency. We only read.
 
-  const { data: profile } = await supabase
+  // Use admin client to guarantee read of own profile (bypass any accidental RLS issues)
+  const admin = getSupabaseAdminClient();
+  const { data: profile } = await admin
     .from("profiles")
     .select("id, email, username, avatar_url, role")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
 
   return (
     <AppLayout title="Profile">
