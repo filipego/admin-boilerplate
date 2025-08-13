@@ -51,11 +51,11 @@ Status legend: [x] done, [ ] pending
 - [x] (basic) CSV importer with field mapping; JSON export helpers pending
 - [x] (basic) Tag/label input (create/remove); async search pending
 - [x] (basic) Tag input (create/remove)
-- [ ] User avatar menu (profile, theme, sign out, env indicator)
-- [ ] Settings layout (sticky sidebar sections, autosave)
-- [ ] Feature flags toggles
-- [ ] Error boundary + retry component
-- [ ] Global search (header)
+- [x] User avatar menu (profile, sign out, env indicator; theme toggle optional)
+- [x] Settings layout (sticky sidebar sections, autosave)
+- [x] Feature flags toggles
+- [x] Error boundary + retry component
+- [x] Global search (header)
 - [ ] Kanban/board (drag-and-drop)
 - [x] Toolbar chips for active filters
 

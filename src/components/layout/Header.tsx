@@ -9,6 +9,7 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import UserAvatarMenu from "@/components/common/UserAvatarMenu";
+import CommandPalette from "@/components/common/CommandPalette";
 
 const Header = () => {
   const router = useRouter();
@@ -73,6 +74,14 @@ const Header = () => {
           <MobileSidebar showProfile={true} showSidebarTheme={true} showBottomActions={true} />
         </div>
         <div className="ml-auto flex items-center gap-1 md:gap-2">
+          <CommandPalette
+            items={[
+              { id: "dashboard", label: "Go to Dashboard", href: "/dashboard" },
+              { id: "users", label: "Open Users", href: "/users" },
+              { id: "profile", label: "Open Profile", href: "/profile" },
+            ]}
+            placeholder="Search pages or actions..."
+          />
           <Button variant="ghost" size="icon" aria-label="Notifications" className="h-8 w-8 md:h-10 md:w-10">
             <Bell className="h-5 w-5" />
           </Button>

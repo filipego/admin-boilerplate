@@ -41,6 +41,9 @@ import ToolbarChips from "@/components/common/ToolbarChips";
 import NotificationBell from "@/components/common/Notifications";
 import CsvImport from "@/components/common/CsvImport";
 import UserAvatarMenu from "@/components/common/UserAvatarMenu";
+import SettingsLayout from "@/components/common/SettingsLayout";
+import FeatureFlags from "@/components/common/FeatureFlags";
+import ErrorBoundary from "@/components/common/ErrorBoundary";
 
 export default function ExamplesPage() {
   const [openFull, setOpenFull] = useState(false);
@@ -218,6 +221,62 @@ export default function ExamplesPage() {
           <div className="mt-4">
             <Chart data={chartData} />
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="text-base">Settings Layout</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <SettingsLayout
+            sections={[
+              { id: "profile", title: "Profile", content: <div className="grid gap-2"><input name="username" className="px-3 py-2 rounded-md border bg-background" placeholder="Username" /><input name="email" className="px-3 py-2 rounded-md border bg-background" placeholder="Email" /></div> },
+              { id: "preferences", title: "Preferences", content: <div className="grid gap-2"><label className="inline-flex items-center gap-2 text-sm"><input type="checkbox" name="notifications" /> Enable notifications</label></div> },
+              { id: "security", title: "Security", content: <div className="grid gap-2"><input name="2fa" className="px-3 py-2 rounded-md border bg-background" placeholder="2FA Code" /></div> },
+            ]}
+          />
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="text-base">Feature Flags</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <FeatureFlags
+            flags={[
+              { key: "newDashboard", label: "New Dashboard", description: "Enable the redesigned dashboard" },
+              { key: "betaUploads", label: "Beta Uploads" },
+            ]}
+            storageKey="example-feature-flags"
+            onChange={(s) => console.log("flags", s)}
+          />
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="text-base">Error Boundary</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {(() => {
+            // Demo component that throws during render after a state change (so the boundary catches it)
+            const CrashDemo = () => {
+              const [boom, setBoom] = useState(false);
+              if (boom) {
+                throw new Error("Demo crash");
+              }
+              return (
+                <UIButton variant="outline" onClick={() => setBoom(true)}>Trigger Error</UIButton>
+              );
+            };
+            return (
+              <ErrorBoundary>
+                <CrashDemo />
+              </ErrorBoundary>
+            );
+          })()}
         </CardContent>
       </Card>
 

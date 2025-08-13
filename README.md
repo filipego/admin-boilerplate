@@ -427,6 +427,40 @@ import UserAvatarMenu from "@/components/common/UserAvatarMenu";
 <ToolbarChips chips={[{ id: 'status', label: 'Status: Active' }]} onRemove={() => {}} onClear={() => {}} />
 ```
 
+### SettingsLayout
+`src/components/common/SettingsLayout.tsx`
+
+2-column settings page with sticky sidebar, active section highlighting, and simple autosave (localStorage).
+
+```tsx
+import SettingsLayout from "@/components/common/SettingsLayout";
+
+<SettingsLayout
+  sections={[
+    { id: 'profile', title: 'Profile', content: <div>...</div> },
+    { id: 'preferences', title: 'Preferences', content: <div>...</div> },
+  ]}
+/>
+```
+
+### FeatureFlags
+`src/components/common/FeatureFlags.tsx`
+
+```tsx
+<FeatureFlags flags={[{ key: 'newDashboard', label: 'New Dashboard' }]} onChange={(s) => console.log(s)} />
+```
+
+### ErrorBoundary
+`src/components/common/ErrorBoundary.tsx`
+
+```tsx
+import ErrorBoundary from "@/components/common/ErrorBoundary";
+
+<ErrorBoundary>
+  <YourComponent />
+</ErrorBoundary>
+```
+
 ### CSV Import
 `src/components/common/CsvImport.tsx`
 
@@ -440,7 +474,10 @@ import UserAvatarMenu from "@/components/common/UserAvatarMenu";
 Press Cmd/Ctrl + K to open.
 
 ```tsx
-<CommandPalette items={[{ id: 'dashboard', label: 'Go to Dashboard', href: '/dashboard' }]} />
+<CommandPalette
+  items={[{ id: 'dashboard', label: 'Go to Dashboard', href: '/dashboard' }]}
+  onSearch={async (q) => [{ id: 'users', label: `Search users for "${q}"`, href: '/users' }]}
+/>
 ```
 
 ### Calendars
