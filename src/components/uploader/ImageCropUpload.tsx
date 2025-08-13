@@ -80,15 +80,29 @@ export default function ImageCropUpload({ userId, initialUrl, onUploaded, folder
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
 
   const uploadOnce = async (blob: Blob) => {
-    const fileName = `${Date.now()}.jpg`;
-    const path = `${userId}/${fileName}`;
-    const { error } = await supabase.storage.from(folder).upload(path, blob, {
-      contentType: "image/jpeg",
-      upsert: true,
+    const form = new FormData();
+    form.append("file", blob, "avatar.jpg");
+    form.append("userId", userId);
+    if (initialUrl) form.append("previousUrl", initialUrl);
+    const res = await fetch("/api/upload-avatar", {
+      method: "POST",
+      body: form,
     });
-    if (error) throw error;
-    const { data } = supabase.storage.from(folder).getPublicUrl(path);
-    onUploaded?.(data.publicUrl);
+    if (!res.ok) throw new Error("Upload failed");
+    const json = (await res.json()) as { id?: string; url?: string };
+    const publicUrl = json.url;
+    if (!publicUrl) throw new Error("No URL returned");
+    onUploaded?.(publicUrl);
+    // Persist avatar_url immediately for current user so UI updates everywhere
+    try {
+      await fetch("/api/user/update-avatar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, url: publicUrl }),
+      });
+    } catch {
+      // ignore; caller may persist separately (admin edit flow)
+    }
   };
 
   const handleUpload = async () => {
@@ -98,28 +112,10 @@ export default function ImageCropUpload({ userId, initialUrl, onUploaded, folder
       await uploadOnce(blob);
       setImageSrc(null);
       showAvatarUpdated();
-    } catch (e) {
-      console.error(e);
-      const err = e as unknown as { message?: string };
-      if (err?.message && err.message.includes("Bucket not found")) {
-        showBucketMissing();
-        try {
-          const res = await fetch("/api/dev/ensure-avatars-bucket", { method: "POST" });
-          if (!res.ok) throw new Error("bucket create failed");
-          showBucketCreated();
-          // retry once after creating bucket
-          const blob = await createCroppedImageBlob();
-          await uploadOnce(blob);
-          setImageSrc(null);
-          showAvatarUpdated();
-          return;
-        } catch {
-          showError();
-        }
-      } else {
+      } catch (e) {
+        console.error(e);
         showUploadFailed();
-      }
-    } finally {
+      } finally {
       setBusy(false);
     }
   };
