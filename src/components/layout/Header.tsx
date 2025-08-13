@@ -3,18 +3,12 @@
 import Link from "next/link";
 import MobileSidebar from "@/components/layout/MobileSidebar";
 import ModeToggle from "@/components/theme/ModeToggle";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Bell, LogOut } from "lucide-react";
+import { Bell } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import UserAvatarMenu from "@/components/common/UserAvatarMenu";
 
 const Header = () => {
   const router = useRouter();
@@ -83,28 +77,7 @@ const Header = () => {
             <Bell className="h-5 w-5" />
           </Button>
           <ModeToggle />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="gap-2 h-8 md:h-10">
-                <Avatar className="h-6 w-6">
-                  {profile?.avatar_url ? (
-                    <AvatarImage src={profile.avatar_url} alt={profile.username ?? profile?.email ?? ""} />
-                  ) : null}
-                  <AvatarFallback>{initials}</AvatarFallback>
-                </Avatar>
-                <span className="sr-only sm:not-sr-only">{profile?.username || profile?.email || "Profile"}</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild>
-                <Link href="/profile">Profile</Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button variant="outline" className="gap-2 h-8 md:h-10 px-2 md:px-3" onClick={handleLogout}>
-            <LogOut className="h-4 w-4" />
-            <span className="hidden md:inline">Logout</span>
-          </Button>
+          <UserAvatarMenu user={{ name: profile?.username ?? null, email: profile?.email ?? null, avatarUrl: profile?.avatar_url ?? null }} fallbackTransparent={false} />
         </div>
       </div>
     </header>

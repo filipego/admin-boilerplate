@@ -150,6 +150,313 @@ import UICard from "@/components/common/UICard";
 />
 ```
 
+### PageHeader
+`src/components/common/PageHeader.tsx`
+
+Simple page title block with optional description and a right-aligned action (e.g., button or link).
+
+Props: `{ title: string, description?: string, action?: React.ReactNode, className?: string }`
+
+```tsx
+import PageHeader from "@/components/common/PageHeader";
+import UIButton from "@/components/common/UIButton";
+
+<PageHeader
+  title="Notes"
+  description="Personal notes and documentation for planning and brainstorming"
+  action={<UIButton>New Note</UIButton>}
+/>;
+```
+
+### ContentTabs
+`src/components/common/ContentTabs.tsx`
+
+Tabs for separating content areas. Supports optional icons and count badges per tab.
+
+Types:
+`TabItem = { id: string; label: string; icon?: React.ReactNode; count?: number; content: React.ReactNode }`
+
+Props: `{ items: TabItem[], value: string, onValueChange: (id: string) => void, className?, listClassName?, fullWidthList? }`
+
+```tsx
+import ContentTabs, { type TabItem } from "@/components/common/ContentTabs";
+
+const [active, setActive] = useState("all");
+const tabs: TabItem[] = [
+  { id: "all", label: "All Notes", count: 13, content: <div>All notes</div> },
+  { id: "pinned", label: "Pinned Notes", count: 3, content: <div>Pinned</div> },
+  { id: "uncategorised", label: "Uncategorised", count: 1, content: <div>Misc</div> },
+  { id: "shared", label: "Shared with Me", count: 1, content: <div>Shared</div> },
+];
+
+<ContentTabs items={tabs} value={active} onValueChange={setActive} />
+```
+
+### DataTable
+`src/components/common/DataTable.tsx`
+
+Wrapper around TanStack Table with search, sort, pagination, and an export button. Designed to be themeable and extended with bulk actions.
+
+Props: `{ columns, data, searchPlaceholder?, initialPageSize?, className? }`
+
+```tsx
+import DataTable from "@/components/common/DataTable";
+import type { ColumnDef } from "@tanstack/react-table";
+
+type Person = { name: string; email: string; role: string };
+const columns: ColumnDef<Person>[] = [
+  { accessorKey: "name", header: "Name" },
+  { accessorKey: "email", header: "Email" },
+  { accessorKey: "role", header: "Role" },
+];
+
+<DataTable columns={columns} data={[{ name: "Alice", email: "a@x.com", role: "Admin" }]} />
+```
+
+### Form System (RHF + Zod)
+`src/components/common/form/Form.tsx`, `src/components/common/form/Fields.tsx`
+
+Simple, extensible form setup with React Hook Form and Zod. Includes text and textarea fields with labels, descriptions, and error messages. Extend with more field types as needed.
+
+```tsx
+import { RHFForm } from "@/components/common/form/Form";
+import { TextField, TextAreaField } from "@/components/common/form/Fields";
+import { z } from "zod";
+
+const profileSchema = z.object({ displayName: z.string().min(2), bio: z.string().max(200).optional() });
+
+<RHFForm
+  schema={profileSchema}
+  defaultValues={{ displayName: "", bio: "" }}
+  onSubmit={(values) => console.log(values)}
+>
+  <TextField name="displayName" label="Display Name" />
+  <TextAreaField name="bio" label="Bio" />
+  <div className="flex justify-end"><UIButton type="submit">Save</UIButton></div>
+</RHFForm>
+```
+
+### StatusBadge
+`src/components/common/StatusBadge.tsx`
+
+Semantic badges for statuses. Sizes: `sm` (default), `md`. Variants: `default`, `success`, `warning`, `destructive`, `info`.
+
+```tsx
+import StatusBadge from "@/components/common/StatusBadge";
+
+<StatusBadge>Default</StatusBadge>
+<StatusBadge status="success">Active</StatusBadge>
+<StatusBadge status="warning">Pending</StatusBadge>
+<StatusBadge status="destructive">Error</StatusBadge>
+<StatusBadge status="info">Info</StatusBadge>
+```
+
+### StatCard
+`src/components/common/StatCard.tsx`
+
+Compact KPIs: label, value, and delta status.
+
+```tsx
+import StatCard from "@/components/common/StatCard";
+
+<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+  <StatCard label="Revenue" value="$24,300" deltaLabel="+12%" deltaStatus="success" />
+  <StatCard label="Active Users" value="1,204" deltaLabel="+2%" deltaStatus="info" />
+  <StatCard label="Errors" value="7" deltaLabel="-18%" deltaStatus="success" />
+  <StatCard label="Churn" value="3.2%" deltaLabel="+0.3%" deltaStatus="warning" />
+</div>
+```
+
+### Chart (Recharts wrapper)
+`src/components/common/Chart.tsx`
+
+Simple themed line chart wrapper.
+
+```tsx
+import Chart from "@/components/common/Chart";
+
+const data = [
+  { x: "M1", y: 80 },
+  { x: "M2", y: 64 },
+  { x: "M3", y: 92 },
+];
+
+<Chart data={data} />
+```
+
+### Breadcrumbs
+`src/components/common/Breadcrumbs.tsx`
+
+```tsx
+<Breadcrumbs items={[{ label: "Dashboard", href: "/dashboard" }, { label: "Analytics" }]} />
+```
+
+### PaginationBar
+`src/components/common/PaginationBar.tsx`
+
+```tsx
+<PaginationBar page={1} pageCount={10} onPrev={() => {}} onNext={() => {}} />
+```
+
+### FiltersDrawer
+`src/components/common/FiltersDrawer.tsx`
+
+```tsx
+<FiltersDrawer open={open} onOpenChange={setOpen} onApply={() => setOpen(false)} onReset={() => setOpen(false)}>
+  <TextField name="q" label="Query" />
+  <TextField name="tag" label="Tag" />
+</FiltersDrawer>
+```
+
+### Async States
+`src/components/common/AsyncStates.tsx`, `src/components/ui/skeleton.tsx`
+
+```tsx
+import { LoadingListSkeleton, EmptyState, ErrorState } from "@/components/common/AsyncStates";
+
+<LoadingListSkeleton rows={4} />
+<EmptyState actionLabel="Create Item" onAction={() => {}} />
+<ErrorState onRetry={() => {}} />
+```
+
+### ModalForm
+`src/components/common/ModalForm.tsx`
+
+A modal wrapper for create/edit forms using RHF + Zod with optimistic toasts.
+
+```tsx
+import ModalForm from "@/components/common/ModalForm";
+import { TextField, TextAreaField } from "@/components/common/form/Fields";
+import { z } from "zod";
+
+const schema = z.object({ displayName: z.string().min(2), bio: z.string().optional() });
+
+<ModalForm
+  open={open}
+  onOpenChange={setOpen}
+  title="Create Item"
+  schema={schema}
+  defaultValues={{ displayName: "", bio: "" }}
+  onSubmit={async (values) => { /* async save */ }}
+>
+  <TextField name="displayName" label="Display Name" />
+  <TextAreaField name="bio" label="Bio" />
+</ModalForm>
+```
+
+### Stepper / Wizard
+`src/components/common/Stepper.tsx`
+
+```tsx
+import Stepper from "@/components/common/Stepper";
+
+const steps = [
+  { id: 's1', title: 'Details', content: <div>...</div> },
+  { id: 's2', title: 'Settings', content: <div>...</div> },
+  { id: 's3', title: 'Review', content: <div>...</div> },
+];
+
+<Stepper steps={steps} active={0} onActiveChange={() => {}} />
+```
+
+### ActivityFeed
+`src/components/common/ActivityFeed.tsx`
+
+```tsx
+<ActivityFeed items={[{ id: '1', title: 'User signed in', time: 'Just now' }]} />
+```
+
+### Access Control Helpers
+`src/components/auth/Access.tsx`
+
+```tsx
+import { AbilityProvider, Can, RequireRole } from "@/components/auth/Access";
+
+<AbilityProvider role="admin">
+  <Can role="admin">Only admins see this</Can>
+  <RequireRole role={["admin", "client"]} fallback={<div>No access</div>}>
+    Shared content
+  </RequireRole>
+</AbilityProvider>
+```
+
+### TagInput
+`src/components/common/TagInput.tsx`
+
+```tsx
+import TagInput from "@/components/common/TagInput";
+
+<TagInput />
+```
+
+### Notifications
+`src/components/common/Notifications.tsx`
+
+```tsx
+import NotificationBell from "@/components/common/Notifications";
+<NotificationBell items={[{ id: '1', title: 'Welcome', time: 'Just now' }]} />
+```
+
+### UserAvatarMenu
+`src/components/common/UserAvatarMenu.tsx`
+
+```tsx
+import UserAvatarMenu from "@/components/common/UserAvatarMenu";
+<UserAvatarMenu user={{ name: 'Admin User', email: 'admin@example.com' }} />
+```
+
+### DateRangePicker
+`src/components/common/DateRangePicker.tsx`
+
+```tsx
+<DateRangePicker />
+```
+
+### DrawerForm / SidePanel
+`src/components/common/DrawerForm.tsx`, `src/components/common/SidePanel.tsx`
+
+```tsx
+<DrawerForm ...>...</DrawerForm>
+<SidePanel open={open} onOpenChange={setOpen}>...</SidePanel>
+```
+
+### ToolbarChips
+`src/components/common/ToolbarChips.tsx`
+
+```tsx
+<ToolbarChips chips={[{ id: 'status', label: 'Status: Active' }]} onRemove={() => {}} onClear={() => {}} />
+```
+
+### CSV Import
+`src/components/common/CsvImport.tsx`
+
+```tsx
+<CsvImport fields={["name", "email", "role"]} onComplete={(rows) => console.log(rows)} />
+```
+
+### CommandPalette (cmd+k)
+`src/components/common/CommandPalette.tsx`
+
+Press Cmd/Ctrl + K to open.
+
+```tsx
+<CommandPalette items={[{ id: 'dashboard', label: 'Go to Dashboard', href: '/dashboard' }]} />
+```
+
+### Calendars
+- Small calendar: `src/components/common/SmallCalendar.tsx`
+- Full calendar (basic monthly grid): `src/components/common/FullCalendar.tsx`
+
+```tsx
+<SmallCalendar />
+<FullCalendar events={[{ id: '1', title: 'Event', date: new Date() }]} />
+```
+
+Notes:
+- Full calendar shows weekday headers, month navigation, selectable dates, and event chips.
+- Day cells are square (`aspect-square`) and today is highlighted with a blue border.
+
+
 ### Toasts (centralized)
 `src/lib/toast.ts`
 
@@ -296,3 +603,7 @@ Visit `/examples` to see usage of UIButton, modals, SearchBar, ViewFilters, and 
 ### Live Demo
 
 Check the hosted demo here: [admin-boilerplate demo](https://admin-boilerplate-blond.vercel.app/)
+
+### Roadmap
+
+See the running list of planned components and status in [`md files/components-roadmap.md`](md%20files/components-roadmap.md).
