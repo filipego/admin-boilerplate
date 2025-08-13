@@ -21,8 +21,9 @@ export default class ErrorBoundary extends React.Component<Props, State> {
   }
 
   componentDidCatch(error: unknown) {
-    // eslint-disable-next-line no-console
-    console.error("ErrorBoundary caught", error);
+    if (process.env.NODE_ENV !== "production") {
+      console.error("ErrorBoundary caught", error);
+    }
   }
 
   handleRetry = () => {

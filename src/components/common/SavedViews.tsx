@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import UIButton from "@/components/common/UIButton";
 import { cn } from "@/lib/utils";
 

@@ -43,17 +43,18 @@ export default function SettingsLayout({ sections, storageKey = "settings-autosa
         if (el instanceof HTMLInputElement && el.type === "checkbox") {
           values[el.name] = el.checked ? "true" : "false";
         } else {
-          values[el.name] = String((el as any).value ?? "");
+          values[el.name] = String(el.value ?? "");
         }
       });
       localStorage.setItem(storageKey, JSON.stringify(values));
       showSaved("Autosaved");
     };
-    root.addEventListener("change", handler, { passive: true } as any);
-    root.addEventListener("input", handler, { passive: true } as any);
+    const options: AddEventListenerOptions = { passive: true };
+    root.addEventListener("change", handler, options);
+    root.addEventListener("input", handler, options);
     return () => {
-      root.removeEventListener("change", handler as any);
-      root.removeEventListener("input", handler as any);
+      root.removeEventListener("change", handler);
+      root.removeEventListener("input", handler);
     };
   }, [storageKey]);
 

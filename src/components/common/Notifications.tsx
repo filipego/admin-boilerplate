@@ -1,7 +1,6 @@
 "use client";
 
 import { Bell } from "lucide-react";
-import UIButton from "@/components/common/UIButton";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useState } from "react";
 
@@ -31,7 +30,7 @@ export default function NotificationBell({ items = [] }: { items?: NotificationI
               </li>
             ))}
             {items.length === 0 ? (
-              <li className="text-sm text-muted-foreground">You're all caught up.</li>
+              <li className="text-sm text-muted-foreground">You&apos;re all caught up.</li>
             ) : null}
           </ul>
         </SheetContent>

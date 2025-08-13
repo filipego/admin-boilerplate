@@ -40,6 +40,7 @@ export default async function UsersPage() {
     .from("profiles")
     .select("id, email, username, role, avatar_url")
     .order("created_at", { ascending: false });
+  void users; // avoid unused vars warning, data is consumed by UsersTable via realtime
 
   return (
     <AppLayout title="Users">

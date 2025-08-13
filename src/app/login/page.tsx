@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import LoginForm from "./LoginForm";
 import { getSupabaseServerClient } from "@/lib/supabase/server";

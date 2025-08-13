@@ -10,7 +10,7 @@ import { MESSAGES } from "@/lib/messages";
 import UICard from "@/components/common/UICard";
 import SearchBar from "@/components/common/SearchBar";
 import ViewFilters from "@/components/common/ViewFilters";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import CardsShowcase from "./CardsShowcase";
 import PageHeader from "@/components/common/PageHeader";
 import ContentTabs, { type TabItem } from "@/components/common/ContentTabs";

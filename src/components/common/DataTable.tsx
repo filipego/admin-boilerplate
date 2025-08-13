@@ -15,7 +15,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import UIButton from "@/components/common/UIButton";
-import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export type DataTableStateSnapshot = {
   sorting: SortingState;

@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import MobileSidebar from "@/components/layout/MobileSidebar";
 import ModeToggle from "@/components/theme/ModeToggle";
 import { Button } from "@/components/ui/button";
@@ -55,17 +54,7 @@ const Header = () => {
     };
   }, [supabase, profile]);
 
-  const initials = useMemo(() => {
-    const src = profile?.username || profile?.email || "";
-    const first = src.trim()[0]?.toUpperCase();
-    const second = src.trim().split(" ")[1]?.[0]?.toUpperCase();
-    return `${first || "U"}${second || ""}`;
-  }, [profile]);
-  const handleLogout = async () => {
-    const supabase = getSupabaseBrowserClient();
-    await supabase.auth.signOut();
-    router.replace("/login");
-  };
+  // initials and handleLogout kept previously; remove unused to satisfy linter
 
   return (
     <header className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">

@@ -6,11 +6,13 @@ import UIButton from "@/components/common/UIButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 type Mapping = Record<string, string>; // csvHeader -> fieldName
+type CSVRow = Record<string, string>;
+type ImportedRow = Record<string, string>;
 
-export default function CsvImport({ fields, onComplete }: { fields: string[]; onComplete: (rows: any[]) => void }) {
+export default function CsvImport({ fields, onComplete }: { fields: string[]; onComplete: (rows: ImportedRow[]) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [headers, setHeaders] = useState<string[]>([]);
-  const [rows, setRows] = useState<any[]>([]);
+  const [rows, setRows] = useState<CSVRow[]>([]);
   const [mapping, setMapping] = useState<Mapping>({});
 
   const pickFile = () => inputRef.current?.click();
@@ -20,7 +22,7 @@ export default function CsvImport({ fields, onComplete }: { fields: string[]; on
       header: true,
       skipEmptyLines: true,
       complete: (result) => {
-        const data = result.data as any[];
+        const data = result.data as CSVRow[];
         const cols = result.meta.fields ?? [];
         setHeaders(cols);
         setRows(data);
@@ -32,8 +34,8 @@ export default function CsvImport({ fields, onComplete }: { fields: string[]; on
   };
 
   const apply = () => {
-    const mapped = rows.map((r) => {
-      const out: any = {};
+    const mapped: ImportedRow[] = rows.map((r) => {
+      const out: ImportedRow = {};
       for (const [csv, field] of Object.entries(mapping)) {
         if (!field) continue;
         out[field] = r[csv];

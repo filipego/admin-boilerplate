@@ -35,7 +35,7 @@ export default function ModalForm<TSchema extends z.ZodTypeAny>({ open, onOpenCh
             await onSubmit(values);
             showSaved("Saved");
             onOpenChange(false);
-          } catch (e) {
+          } catch {
             showError("Failed to save");
           } finally {
             setPending(false);
