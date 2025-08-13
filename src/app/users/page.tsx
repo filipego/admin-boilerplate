@@ -8,6 +8,7 @@ import UIButton from "@/components/common/UIButton";
 import CreateUserButton from "./CreateUserButton";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { cookies } from "next/headers";
+import PermissionsMatrixCard from "./PermissionsMatrixCard";
 export const dynamic = "force-dynamic";
 
 export default async function UsersPage() {
@@ -46,6 +47,15 @@ export default async function UsersPage() {
         </CardHeader>
         <CardContent>
           <UsersTable initial={(initialUsers ?? []) as any} />
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="text-base">Role / Permission Matrix</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <PermissionsMatrixCard />
         </CardContent>
       </Card>
     </AppLayout>
