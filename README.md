@@ -466,6 +466,26 @@ import Loader from "@/components/common/Loader";
 <Loader size="sm" />
 ```
 
+## Branding (CSS tokens)
+
+Edit `src/app/globals.css` to brand the entire UI without touching components:
+
+- Radius: `--radius` (affects cards, buttons, inputs via `rounded-[var(--radius)]`)
+- Shadows: `--shadow-card` (cards/buttons), plus `--shadow-elev-*` presets
+- Colors: `--primary`, `--accent`, `--muted`, `--border`, etc. with `.dark { ... }` overrides
+
+Example:
+```css
+:root {
+  --radius: 12px;                    /* global rounding */
+  --shadow-card: 0 8px 24px rgba(0,0,0,.08); /* global card/button shadow */
+  --primary: oklch(0.6 0.15 250);    /* brand color */
+}
+.dark {
+  --primary: oklch(0.8 0.1 250);
+}
+```
+
 ### UserAvatarMenu
 `src/components/common/UserAvatarMenu.tsx`
 

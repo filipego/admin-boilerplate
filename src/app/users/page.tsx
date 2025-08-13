@@ -58,6 +58,8 @@ export default async function UsersPage() {
           <PermissionsMatrixCard />
         </CardContent>
       </Card>
+
+      {/* Theme tokens panel intentionally removed; branding via CSS tokens in globals.css */}
     </AppLayout>
   );
 }

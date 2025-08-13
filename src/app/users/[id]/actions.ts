@@ -1,4 +1,5 @@
 "use server";
+import { assertHasPermission } from "@/lib/permissions.server";
 
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -14,15 +15,12 @@ export async function adminUpdateUserAction(
   const user = userData.user;
   if (!user) return { error: "Not authenticated" };
 
-  // Use admin client for the role check to avoid RLS latency
-  const admin = getSupabaseAdminClient();
-  const { data: meAdmin, error: meAdminErr } = await admin
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .maybeSingle();
-  if (meAdminErr) return { error: meAdminErr.message };
-  if (meAdmin?.role !== "admin") return { error: "Forbidden" };
+  // Permission check: users.edit
+  try {
+    await assertHasPermission(user.id, 'users.edit');
+  } catch {
+    return { error: 'Forbidden' };
+  }
 
   const targetId = String(formData.get("id") || "");
   if (!targetId) return { error: "Missing target id" };
@@ -40,6 +38,7 @@ export async function adminUpdateUserAction(
   if (role) update.role = role;
   if (Object.keys(update).length === 0) return { success: true };
 
+  const admin = getSupabaseAdminClient();
   const { error } = await admin.from("profiles").update(update).eq("id", targetId);
   if (error) return { error: error.message };
   return { success: true };
