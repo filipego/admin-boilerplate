@@ -4,7 +4,7 @@ import Cropper from "react-easy-crop";
 import { useCallback, useMemo, useRef, useState } from "react";
 import imageCompression from "browser-image-compression";
 import UIButton from "@/components/common/UIButton";
-import { showAvatarUpdated, showBucketCreated, showBucketMissing, showError, showUploadFailed } from "@/lib/toast";
+import { showAvatarUpdated, showUploadFailed } from "@/lib/toast";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type Area = { x: number; y: number; width: number; height: number };

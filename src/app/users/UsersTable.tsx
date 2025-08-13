@@ -65,7 +65,7 @@ export default function UsersTable({ initial }: { initial?: UserRow[] }) {
       mounted = false;
       channel.unsubscribe();
     };
-  }, [supabase]);
+  }, [supabase, initial]);
 
   return (
     <Table>

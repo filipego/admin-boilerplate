@@ -2,9 +2,9 @@ import AppLayout from "@/components/layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import UsersTable from "./UsersTable";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
-import Link from "next/link";
+// import Link from "next/link";
 import { redirect } from "next/navigation";
-import UIButton from "@/components/common/UIButton";
+// import UIButton from "@/components/common/UIButton";
 import CreateUserButton from "./CreateUserButton";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { cookies } from "next/headers";
@@ -46,7 +46,7 @@ export default async function UsersPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <UsersTable initial={(initialUsers ?? []) as any} />
+          <UsersTable initial={(initialUsers ?? []) as { id: string; email: string; username: string | null; role: any; avatar_url: string | null; created_at?: string }[]} />
         </CardContent>
       </Card>
 

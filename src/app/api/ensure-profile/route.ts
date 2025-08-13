@@ -34,7 +34,7 @@ export async function POST() {
       res.cookies.set("role", String(profile.role), { httpOnly: true, sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 });
     }
     return res;
-  } catch (e) {
+  } catch {
     return NextResponse.json({ error: "failed" }, { status: 500 });
   }
 }

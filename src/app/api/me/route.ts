@@ -17,7 +17,7 @@ export async function GET() {
       .maybeSingle();
 
     return NextResponse.json({ profile });
-  } catch (e) {
+  } catch {
     return NextResponse.json({ error: "failed" }, { status: 500 });
   }
 }

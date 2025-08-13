@@ -53,7 +53,7 @@ import CopyButton from "@/components/common/CopyButton";
 import Kbd from "@/components/common/Kbd";
 import ProgressMini from "@/components/common/ProgressMini";
 import LoadingOverlay from "@/components/common/LoadingOverlay";
-import Loader from "@/components/common/Loader";
+// import Loader from "@/components/common/Loader";
 
 export default function ExamplesPage() {
   const [openFull, setOpenFull] = useState(false);

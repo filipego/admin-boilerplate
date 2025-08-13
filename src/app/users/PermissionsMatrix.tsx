@@ -19,19 +19,21 @@ export default function PermissionsMatrix() {
     (async () => {
       const { data: p } = await supabase.from("permissions").select("key, label").order("key");
       const { data: map } = await supabase.from("role_permissions").select("role, permission_key");
-      const roles: Record<string, Set<string>> = { admin: new Set(), client: new Set() };
-      (map as RolePerm[] | null)?.forEach((row) => roles[row.role]?.add(row.permission_key));
+      const roles: Record<"admin" | "client", Set<string>> = { admin: new Set(), client: new Set() };
+      (map as RolePerm[] | null)?.forEach((row) => {
+        if (row.role === "admin" || row.role === "client") roles[row.role].add(row.permission_key);
+      });
       setPerms((p as Perm[]) ?? []);
-      setRp(roles as any);
+      setRp(roles);
     })();
   }, [supabase]);
 
   const toggle = (role: "admin" | "client", key: string) => {
     setRp((prev) => {
-      const copy: Record<string, Set<string>> = { admin: new Set(prev.admin), client: new Set(prev.client) };
+      const copy: Record<"admin" | "client", Set<string>> = { admin: new Set(prev.admin), client: new Set(prev.client) };
       const set = copy[role];
       if (set.has(key)) set.delete(key); else set.add(key);
-      return copy as any;
+      return copy;
     });
   };
 
@@ -39,10 +41,10 @@ export default function PermissionsMatrix() {
     setSaving(true);
     try {
       // Clear and re-insert for simplicity
-      await supabase.from("role_permissions").delete().in("role", ROLES as any);
+      await supabase.from("role_permissions").delete().in("role", ROLES);
       const rows: RolePerm[] = [];
       ROLES.forEach((r) => rp[r].forEach((k) => rows.push({ role: r, permission_key: k } as RolePerm)));
-      if (rows.length) await supabase.from("role_permissions").insert(rows as any);
+      if (rows.length) await supabase.from("role_permissions").insert(rows);
     } finally {
       setSaving(false);
     }
