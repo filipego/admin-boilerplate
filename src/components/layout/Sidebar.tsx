@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import SidebarThemeControl from "@/components/sidebar/SidebarThemeControl";
 import { useEffect, useMemo, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/utils/cn";
 import { ChevronLeft, ChevronRight, LogOut } from "lucide-react";
 import { mainItems as configMainItems, personalItems as configPersonalItems } from "@/components/layout/sidebar.config";
@@ -19,6 +19,7 @@ const Sidebar = () => {
   const { collapsed, toggle, showProfile, showSidebarTheme, showBottomActions, hasHydrated, setHasHydrated } = useSidebarStore();
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const router = useRouter();
+  const pathname = usePathname();
   type Profile = { username: string | null; email: string | null; avatar_url: string | null };
   const [profile, setProfile] = useState<Profile | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -88,7 +89,15 @@ const Sidebar = () => {
     >
       <div className="flex h-dvh flex-col">
         <div className="flex items-center justify-between px-3 py-3 border-b border-sidebar-border">
-          <span className={cn("font-semibold", collapsed && "sr-only")}>Studio Admin</span>
+          <Link
+            href="/dashboard"
+            className={cn(
+              "font-semibold focus:outline-none focus:ring-2 focus:ring-ring rounded-sm",
+              collapsed && "sr-only"
+            )}
+          >
+            Studio Admin
+          </Link>
           <Button
             variant="ghost"
             size="icon"
@@ -102,40 +111,50 @@ const Sidebar = () => {
 
         <nav className="px-2 py-2 flex-1 flex flex-col">
           <ul className="space-y-1">
-            {mainItems.map(({ href, label, icon: Icon }) => (
-              <li key={href}>
-                <Link
-                  href={href}
-                  className={cn(
-                    "flex items-center gap-3 rounded-md px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground",
-                    collapsed && "justify-center"
-                  )}
-                >
-                  <Icon className="h-5 w-5" aria-hidden />
-                  <span className={cn(collapsed && "sr-only")}>{label}</span>
-                </Link>
-              </li>
-            ))}
+            {mainItems.map(({ href, label, icon: Icon }) => {
+              const isActive = pathname === href || pathname.startsWith(`${href}/`);
+              return (
+                <li key={href}>
+                  <Link
+                    href={href}
+                    aria-current={isActive ? "page" : undefined}
+                    className={cn(
+                      "flex items-center gap-3 rounded-md px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground",
+                      isActive && "bg-accent text-accent-foreground",
+                      collapsed && "justify-center"
+                    )}
+                  >
+                    <Icon className="h-5 w-5" aria-hidden />
+                    <span className={cn(collapsed && "sr-only")}>{label}</span>
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
 
           {personalItems.length > 0 ? (
             <>
               <div className="mt-4 border-t border-sidebar-border pt-2" />
               <ul className="space-y-1">
-                {personalItems.map(({ href, label, icon: Icon }) => (
-                  <li key={href}>
-                    <Link
-                      href={href}
-                      className={cn(
-                        "flex items-center gap-3 rounded-md px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground",
-                        collapsed && "justify-center"
-                      )}
-                    >
-                      <Icon className="h-5 w-5" aria-hidden />
-                      <span className={cn(collapsed && "sr-only")}>{label}</span>
-                    </Link>
-                  </li>
-                ))}
+                {personalItems.map(({ href, label, icon: Icon }) => {
+                  const isActive = pathname === href || pathname.startsWith(`${href}/`);
+                  return (
+                    <li key={href}>
+                      <Link
+                        href={href}
+                        aria-current={isActive ? "page" : undefined}
+                        className={cn(
+                          "flex items-center gap-3 rounded-md px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground",
+                          isActive && "bg-accent text-accent-foreground",
+                          collapsed && "justify-center"
+                        )}
+                      >
+                        <Icon className="h-5 w-5" aria-hidden />
+                        <span className={cn(collapsed && "sr-only")}>{label}</span>
+                      </Link>
+                    </li>
+                  );
+                })}
               </ul>
             </>
           ) : null}
