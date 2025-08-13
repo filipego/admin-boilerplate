@@ -4,7 +4,6 @@ export type NavItem = { href: string; label: string; icon: React.ComponentType<{
 
 export const mainItems: NavItem[] = [
   { href: "/dashboard", label: "Overview", icon: Home },
-  { href: "/projects", label: "Projects", icon: Briefcase },
   { href: "/examples", label: "Examples", icon: Briefcase },
   { href: "/users", label: "Users", icon: Users },
   { href: "/reports", label: "Reports / Analytics", icon: BarChart3 },
