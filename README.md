@@ -450,6 +450,26 @@ import SettingsLayout from "@/components/common/SettingsLayout";
 <FeatureFlags flags={[{ key: 'newDashboard', label: 'New Dashboard' }]} onChange={(s) => console.log(s)} />
 ```
 
+### KanbanBoard
+`src/components/common/KanbanBoard.tsx`
+
+```tsx
+<KanbanBoard
+  initial=[
+    { id: 'todo', title: 'To Do', cards: [{ id: 'c1', title: 'Task' }] },
+    { id: 'doing', title: 'In Progress', cards: [] },
+    { id: 'done', title: 'Done', cards: [] },
+  ]
+/>
+```
+
+### NotesBoard
+`src/components/common/NotesBoard.tsx`
+
+```tsx
+<NotesBoard initial={[{ id: 'n1', text: 'First note' }]} />
+```
+
 ### ErrorBoundary
 `src/components/common/ErrorBoundary.tsx`
 

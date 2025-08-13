@@ -44,6 +44,8 @@ import UserAvatarMenu from "@/components/common/UserAvatarMenu";
 import SettingsLayout from "@/components/common/SettingsLayout";
 import FeatureFlags from "@/components/common/FeatureFlags";
 import ErrorBoundary from "@/components/common/ErrorBoundary";
+import KanbanBoard from "@/components/common/KanbanBoard";
+import NotesBoard from "@/components/common/NotesBoard";
 
 export default function ExamplesPage() {
   const [openFull, setOpenFull] = useState(false);
@@ -252,6 +254,30 @@ export default function ExamplesPage() {
             storageKey="example-feature-flags"
             onChange={(s) => console.log("flags", s)}
           />
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="text-base">Kanban</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <KanbanBoard
+            initial={[
+              { id: "todo", title: "To Do", cards: [{ id: "c1", title: "Design hero" }, { id: "c2", title: "Write API spec" }] },
+              { id: "doing", title: "In Progress", cards: [{ id: "c3", title: "Auth flow" }] },
+              { id: "done", title: "Done", cards: [{ id: "c4", title: "Skeleton states" }] },
+            ]}
+          />
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="text-base">Notes Board</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <NotesBoard initial={[{ id: "n1", text: "Collect brand assets" }, { id: "n2", text: "Draft onboarding copy" }]} />
         </CardContent>
       </Card>
 
