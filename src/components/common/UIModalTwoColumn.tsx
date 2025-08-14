@@ -17,6 +17,7 @@ type UIModalTwoColumnProps = {
   right: React.ReactNode;
   leftClassName?: string;
   rightClassName?: string;
+  footer?: React.ReactNode; // right-aligned actions row pinned at bottom
 };
 
 export default function UIModalTwoColumn({
@@ -33,6 +34,7 @@ export default function UIModalTwoColumn({
   right,
   leftClassName,
   rightClassName,
+  footer,
 }: UIModalTwoColumnProps) {
   return (
     <UIModal
@@ -45,9 +47,14 @@ export default function UIModalTwoColumn({
       className={className}
       disableScrollWrapper
     >
-      <div className={cn("grid", columnsClassName, gapClassName, size === "fullscreen" ? "h-full" : "max-h-[85vh]")}> 
-        <div className={cn("overflow-y-auto", leftClassName)}>{left}</div>
-        <div className={cn("overflow-y-auto", rightClassName)}>{right}</div>
+      <div className={cn(size === "fullscreen" ? "h-full flex flex-col" : "max-h-[85vh] flex flex-col")}> 
+        <div className={cn("grid flex-1 min-h-0 overflow-hidden items-start content-start justify-start pt-0 -mt-2", columnsClassName, gapClassName)}> 
+          <div className={cn("min-h-0 overflow-y-auto", leftClassName)}>{left}</div>
+          <div className={cn("min-h-0 overflow-y-auto", rightClassName)}>{right}</div>
+        </div>
+        {footer ? (
+          <div className="mt-3 flex justify-end gap-2">{footer}</div>
+        ) : null}
       </div>
     </UIModal>
   );

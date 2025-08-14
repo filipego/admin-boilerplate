@@ -48,6 +48,7 @@ import FeatureFlags from "@/components/common/FeatureFlags";
 import ErrorBoundary from "@/components/common/ErrorBoundary";
 import KanbanBoard from "@/components/common/KanbanBoard";
 import NotesBoard from "@/components/common/NotesBoard";
+import AdvancedFileUploader from "@/components/uploader/AdvancedFileUploader";
 import UITooltip, { HelpTooltip } from "@/components/common/UITooltip";
 import CopyButton from "@/components/common/CopyButton";
 import Kbd from "@/components/common/Kbd";
@@ -102,6 +103,7 @@ export default function ExamplesPage() {
   const [chips, setChips] = useState([{ id: "status", label: "Status: Active" }, { id: "role", label: "Role: Admin" }]);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
+  const [uploaderOpen, setUploaderOpen] = useState(false);
   const [sectionLoading, setSectionLoading] = useState(false);
   const [tableViewState, setTableViewState] = useState<DataTableStateSnapshot>({ sorting: [], globalFilter: "", columnVisibility: {} });
   const [tableKey, setTableKey] = useState(0);
@@ -114,6 +116,7 @@ export default function ExamplesPage() {
           <div className="flex items-center gap-2">
             <NotificationBell items={[{ id: "1", title: "Welcome to the demo", time: "Just now" }]} />
             <UserAvatarMenu fallbackTransparent={false} />
+            <UIButton onClick={() => setUploaderOpen(true)}>Advanced Uploader</UIButton>
             <UIButton>New Note</UIButton>
           </div>
         }
@@ -570,6 +573,19 @@ export default function ExamplesPage() {
         cancelLabel={MESSAGES.confirmDelete.cancelLabel}
         destructive
         onConfirm={() => setOpenConfirm(false)}
+      />
+
+      <AdvancedFileUploader
+        open={uploaderOpen}
+        onOpenChange={setUploaderOpen}
+        title="Advanced Upload"
+        description="Select multiple images and optionally compress before uploading."
+        folder="uploads/examples"
+        accept="image/*,application/pdf"
+        enableCompressionDefault
+        onUploadComplete={(urls) => {
+          console.log("uploaded urls", urls);
+        }}
       />
 
       <UIModal open={openContent} onOpenChange={setOpenContent} size="content" title="Content Modal" description="Auto-sized to content" className="max-w-3xl">
