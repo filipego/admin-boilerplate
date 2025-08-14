@@ -25,7 +25,7 @@ export default function ContentTabs({ items, value, onValueChange, className, li
     <Tabs value={value} onValueChange={onValueChange} className={className}>
       <TabsList className={cn("w-full justify-start gap-1", listClassName, fullWidthList && "grid grid-cols-2 sm:inline-flex")}> 
         {items.map((it) => (
-          <TabsTrigger key={it.id} value={it.id} className="gap-2">
+          <TabsTrigger key={it.id} value={it.id} className="gap-2 cursor-pointer">
             {it.icon}
             <span>{it.label}</span>
             {typeof it.count === "number" ? (
