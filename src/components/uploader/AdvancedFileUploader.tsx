@@ -21,6 +21,8 @@ type UploadingFile = {
   preview?: string;
   compressionEnabled: boolean;
   estimatedCompressedSize?: number;
+  title: string;
+  description: string;
 };
 
 type AdvancedFileUploaderProps = {
@@ -32,7 +34,7 @@ type AdvancedFileUploaderProps = {
   accept?: string;
   maxFiles?: number;
   enableCompressionDefault?: boolean;
-  onUploadComplete?: (urls: string[]) => void;
+  onUploadComplete?: (files: Array<{ url: string; title: string; description: string; originalName: string; size: number; mimeType: string }>) => void;
 };
 
 export default function AdvancedFileUploader({
@@ -75,6 +77,8 @@ export default function AdvancedFileUploader({
       compressionProgress: 0,
       preview: file.type.startsWith("image/") ? URL.createObjectURL(file) : undefined,
       compressionEnabled,
+      title: file.name.replace(/\.[^/.]+$/, ""), // Use filename without extension as default title
+      description: "",
     }));
     setFiles((prev) => [...prev, ...next]);
     // compute estimates async
@@ -100,6 +104,18 @@ export default function AdvancedFileUploader({
     return res?.compressedFile ?? file;
   }, [options]);
 
+  const onToggleCompression = useCallback((enabled: boolean) => {
+    setFiles((prev) => prev.map((f) => ({ ...f, compressionEnabled: enabled })));
+  }, []);
+
+  const onUpdateTitle = useCallback((fileId: string, title: string) => {
+    setFiles((prev) => prev.map((f) => f.id === fileId ? { ...f, title } : f));
+  }, []);
+
+  const onUpdateDescription = useCallback((fileId: string, description: string) => {
+    setFiles((prev) => prev.map((f) => f.id === fileId ? { ...f, description } : f));
+  }, []);
+
   // Compression size summary (estimates)
   const compressionSummary = useMemo(() => {
     const totalOriginal = files.reduce((sum, f) => sum + f.file.size, 0);
@@ -112,7 +128,7 @@ export default function AdvancedFileUploader({
   const uploadAll = useCallback(async () => {
     if (files.length === 0) return;
     setBusy(true);
-    const urls: string[] = [];
+    const uploadedFiles: Array<{ url: string; title: string; description: string; originalName: string; size: number; mimeType: string }> = [];
     try {
       for (let i = 0; i < files.length; i++) {
         const item = files[i];
@@ -128,6 +144,9 @@ export default function AdvancedFileUploader({
         const form = new FormData();
         form.append("file", toSend);
         form.append("folder", folder);
+        // Add title and description metadata
+        form.append("title", item.title);
+        form.append("description", item.description);
         // Provide compression metadata for parity
         if (item.compressedFile) {
           form.append("originalFileSize", String(item.file.size));
@@ -158,10 +177,19 @@ export default function AdvancedFileUploader({
           xhr.send(form);
         });
 
-        if (json?.url) urls.push(json.url);
+        if (json?.url) {
+          uploadedFiles.push({
+            url: json.url,
+            title: item.title,
+            description: item.description,
+            originalName: item.file.name,
+            size: item.file.size,
+            mimeType: item.file.type,
+          });
+        }
         setFiles((prev) => prev.map((f, idx) => idx === i ? { ...f, progress: 100 } : f));
       }
-      onUploadComplete?.(urls);
+      onUploadComplete?.(uploadedFiles);
       showSaved("Uploaded");
       // Reset state after success
       revokePreviews();
@@ -202,8 +230,8 @@ export default function AdvancedFileUploader({
                 <FileListItem
                   key={f.id}
                   file={f.file}
-                  title={undefined}
-                  description={undefined}
+                  title={f.title}
+                  description={f.description}
                   progress={f.progress}
                   preview={f.preview}
                   compressionEnabled={f.compressionEnabled}
@@ -213,7 +241,9 @@ export default function AdvancedFileUploader({
                   compressionResult={undefined}
                   onRemove={() => { if (f.preview) URL.revokeObjectURL(f.preview); setFiles((prev) => prev.filter((x) => x.id !== f.id)); }}
                   onToggleCompression={(en) => setFiles((prev) => prev.map((x, i) => i === idx ? { ...x, compressionEnabled: en } : x))}
-                  showTitleDescription={false}
+                  showTitleDescription={true}
+                  onUpdateTitle={(title) => onUpdateTitle(f.id, title)}
+                  onUpdateDescription={(description) => onUpdateDescription(f.id, description)}
                 />
               ))}
             </div>

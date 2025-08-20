@@ -45,12 +45,11 @@ export default function UIModalTwoColumn({
       hideTitleVisually={hideTitleVisually}
       size={size}
       className={className}
-      disableScrollWrapper
     >
-      <div className={cn(size === "fullscreen" ? "h-full flex flex-col" : "max-h-[85vh] flex flex-col")}> 
-        <div className={cn("grid flex-1 min-h-0 overflow-hidden items-start content-start justify-start pt-0 -mt-2", columnsClassName, gapClassName)}> 
-          <div className={cn("min-h-0 overflow-y-auto", leftClassName)}>{left}</div>
-          <div className={cn("min-h-0 overflow-y-auto", rightClassName)}>{right}</div>
+      <div className={cn("min-h-0 flex flex-col")}> 
+        <div className={cn("grid flex-1 min-h-0 overflow-visible items-start content-start justify-start pt-0 -mt-2", columnsClassName, gapClassName)}> 
+          <div className={cn("min-h-0 overflow-visible md:overflow-y-auto", leftClassName)}>{left}</div>
+          <div className={cn("min-h-0 overflow-visible md:overflow-y-auto", rightClassName)}>{right}</div>
         </div>
         {footer ? (
           <div className="mt-3 flex justify-end gap-2">{footer}</div>
