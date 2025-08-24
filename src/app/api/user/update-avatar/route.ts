@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
+import { checkOrigin, rateLimit } from "@/lib/utils";
 
 export async function POST(req: Request) {
+  if (!rateLimit(req, 30, 60_000)) return NextResponse.json({ error: "Too Many Requests" }, { status: 429 });
+  if (!checkOrigin(req)) return NextResponse.json({ error: "Bad Origin" }, { status: 400 });
   try {
     const { userId, url } = await req.json();
     if (!userId || !url) return NextResponse.json({ error: "Missing userId or url" }, { status: 400 });

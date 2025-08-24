@@ -4,14 +4,12 @@ import MobileSidebar from "@/components/layout/MobileSidebar";
 import ModeToggle from "@/components/theme/ModeToggle";
 import { Button } from "@/components/ui/button";
 import { Bell } from "lucide-react";
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import UserAvatarMenu from "@/components/common/UserAvatarMenu";
 import CommandPalette from "@/components/common/CommandPalette";
 
 const Header = () => {
-  const router = useRouter();
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
 
   type Profile = { username: string | null; email: string | null; avatar_url: string | null };
@@ -56,12 +54,12 @@ const Header = () => {
   // initials and handleLogout kept previously; remove unused to satisfy linter
 
   return (
-    <header className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="w-full px-2 md:px-4 py-2 md:py-3 flex items-center">
-        <div className="md:hidden mr-1">
+    <header data-ui="header" className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div data-ui="header-container" className="w-full px-2 md:px-4 py-2 md:py-3 flex items-center">
+        <div data-ui="header-mobile-nav" className="md:hidden mr-1">
           <MobileSidebar showProfile={true} showSidebarTheme={true} showBottomActions={true} />
         </div>
-        <div className="ml-auto flex items-center gap-1 md:gap-2">
+        <div data-ui="header-actions" className="ml-auto flex items-center gap-1 md:gap-2">
           <CommandPalette
             items={[
               { id: "dashboard", label: "Go to Dashboard", href: "/dashboard" },
@@ -70,7 +68,7 @@ const Header = () => {
             ]}
             placeholder="Search pages or actions..."
           />
-          <Button variant="ghost" size="icon" aria-label="Notifications" className="h-8 w-8 md:h-10 md:w-10">
+          <Button data-ui="header-notifications" variant="ghost" size="icon" aria-label="Notifications" className="h-8 w-8 md:h-10 md:w-10">
             <Bell className="h-5 w-5" />
           </Button>
           <ModeToggle />

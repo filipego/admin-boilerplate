@@ -6,7 +6,7 @@ import { showSaved, showError } from "@/lib/toast";
 import UIModal from "@/components/common/UIModal";
 import ImageCropUpload from "@/components/uploader/ImageCropUpload";
 import { updateProfileAction } from "./actions";
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+// Removed direct supabase client usage; use server actions and APIs instead
 
 type Profile = {
   id: string;
@@ -57,7 +57,6 @@ export default function ProfileViewEdit({ profile }: { profile: Profile }) {
     };
   }, [username, editing, profile.username]);
 
-  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const [pwOpen, setPwOpen] = useState(false);
   const [pw1, setPw1] = useState("");
   const [pw2, setPw2] = useState("");
@@ -101,8 +100,8 @@ export default function ProfileViewEdit({ profile }: { profile: Profile }) {
                   if (pw1 !== pw2) { showError("Passwords do not match"); return; }
                   try {
                     setPwPending(true);
-                    const { error } = await supabase.auth.updateUser({ password: pw1 });
-                    if (error) { showError(error.message); return; }
+                    const res = await fetch('/api/user/change-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pw1 }) });
+                    if (!res.ok) { const j = await res.json().catch(() => ({})); showError(j.error || 'Failed to update password'); return; }
                     showSaved("Password updated");
                     setPwOpen(false);
                     setPw1(""); setPw2("");
@@ -131,12 +130,7 @@ export default function ProfileViewEdit({ profile }: { profile: Profile }) {
           initialUrl={avatarUrl}
           onUploaded={async (url) => {
             setAvatarUrl(url);
-            // Persist immediately so header/sidebar/users reflect new avatar without waiting for Save
-            const { error } = await supabase
-              .from("profiles")
-              .update({ avatar_url: url })
-              .eq("id", profile.id);
-            if (error) showError(error.message);
+            await fetch('/api/user/update-avatar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: profile.id, url }) });
           }}
         />
       </div>

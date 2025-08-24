@@ -23,7 +23,6 @@ type Profile = { username: string | null; email: string | null; avatar_url: stri
 const MobileSidebar = ({ showProfile, showSidebarTheme, showBottomActions }: MobileSidebarProps) => {
   const pathname = usePathname();
   const router = useRouter();
-  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
@@ -41,11 +40,12 @@ const MobileSidebar = ({ showProfile, showSidebarTheme, showBottomActions }: Mob
       }
     })();
     return () => { isMounted = false; };
-  }, [supabase]);
+  }, []);
 
   // Realtime updates (subscribe once per user id)
   useEffect(() => {
     if (!currentUserId) return;
+    const supabase = getSupabaseBrowserClient();
     const channel = supabase
       .channel("public:profiles")
       .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, (payload: { new?: { id?: string } }) => {
@@ -60,7 +60,7 @@ const MobileSidebar = ({ showProfile, showSidebarTheme, showBottomActions }: Mob
       })
       .subscribe();
     return () => { channel.unsubscribe(); };
-  }, [supabase, currentUserId]);
+  }, [currentUserId]);
 
   const initials = useMemo(() => {
     const src = profile?.username || profile?.email || "";
@@ -70,7 +70,7 @@ const MobileSidebar = ({ showProfile, showSidebarTheme, showBottomActions }: Mob
   }, [profile]);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await fetch('/api/logout', { method: 'POST' });
     router.replace("/login");
   };
 

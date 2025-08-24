@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import UIButton from "@/components/common/UIButton";
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type Perm = { key: string; label: string };
 type RolePerm = { role: string; permission_key: string };
@@ -10,23 +9,24 @@ type RolePerm = { role: string; permission_key: string };
 const ROLES: Array<"admin" | "client"> = ["admin", "client"];
 
 export default function PermissionsMatrix() {
-  const supabase = getSupabaseBrowserClient();
   const [perms, setPerms] = useState<Perm[]>([]);
   const [rp, setRp] = useState<Record<string, Set<string>>>({ admin: new Set(), client: new Set() });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     (async () => {
-      const { data: p } = await supabase.from("permissions").select("key, label").order("key");
-      const { data: map } = await supabase.from("role_permissions").select("role, permission_key");
+      const pRes = await fetch('/api/permissions', { cache: 'no-store' });
+      const pJson = await pRes.json();
+      const mapRes = await fetch('/api/role-permissions', { cache: 'no-store' });
+      const mapJson = await mapRes.json();
       const roles: Record<"admin" | "client", Set<string>> = { admin: new Set(), client: new Set() };
-      (map as RolePerm[] | null)?.forEach((row) => {
+      (mapJson.rows as RolePerm[] | null)?.forEach((row) => {
         if (row.role === "admin" || row.role === "client") roles[row.role].add(row.permission_key);
       });
-      setPerms((p as Perm[]) ?? []);
+      setPerms((pJson.rows as Perm[]) ?? []);
       setRp(roles);
     })();
-  }, [supabase]);
+  }, []);
 
   const toggle = (role: "admin" | "client", key: string) => {
     setRp((prev) => {
@@ -40,11 +40,9 @@ export default function PermissionsMatrix() {
   const save = async () => {
     setSaving(true);
     try {
-      // Clear and re-insert for simplicity
-      await supabase.from("role_permissions").delete().in("role", ROLES);
       const rows: RolePerm[] = [];
       ROLES.forEach((r) => rp[r].forEach((k) => rows.push({ role: r, permission_key: k } as RolePerm)));
-      if (rows.length) await supabase.from("role_permissions").insert(rows);
+      await fetch('/api/role-permissions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rows }) });
     } finally {
       setSaving(false);
     }

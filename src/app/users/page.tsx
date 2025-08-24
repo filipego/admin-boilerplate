@@ -8,7 +8,6 @@ import { redirect } from "next/navigation";
 import CreateUserButton from "./CreateUserButton";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { cookies } from "next/headers";
-import PermissionsMatrixCard from "./PermissionsMatrixCard";
 export const dynamic = "force-dynamic";
 
 export default async function UsersPage() {
@@ -50,14 +49,7 @@ export default async function UsersPage() {
         </CardContent>
       </Card>
 
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle className="text-base">Role / Permission Matrix</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <PermissionsMatrixCard />
-        </CardContent>
-      </Card>
+      {/* Role / Permission Matrix intentionally hidden for now */}
 
       {/* Theme tokens panel intentionally removed; branding via CSS tokens in globals.css */}
     </AppLayout>

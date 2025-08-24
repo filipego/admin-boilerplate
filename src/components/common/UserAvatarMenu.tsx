@@ -11,7 +11,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import ModeToggle from "@/components/theme/ModeToggle";
 
@@ -23,7 +22,6 @@ type Props = {
 };
 
 export default function UserAvatarMenu({ user, showTheme = false, fallbackTransparent = false, autoLoad = true }: Props) {
-  const supabase = getSupabaseBrowserClient();
   const router = useRouter();
   const [loaded, setLoaded] = useState<{ name?: string | null; email?: string | null; avatarUrl?: string | null } | null>(null);
 
@@ -42,22 +40,9 @@ export default function UserAvatarMenu({ user, showTheme = false, fallbackTransp
           }
         }
       } catch {}
-      // Fallback: client Supabase
-      const { data } = await supabase.auth.getUser();
-      const u = data.user;
-      if (!u) {
-        if (mounted) setLoaded(null);
-        return;
-      }
-      const { data: p } = await supabase
-        .from("profiles")
-        .select("username, email, avatar_url")
-        .eq("id", u.id)
-        .maybeSingle();
-      if (mounted) setLoaded({ name: p?.username ?? null, email: p?.email ?? u.email ?? null, avatarUrl: p?.avatar_url ?? null });
     })();
     return () => { mounted = false; };
-  }, [user, autoLoad, supabase]);
+  }, [user, autoLoad]);
 
   const displayUser = user ?? loaded ?? null;
   const initials = useMemo(() => {
@@ -101,7 +86,7 @@ export default function UserAvatarMenu({ user, showTheme = false, fallbackTransp
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={async () => {
-            await supabase.auth.signOut();
+            await fetch('/api/logout', { method: 'POST' });
             router.replace("/login");
           }}
           className="text-destructive focus:text-destructive cursor-pointer"

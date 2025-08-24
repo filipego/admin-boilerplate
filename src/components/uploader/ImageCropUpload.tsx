@@ -1,11 +1,10 @@
 "use client";
 
 import Cropper from "react-easy-crop";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import imageCompression from "browser-image-compression";
 import UIButton from "@/components/common/UIButton";
 import { showAvatarUpdated, showUploadFailed } from "@/lib/toast";
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type Area = { x: number; y: number; width: number; height: number };
 
@@ -76,8 +75,6 @@ export default function ImageCropUpload({ userId, initialUrl, onUploaded, folder
     });
     return compressed;
   };
-
-  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
 
   const uploadOnce = async (blob: Blob) => {
     const form = new FormData();

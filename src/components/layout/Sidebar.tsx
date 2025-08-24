@@ -17,6 +17,7 @@ const personalItems = configPersonalItems;
 
 const Sidebar = () => {
   const { collapsed, toggle, showProfile, showSidebarTheme, showBottomActions, hasHydrated, setHasHydrated } = useSidebarStore();
+  // Client Supabase used only for realtime profile updates; reads gated by RLS
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const router = useRouter();
   const pathname = usePathname();
@@ -45,7 +46,7 @@ const Sidebar = () => {
       }
     })();
     return () => { isMounted = false; };
-  }, [supabase]);
+  }, []);
 
   // Realtime updates (subscribe once per user id)
   useEffect(() => {
@@ -74,12 +75,13 @@ const Sidebar = () => {
   }, [profile]);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await fetch('/api/logout', { method: 'POST' });
     router.replace("/login");
   };
 
   return (
     <aside
+      data-ui="sidebar"
       className={cn(
         "border-r border-border bg-sidebar text-sidebar-foreground h-dvh sticky top-0",
         collapsed ? "w-16" : "w-64"
@@ -88,9 +90,10 @@ const Sidebar = () => {
       aria-label="Primary"
     >
       <div className="flex h-dvh flex-col">
-        <div className="flex items-center justify-between px-3 py-3 border-b border-sidebar-border">
+        <div data-ui="sidebar-header" className="flex items-center justify-between px-3 py-3 border-b border-sidebar-border">
           <Link
             href="/dashboard"
+            data-ui="sidebar-logo"
             className={cn(
               "font-semibold focus:outline-none focus:ring-2 focus:ring-ring rounded-sm",
               collapsed && "sr-only"
@@ -109,14 +112,15 @@ const Sidebar = () => {
           </Button>
         </div>
 
-        <nav className="px-2 py-2 flex-1 flex flex-col">
-          <ul className="space-y-1">
+        <nav data-ui="sidebar-nav" className="px-2 py-2 flex-1 flex flex-col">
+          <ul data-ui="sidebar-nav-main" className="space-y-1">
             {mainItems.map(({ href, label, icon: Icon }) => {
               const isActive = pathname === href || pathname.startsWith(`${href}/`);
               return (
                 <li key={href}>
                   <Link
                     href={href}
+                    data-ui={`sidebar-nav-item:${label.toLowerCase().replace(/\s+/g, '-')}`}
                     aria-current={isActive ? "page" : undefined}
                     className={cn(
                       "flex items-center gap-3 rounded-md px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground",
@@ -135,13 +139,14 @@ const Sidebar = () => {
           {personalItems.length > 0 ? (
             <>
               <div className="mt-4 border-t border-sidebar-border pt-2" />
-              <ul className="space-y-1">
+              <ul data-ui="sidebar-nav-personal" className="space-y-1">
                 {personalItems.map(({ href, label, icon: Icon }) => {
                   const isActive = pathname === href || pathname.startsWith(`${href}/`);
                   return (
                     <li key={href}>
                       <Link
                         href={href}
+                        data-ui={`sidebar-nav-item:${label.toLowerCase().replace(/\s+/g, '-')}`}
                         aria-current={isActive ? "page" : undefined}
                         className={cn(
                           "flex items-center gap-3 rounded-md px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground",
@@ -159,9 +164,10 @@ const Sidebar = () => {
             </>
           ) : null}
 
-          <div className="mt-auto border-t border-sidebar-border pt-2">
+          <div data-ui="sidebar-footer" className="mt-auto border-t border-sidebar-border pt-2">
             {showProfile ? (
               <div
+                data-ui="sidebar-profile"
                 className={cn(
                   "flex items-center gap-3 rounded-md px-3 py-2",
                   collapsed && "justify-center"
@@ -186,6 +192,7 @@ const Sidebar = () => {
               <div className="space-y-1">
                 <button
                   type="button"
+                  data-ui="sidebar-logout"
                   onClick={handleLogout}
                   className={cn(
                     "w-full flex items-center gap-3 rounded-md px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground cursor-pointer",

@@ -8,7 +8,6 @@ import UIButton from "@/components/common/UIButton";
 import { z } from "zod";
 import ImageCropUpload from "@/components/uploader/ImageCropUpload";
 import { createUserAdmin } from "./actions";
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 const schema = z.object({
 	email: z.string().email(),
@@ -21,10 +20,15 @@ export default function UserCreateModal({ open, onOpenChange }: { open: boolean;
 	const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
   const [uploaderUserId, setUploaderUserId] = useState<string>("");
   useEffect(() => {
-    const supabase = getSupabaseBrowserClient();
-    supabase.auth.getUser().then(({ data }) => {
-      if (data.user?.id) setUploaderUserId(data.user.id);
-    });
+    (async () => {
+      try {
+        const res = await fetch('/api/me', { cache: 'no-store' });
+        if (!res.ok) return;
+        const json = await res.json();
+        const id = json.profile?.id as string | undefined;
+        if (id) setUploaderUserId(id);
+      } catch {}
+    })();
   }, []);
 	return (
 		<UIModal open={open} onOpenChange={onOpenChange} title="Create User" description="Create auth user and profile">
