@@ -279,19 +279,10 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={handleMinimize}
-                title={isMinimized ? 'Expand' : 'Minimize'}
-              >
-                <Minimize2 className="w-4 h-4" />
-              </Button>
-              
-              <Button
-                variant="ghost"
-                size="sm"
                 onClick={handleMaximize}
                 title={isMaximized ? 'Restore' : 'Maximize'}
               >
-                <Maximize2 className="w-4 h-4" />
+                {isMaximized ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
               </Button>
               
               <Button
