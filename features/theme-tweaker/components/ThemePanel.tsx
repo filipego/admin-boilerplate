@@ -22,12 +22,10 @@ import {
   Layout, 
   FileText,
   Save,
-  Download,
   RotateCcw,
   Eye,
   EyeOff
-  , Move,
-  PanelLeft,
+  , PanelLeft,
   PanelRight
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -179,9 +177,19 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
     setIsMaximized(!isMaximized);
   };
 
-  const handleSave = () => {
-    // This would typically trigger the save pipeline
-    toast.success('Theme changes saved!');
+  const handleSave = async () => {
+    try {
+      const res = await fetch('/api/theme-tweaker/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tokenEdits, runtimeStyles })
+      });
+      const json = await res.json();
+      if (!res.ok || !json.ok) throw new Error(json?.error || 'Failed');
+      toast.success('Theme changes saved');
+    } catch (e) {
+      toast.error('Save failed');
+    }
   };
 
   const handleExport = () => {
@@ -222,22 +230,22 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
             : { width: panelWidth })
         : undefined}
     >
-      <Card className="bg-[#774DFF] dark:bg-[#5E3AD8] border border-[#774DFF] dark:border-[#5E3AD8] shadow-2xl h-full flex flex-col">
+      <Card className="bg-[#774DFF] dark:bg-[#5E3AD8] border border-[#774DFF] dark:border-[#5E3AD8] shadow-2xl h-full flex flex-col pt-0">
         {/* Header */}
-        <CardHeader
-          className="pb-3 border-b border-transparent bg-[#774DFF] dark:bg-[#5E3AD8] cursor-move select-none"
-          onMouseDown={(e) => {
-            if (dock !== 'floating') return;
-            // don't start drag when clicking header action buttons
-            const target = e.target as HTMLElement;
-            if (target.closest('button')) return;
-            e.preventDefault();
-            isDragging.current = true;
-            dragStart.current = { x: e.clientX, y: e.clientY };
-            dragOffset.current = { x: e.clientX - position.x, y: e.clientY - position.y };
-            document.body.style.userSelect = 'none';
-          }}
-        >
+        <CardHeader className="pt-0 pb-2 border-b border-transparent bg-[#774DFF] dark:bg-[#5E3AD8] select-none">
+          {/* Draggable spacer equal to removed top padding */}
+          <div
+            className="h-6 w-full cursor-move"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              if (dock !== 'floating') setDock('floating');
+              isDragging.current = true;
+              dragStart.current = { x: e.clientX, y: e.clientY };
+              dragOffset.current = { x: e.clientX - position.x, y: e.clientY - position.y };
+              document.body.style.userSelect = 'none';
+            }}
+            aria-label="Drag panel"
+          />
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Settings className="w-5 h-5" />
@@ -258,14 +266,7 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
               >
                 {dock === 'left' ? <PanelRight className="w-4 h-4" /> : <PanelLeft className="w-4 h-4" />}
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setDock('floating')}
-                title="Undock / Drag"
-              >
-                <Move className="w-4 h-4" />
-              </Button>
+              
               <Button
                 variant="ghost"
                 size="sm"
@@ -306,7 +307,7 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
           
           {/* Quick Actions */}
           {!isMinimized && (
-            <div className="flex items-center gap-2 mt-3">
+            <div className="flex items-center gap-2 mt-2">
               <Button
                 variant="outline"
                 size="sm"
@@ -315,16 +316,6 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
               >
                 <Save className="w-3 h-3 mr-1" />
                 Save
-              </Button>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExport}
-                disabled={totalChanges === 0}
-              >
-                <Download className="w-3 h-3 mr-1" />
-                Export
               </Button>
               
               <Button
@@ -344,7 +335,7 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
         {!isMinimized && (
           <CardContent className="p-0 flex-1 overflow-hidden">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-              <div className="px-4 pt-4">
+              <div className="px-4 pt-2">
                 <TabsList className="w-full gap-2 justify-start">
                   <TabsTrigger value="tokens" className="flex items-center gap-1">
                   <Palette className="w-3 h-3" />
@@ -433,9 +424,6 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
                   <>
                     <Button variant="ghost" size="sm" onClick={handleSave}>
                       <Save className="w-3 h-3" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={handleExport}>
-                      <Download className="w-3 h-3" />
                     </Button>
                   </>
                 )}
