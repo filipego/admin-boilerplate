@@ -18,10 +18,16 @@ export function ColorPicker({ label, value, onChange, className }: ColorPickerPr
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState(value);
   const colorInputRef = useRef<HTMLInputElement>(null);
+  const [iconColor, setIconColor] = useState('#000000');
 
   useEffect(() => {
     setInputValue(value);
   }, [value]);
+
+  useEffect(() => {
+    const lum = getLuminance(getDisplayColor());
+    setIconColor(lum > 0.55 ? '#000000' : '#ffffff');
+  }, [inputValue, isOpen]);
 
   const handleInputChange = (newValue: string) => {
     setInputValue(newValue);
@@ -37,9 +43,10 @@ export function ColorPicker({ label, value, onChange, className }: ColorPickerPr
   };
 
   const isValidColor = (color: string): boolean => {
-    const s = new Option().style;
-    s.color = color;
-    return s.color !== '';
+    const el = document.createElement('div');
+    el.style.color = '';
+    el.style.color = color;
+    return el.style.color !== '';
   };
 
   const getDisplayColor = (): string => {
@@ -47,6 +54,69 @@ export function ColorPicker({ label, value, onChange, className }: ColorPickerPr
       return inputValue;
     }
     return '#000000';
+  };
+
+  const getLuminance = (color: string): number => {
+    // 1) Try computed style conversion via color property (handles most formats)
+    try {
+      const probe = document.createElement('div');
+      probe.style.color = color;
+      probe.style.display = 'none';
+      document.body.appendChild(probe);
+      const computed = getComputedStyle(probe).color; // e.g. rgb(255 255 255) or rgb(255, 255, 255)
+      document.body.removeChild(probe);
+      const rgbMatch = computed.match(/rgba?\((\d+)[,\s]+(\d+)[,\s]+(\d+)/i);
+      if (rgbMatch) {
+        const r = parseInt(rgbMatch[1], 10);
+        const g = parseInt(rgbMatch[2], 10);
+        const b = parseInt(rgbMatch[3], 10);
+        return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+      }
+    } catch {}
+
+    // 2) Hex fallback
+    if (color.startsWith('#')) {
+      const hex = color.replace('#', '');
+      const parse = (s: string) => parseInt(s.length === 1 ? s + s : s, 16);
+      const r = hex.length >= 2 ? parse(hex.slice(0, 2)) : 0;
+      const g = hex.length >= 4 ? parse(hex.slice(2, 4)) : 0;
+      const b = hex.length >= 6 ? parse(hex.slice(4, 6)) : 0;
+      return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    }
+
+    // 3) lab() fallback: use L channel (0-100%)
+    const lab = color.match(/lab\(([^)]+)\)/i);
+    if (lab) {
+      const parts = lab[1].split(/[\s,]+/).filter(Boolean);
+      if (parts.length > 0) {
+        const lRaw = parts[0];
+        const l = lRaw.includes('%') ? parseFloat(lRaw) : parseFloat(lRaw) * 100;
+        return Math.max(0, Math.min(100, l)) / 100;
+      }
+    }
+
+    // 4) oklch() fallback: use L (0-1 or 0-100%)
+    const oklch = color.match(/oklch\(([^)]+)\)/i);
+    if (oklch) {
+      const parts = oklch[1].split(/[\s,]+/).filter(Boolean);
+      if (parts.length > 0) {
+        const lRaw = parts[0];
+        const l = lRaw.includes('%') ? parseFloat(lRaw) / 100 : parseFloat(lRaw);
+        return Math.max(0, Math.min(1, l));
+      }
+    }
+
+    // 5) Last resort: try rgb() with spaces directly
+    const spaceRgb = color.match(/rgba?\((\d+)[\s]+(\d+)[\s]+(\d+)/i);
+    if (spaceRgb) {
+      const r = parseInt(spaceRgb[1], 10);
+      const g = parseInt(spaceRgb[2], 10);
+      const b = parseInt(spaceRgb[3], 10);
+      return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    }
+
+    // Default luminance (dark)
+    return 0;
   };
 
   const commonColors = [
@@ -74,9 +144,7 @@ export function ColorPicker({ label, value, onChange, className }: ColorPickerPr
               className="w-10 h-10 p-0 border-2"
               style={{ backgroundColor: getDisplayColor() }}
             >
-              <Palette className="w-4 h-4" style={{ 
-                color: getContrastColor(getDisplayColor()) 
-              }} />
+              <Palette className="w-4 h-4" style={{ color: iconColor }} />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-64 p-4">
@@ -122,7 +190,7 @@ export function ColorPicker({ label, value, onChange, className }: ColorPickerPr
                   className="mt-1 font-mono text-sm"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  Supports: #hex, rgb(), hsl(), named colors
+                  Supports: #hex, rgb(), hsl(), oklch(), lab(), named colors
                 </p>
               </div>
             </div>
@@ -133,16 +201,12 @@ export function ColorPicker({ label, value, onChange, className }: ColorPickerPr
   );
 }
 
-// Helper function to get contrasting color for text
-function getContrastColor(hexColor: string): string {
-  // Convert hex to RGB
+// Keep exported for reuse
+export function getContrastColor(hexColor: string): string {
   const hex = hexColor.replace('#', '');
   const r = parseInt(hex.substr(0, 2), 16);
   const g = parseInt(hex.substr(2, 2), 16);
   const b = parseInt(hex.substr(4, 2), 16);
-  
-  // Calculate luminance
   const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  
   return luminance > 0.5 ? '#000000' : '#ffffff';
 }

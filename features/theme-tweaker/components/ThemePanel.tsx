@@ -7,9 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ToolTokensTab } from './tabs/ToolTokensTab';
-import { ToolComponentsTab } from './tabs/ToolComponentsTab';
-import { ToolLayoutTab } from './tabs/ToolLayoutTab';
+import ReactLazy = React.lazy;
+const ToolTokensTab = React.lazy(() => import('./tabs/ToolTokensTab').then(m => ({ default: m.ToolTokensTab })));
+const ToolComponentsTab = React.lazy(() => import('./tabs/ToolComponentsTab').then(m => ({ default: m.ToolComponentsTab })));
+const ToolLayoutTab = React.lazy(() => import('./tabs/ToolLayoutTab').then(m => ({ default: m.ToolLayoutTab })));
 import { ToolDiffTab } from './tabs/ToolDiffTab';
 import { 
   X, 
@@ -389,15 +390,21 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
               
               <div className="flex-1 overflow-hidden">
                 <TabsContent value="tokens" className="h-full m-0 p-4 overflow-auto">
-                  <ToolTokensTab />
+                  <React.Suspense fallback={<div className="p-4 text-sm text-muted-foreground">Loading tokens…</div>}>
+                    <ToolTokensTab />
+                  </React.Suspense>
                 </TabsContent>
                 
                 <TabsContent value="components" className="h-full m-0 p-4 overflow-auto">
-                  <ToolComponentsTab />
+                  <React.Suspense fallback={<div className="p-4 text-sm text-muted-foreground">Loading components…</div>}>
+                    <ToolComponentsTab />
+                  </React.Suspense>
                 </TabsContent>
                 
                 <TabsContent value="layout" className="h-full m-0 p-4 overflow-auto">
-                  <ToolLayoutTab />
+                  <React.Suspense fallback={<div className="p-4 text-sm text-muted-foreground">Loading layout…</div>}>
+                    <ToolLayoutTab />
+                  </React.Suspense>
                 </TabsContent>
                 
                 <TabsContent value="diff" className="h-full m-0 p-4 overflow-auto">

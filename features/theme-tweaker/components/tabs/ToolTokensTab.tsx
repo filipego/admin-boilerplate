@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useThemeTweakerStore } from '../../store/useThemeTweakerStore';
 import { TokenScanner, CSSToken } from '../../utils/tokenScanner';
 import { RepoScanner } from '../../utils/repoScanner';
@@ -37,12 +37,13 @@ interface TokenGroup {
 let tokensLoadedOnce = false;
 
 export function ToolTokensTab() {
-  const { tokenEdits, updateTokenEdit } = useThemeTweakerStore();
+  const { tokenEdits, updateTokenEdit, addTokenEdit, addRuntimeStyle } = useThemeTweakerStore();
   const [tokens, setTokens] = useState<CSSToken[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<CSSToken['category'] | 'all'>('all');
   const [isScanning, setIsScanning] = useState(false);
+  const darkProbeRef = useRef<HTMLDivElement | null>(null);
 
   const tokenScanner = useMemo(() => TokenScanner.getInstance(), []);
   const repoScanner = useMemo(() => new RepoScanner(), []);
@@ -88,16 +89,37 @@ export function ToolTokensTab() {
     }
   };
 
-  // Filter tokens based on search and category
-  const filteredTokens = useMemo(() => {
-    let filtered = tokens;
+  // Helper to exclude non-style tokens
+  const isStyleToken = (name: string) => {
+    const n = name.toLowerCase();
+    // Exclude Tailwind runtime/internal vars and motion/transform utilities
+    if (n.startsWith('--tw-')) return false;
+    return !(
+      n.includes('transition') ||
+      n.includes('animation') ||
+      n.includes('duration') ||
+      n.includes('timing') ||
+      n.includes('easing') ||
+      n.includes('easings') ||
+      n.includes('translate') ||
+      n.includes('rotate') ||
+      n.includes('scale') ||
+      n.includes('skew') ||
+      n.includes('transform') ||
+      n.includes('perspective') ||
+      n.includes('backdrop') ||
+      n.includes('filter')
+    );
+  };
 
-    // Filter by category
+  // Filter tokens based on search and category; exclude only non-style tokens; dedupe by name
+  const filteredTokens = useMemo(() => {
+    let filtered = tokens.filter(t => isStyleToken(t.name));
+
     if (selectedCategory !== 'all') {
       filtered = filtered.filter(token => token.category === selectedCategory);
     }
 
-    // Filter by search query
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(token => 
@@ -106,7 +128,12 @@ export function ToolTokensTab() {
       );
     }
 
-    return filtered;
+    // Deduplicate by token name so each variable appears once
+    const map = new Map<string, CSSToken>();
+    for (const t of filtered) {
+      if (!map.has(t.name)) map.set(t.name, t);
+    }
+    return Array.from(map.values());
   }, [tokens, searchQuery, selectedCategory]);
 
   // Group tokens by category
@@ -149,8 +176,7 @@ export function ToolTokensTab() {
         color: 'bg-gray-100 text-gray-800'
       }
     ];
-
-    return groups.filter(group => group.tokens.length > 0);
+    return groups.filter(g => g.tokens.length > 0);
   }, [filteredTokens]);
 
   const handleTokenChange = (tokenName: string, newValue: string, originalValue: string, category: CSSToken['category']) => {
@@ -161,85 +187,105 @@ export function ToolTokensTab() {
     });
   };
 
-  const renderTokenControl = (token: CSSToken) => {
-    const currentEdit = tokenEdits[token.name];
-    const currentValue = currentEdit?.value || token.value;
-    const hasChanged = currentEdit && currentEdit.value !== currentEdit.originalValue;
+  const lightDarkMap = useMemo(() => {
+    try {
+      const html = document.documentElement;
+      const wasDark = html.classList.contains('dark');
+      const map = new Map<string, { light: string; dark: string }>();
 
-    switch (token.category) {
-      case 'color':
-        return (
-          <ColorPicker
-            value={currentValue}
-            originalValue={token.value}
-            onChange={(value) => handleTokenChange(token.name, value, token.value, token.category)}
-            hasChanged={hasChanged}
-          />
-        );
+      // Pass 1: Light
+      html.classList.remove('dark');
+      void html.offsetHeight; // force reflow
+      const lightStyles = getComputedStyle(html);
+      tokens.forEach(t => {
+        const light = lightStyles.getPropertyValue(t.name).trim();
+        map.set(t.name, { light, dark: '' });
+      });
 
-      case 'spacing':
-      case 'radius':
-        // Extract numeric value and unit
-        const match = currentValue.match(/^([\d.]+)(.*)$/);
-        const numericValue = match ? parseFloat(match[1]) : 0;
-        const unit = match ? match[2] : 'px';
-        
-        return (
-          <SliderControl
-            value={numericValue}
-            originalValue={parseFloat(token.value)}
-            onChange={(value) => handleTokenChange(token.name, `${value}${unit}`, token.value, token.category)}
-            min={0}
-            max={token.category === 'spacing' ? 100 : 50}
-            step={token.category === 'spacing' ? 1 : 0.5}
-            unit={unit}
-            hasChanged={hasChanged}
-          />
-        );
+      // Pass 2: Dark
+      html.classList.add('dark');
+      void html.offsetHeight; // force reflow
+      const darkStyles = getComputedStyle(html);
+      tokens.forEach(t => {
+        const prev = map.get(t.name) || { light: '', dark: '' };
+        const dark = darkStyles.getPropertyValue(t.name).trim();
+        map.set(t.name, { light: prev.light, dark });
+      });
 
-      default:
-        return (
-          <TextControl
-            value={currentValue}
-            originalValue={token.value}
-            onChange={(value) => handleTokenChange(token.name, value, token.value, token.category)}
-            hasChanged={hasChanged}
-          />
-        );
+      // Restore
+      if (!wasDark) html.classList.remove('dark');
+
+      return map;
+    } catch {
+      return new Map<string, { light: string; dark: string }>();
     }
+  }, [tokens]);
+
+  const handleScopedTokenChange = (
+    tokenName: string,
+    scope: 'light' | 'dark',
+    newValue: string,
+    originalValue: string
+  ) => {
+    // Track edit with scope
+    addTokenEdit({ token: tokenName, value: newValue, originalValue, scope });
+    // Apply runtime style immediately
+    const selector = scope === 'dark' ? '.dark' : ':root';
+    addRuntimeStyle({ selector, property: tokenName, value: newValue, type: 'token' });
   };
 
   const renderTokenItem = (token: CSSToken) => {
-    const currentEdit = tokenEdits[token.name];
-    const hasChanged = currentEdit && currentEdit.value !== currentEdit.originalValue;
-
-    // Use a composite key to avoid duplicate React keys when the same token name
-    // exists in multiple stylesheets (e.g., light/dark overrides)
-    const uniqueKey = `${token.name}-${token.file}-${token.value}`;
+    const uniqueKey = `${token.name}`;
+    const pair = lightDarkMap.get(token.name);
+    const light = pair?.light ?? token.value;
+    const dark = pair?.dark ?? token.value;
+    const lightEdit = tokenEdits.find(e => e.token === token.name && e.scope !== 'dark');
+    const darkEdit = tokenEdits.find(e => e.token === token.name && e.scope === 'dark');
+    const lightValue = lightEdit?.value || light;
+    const darkValue = darkEdit?.value || dark;
+    const lightChanged = !!lightEdit && lightEdit.value !== lightEdit.originalValue;
+    const darkChanged = !!darkEdit && darkEdit.value !== darkEdit.originalValue;
 
     return (
-      <Card key={uniqueKey} className={`transition-all ${hasChanged ? 'ring-2 ring-blue-500' : ''}`}>
+      <Card key={uniqueKey} className="transition-all">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <code className="text-sm font-mono bg-muted px-2 py-1 rounded">
                 {token.name}
               </code>
-              {hasChanged && (
-                <Badge variant="secondary" className="text-xs">
-                  Modified
-                </Badge>
-              )}
             </div>
-            {/* Removed token.file badge as it shows unhelpful Next.js compressed CSS filenames */}
           </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            <div className="text-xs text-muted-foreground">
-              Original: <code className="bg-muted px-1 py-0.5 rounded">{token.value}</code>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <div className="text-xs text-muted-foreground flex items-center gap-2">
+                <Badge variant="outline" className="text-xs">Light</Badge>
+                <code className="bg-muted px-1 py-0.5 rounded">{light}</code>
+                {lightChanged && <Badge variant="secondary" className="text-xs">Modified</Badge>}
+              </div>
+              <ColorPicker
+                value={lightValue}
+                originalValue={light}
+                onChange={(value) => handleScopedTokenChange(token.name, 'light', value, light)}
+                hasChanged={lightChanged}
+              />
             </div>
-            {renderTokenControl(token)}
+
+            <div className="space-y-2">
+              <div className="text-xs text-muted-foreground flex items-center gap-2">
+                <Badge variant="outline" className="text-xs">Dark</Badge>
+                <code className="bg-muted px-1 py-0.5 rounded">{dark}</code>
+                {darkChanged && <Badge variant="secondary" className="text-xs">Modified</Badge>}
+              </div>
+              <ColorPicker
+                value={darkValue}
+                originalValue={dark}
+                onChange={(value) => handleScopedTokenChange(token.name, 'dark', value, dark)}
+                hasChanged={darkChanged}
+              />
+            </div>
           </div>
         </CardContent>
       </Card>

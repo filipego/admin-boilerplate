@@ -89,15 +89,8 @@ export function ToolComponentsTab() {
     try {
       const scannedComponents = await componentScanner.scanComponents();
       setComponents(scannedComponents);
-      
-      if (scannedComponents.length === 0) {
-        toast.info('No components found. Try adding data-ui attributes to your components.');
-      } else {
-        toast.success(`Found ${scannedComponents.length} components`);
-      }
     } catch (error) {
       console.error('Error loading components:', error);
-      toast.error('Failed to load components');
     } finally {
       setLoading(false);
     }
@@ -157,6 +150,10 @@ export function ToolComponentsTab() {
 
     return groups.sort((a, b) => b.components.length - a.components.length);
   }, [filteredComponents]);
+
+  const MemoCard = React.memo(({ c }: { c: ScannedComponent }) => (
+    <div key={c.id}>{renderComponentItem(c)}</div>
+  ));
 
   function getTypeIcon(type: string) {
     switch (type.toLowerCase()) {
@@ -488,9 +485,7 @@ export function ToolComponentsTab() {
                 </div>
                 <div className="space-y-3">
                   {group.components.map(component => (
-                    <div key={component.id}>
-                      {renderComponentItem(component)}
-                    </div>
+                    <MemoCard key={component.id} c={component} />
                   ))}
                 </div>
               </div>
