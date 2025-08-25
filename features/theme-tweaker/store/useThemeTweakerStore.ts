@@ -54,6 +54,7 @@ interface ThemeTweakerState {
   isToolOpen: boolean;
   activeTab: 'tokens' | 'components' | 'layout' | 'diff';
   isInspectorMode: boolean;
+  highlightedComponent?: string | null;
   
   // Selection State
   selectedElement: SelectedElement | null;
@@ -86,6 +87,7 @@ interface ThemeTweakerState {
   setToolOpen: (open: boolean) => void;
   setActiveTab: (tab: 'tokens' | 'components' | 'layout' | 'diff') => void;
   setInspectorMode: (enabled: boolean) => void;
+  setHighlightedComponent?: (id: string | null) => void;
   
   setSelectedElement: (element: SelectedElement | null) => void;
   setHoveredElement: (element: HTMLElement | null) => void;
@@ -131,6 +133,7 @@ export const useThemeTweakerStore = create<ThemeTweakerState>()(devtools(
     isToolOpen: false,
     activeTab: 'tokens',
     isInspectorMode: false,
+    highlightedComponent: null,
     
     selectedElement: null,
     hoveredElement: null,
@@ -164,6 +167,7 @@ export const useThemeTweakerStore = create<ThemeTweakerState>()(devtools(
     setToolOpen: (open) => set({ isToolOpen: open }),
     setActiveTab: (tab) => set({ activeTab: tab }),
     setInspectorMode: (enabled) => set({ isInspectorMode: enabled }),
+    setHighlightedComponent: (id) => set({ highlightedComponent: id }),
     
     setSelectedElement: (element) => set({ selectedElement: element }),
     setHoveredElement: (element) => set({ hoveredElement: element }),
@@ -300,6 +304,7 @@ export const useThemeTweakerStore = create<ThemeTweakerState>()(devtools(
       isToolOpen: false,
       activeTab: 'tokens',
       isInspectorMode: false,
+      highlightedComponent: null,
       selectedElement: null,
       hoveredElement: null,
       tokenEdits: [],

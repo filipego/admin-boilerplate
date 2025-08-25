@@ -7,7 +7,7 @@ import { RepoScanner } from '../../utils/repoScanner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+// removed internal tabs; always show grouped view
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ColorPicker } from '../controls/ColorPicker';
@@ -331,37 +331,24 @@ export function ToolTokensTab() {
           </p>
         </div>
       ) : (
-        <Tabs defaultValue="grouped" className="w-full">
-          <TabsList>
-            <TabsTrigger value="grouped">Grouped</TabsTrigger>
-            <TabsTrigger value="list">List</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="grouped" className="mt-4">
-              <div className="space-y-6">
-                {tokenGroups.map(group => (
-                  <div key={group.category}>
-                    <div className="flex items-center gap-2 mb-3">
-                      {group.icon}
-                      <h4 className="font-medium capitalize">{group.category}</h4>
-                      <Badge className={group.color}>
-                        {group.tokens.length}
-                      </Badge>
-                    </div>
-                    <div className="space-y-3">
-                      {group.tokens.map(token => renderTokenItem(token))}
-                    </div>
-                  </div>
-                ))}
-               </div>
-            </TabsContent>
-          
-          <TabsContent value="list" className="mt-4">
-              <div className="space-y-3">
-                {filteredTokens.map(token => renderTokenItem(token))}
+        <div className="w-full mt-4">
+          <div className="space-y-6">
+            {tokenGroups.map(group => (
+              <div key={group.category}>
+                <div className="flex items-center gap-2 mb-3">
+                  {group.icon}
+                  <h4 className="font-medium capitalize">{group.category}</h4>
+                  <Badge className={group.color}>
+                    {group.tokens.length}
+                  </Badge>
+                </div>
+                <div className="space-y-3">
+                  {group.tokens.map(token => renderTokenItem(token))}
+                </div>
               </div>
-            </TabsContent>
-        </Tabs>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );

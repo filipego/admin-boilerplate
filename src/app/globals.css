@@ -130,7 +130,9 @@
   --brand-1: oklch(0.556 0.2 41.116); /* Primary brand color (darker) */
   --brand-2: oklch(0.51 0.1 184.704); /* Secondary brand color (darker) */
   --brand-3: oklch(0.308 0.06 227.392); /* Accent brand color (darker) */
-  --brand-4: oklch(0.738 0.17 84.429); /* Success/positive brand color (darker) */
+  --brand-4: oklch(
+    0.738 0.17 84.429
+  ); /* Success/positive brand color (darker) */
   --brand-5: oklch(0.679 0.17 70.08); /* Warning brand color (darker) */
   --brand-6: oklch(0.487 0.22 27.325); /* Error/negative brand color (darker) */
 }
@@ -142,6 +144,17 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Theme Tweaker highlighting */
+.tt-highlight {
+  outline: 2px dashed #22c55e;
+  outline-offset: 2px;
+}
+
+.tt-selected {
+  outline: 2px solid #22c55e;
+  outline-offset: 2px;
 }
 
 /* Masonry (react-masonry-css) helpers */

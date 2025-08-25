@@ -7,7 +7,6 @@ import { RepoScanner } from '../../utils/repoScanner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ColorPicker } from '../controls/ColorPicker';
 import { SliderControl } from '../controls/SliderControl';
@@ -55,6 +54,35 @@ export function ToolComponentsTab() {
   useEffect(() => {
     loadComponents();
   }, []);
+
+  // When highlightedComponent changes from outside (e.g., Alt+Click), scroll it into view
+  useEffect(() => {
+    if (!highlightedComponent) return;
+    const el = document.querySelector(`[data-tt-component-id="${highlightedComponent}"]`);
+    if (el && 'scrollIntoView' in el) {
+      (el as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [highlightedComponent]);
+
+  // Also switch the filter chip to the highlighted component's type
+  useEffect(() => {
+    if (!highlightedComponent) return;
+    const comp = components.find(c => c.id === highlightedComponent);
+    if (comp) {
+      setSelectedType(comp.type);
+    }
+  }, [highlightedComponent, components]);
+
+  // Apply page-level selection outline when highlightedComponent changes (Alt+Click or card click)
+  useEffect(() => {
+    // Clear any previous selection
+    document.querySelectorAll('.tt-selected').forEach(el => el.classList.remove('tt-selected'));
+    if (!highlightedComponent) return;
+    const comp = components.find(c => c.id === highlightedComponent);
+    if (comp) {
+      document.querySelectorAll(comp.selector).forEach(el => el.classList.add('tt-selected'));
+    }
+  }, [highlightedComponent, components]);
 
   const loadComponents = async () => {
     setLoading(true);
@@ -173,23 +201,26 @@ export function ToolComponentsTab() {
         // Highlight the component in the DOM
         const elements = document.querySelectorAll(component.selector);
         elements.forEach(el => {
-          if (componentId) {
-            el.classList.add('tt-highlight');
-          } else {
-            el.classList.remove('tt-highlight');
-          }
+          el.classList.add('tt-highlight');
         });
       }
     } else {
       // Remove all highlights
-      document.querySelectorAll('.tt-highlight').forEach(el => {
-        el.classList.remove('tt-highlight');
-      });
+      document.querySelectorAll('.tt-highlight').forEach(el => el.classList.remove('tt-highlight'));
     }
   };
 
   const handleComponentClick = (componentId: string) => {
-    setHighlightedComponent(componentId === highlightedComponent ? null : componentId);
+    const next = componentId === highlightedComponent ? null : componentId;
+    // Clear previous selection outlines
+    document.querySelectorAll('.tt-selected').forEach(el => el.classList.remove('tt-selected'));
+    if (next) {
+      const component = components.find(c => c.id === next);
+      if (component) {
+        document.querySelectorAll(component.selector).forEach(el => el.classList.add('tt-selected'));
+      }
+    }
+    setHighlightedComponent(next);
   };
 
   const renderStyleControl = (component: ScannedComponent, property: string, value: string) => {
@@ -272,10 +303,11 @@ export function ToolComponentsTab() {
         className={`transition-all cursor-pointer ${
           hasChanges ? 'ring-2 ring-blue-500' : ''
         } ${
-          isHighlighted ? 'bg-blue-50 border-blue-300' : ''
+          isHighlighted ? 'ring-2 ring-green-500' : ''
         } ${
-          isHovered ? 'shadow-md' : ''
+          isHovered ? 'shadow-sm' : ''
         }`}
+        data-tt-component-id={component.id}
         onMouseEnter={() => handleComponentHover(component.id)}
         onMouseLeave={() => handleComponentHover(null)}
         onClick={() => handleComponentClick(component.id)}
@@ -443,45 +475,28 @@ export function ToolComponentsTab() {
           </p>
         </div>
       ) : (
-        <Tabs defaultValue="grouped" className="w-full">
-          <TabsList>
-            <TabsTrigger value="grouped">Grouped</TabsTrigger>
-            <TabsTrigger value="list">List</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="grouped" className="mt-4">
-            <div className="space-y-6">
-              {componentGroups.map(group => (
-                <div key={group.type}>
-                  <div className="flex items-center gap-2 mb-3">
-                    {group.icon}
-                    <h4 className="font-medium capitalize">{group.type}</h4>
-                    <Badge className={group.color}>
-                      {group.components.length}
-                    </Badge>
-                  </div>
-                  <div className="space-y-3">
-                    {group.components.map(component => (
-                      <div key={component.id}>
-                        {renderComponentItem(component)}
-                      </div>
-                    ))}
-                  </div>
+        <div className="w-full mt-4">
+          <div className="space-y-6">
+            {componentGroups.map(group => (
+              <div key={group.type}>
+                <div className="flex items-center gap-2 mb-3">
+                  {group.icon}
+                  <h4 className="font-medium capitalize">{group.type}</h4>
+                  <Badge className={group.color}>
+                    {group.components.length}
+                  </Badge>
                 </div>
-              ))}
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="list" className="mt-4">
-            <div className="space-y-3">
-              {filteredComponents.map(component => (
-                <div key={component.id}>
-                  {renderComponentItem(component)}
+                <div className="space-y-3">
+                  {group.components.map(component => (
+                    <div key={component.id}>
+                      {renderComponentItem(component)}
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </TabsContent>
-        </Tabs>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );

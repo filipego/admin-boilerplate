@@ -25,6 +25,9 @@ import {
   RotateCcw,
   Eye,
   EyeOff
+  , Move,
+  PanelLeft,
+  PanelRight
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -47,12 +50,35 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
   const [previewMode, setPreviewMode] = useState(true);
   const [panelWidth, setPanelWidth] = useState<number>(450);
   const isResizing = useRef(false);
+  const resizeStartX = useRef(0);
+  const resizeStartWidth = useRef(0);
+  const resizeSide = useRef<'left' | 'right'>('left');
+
+  const [dock, setDock] = useState<'right' | 'left' | 'floating'>(() => {
+    if (typeof window === 'undefined') return 'right';
+    return (window.localStorage.getItem('tt-panel-dock') as any) || 'right';
+  });
+  const [position, setPosition] = useState<{ x: number; y: number }>(() => ({ x: 16, y: 16 }));
+  const isDragging = useRef(false);
+  const dragStart = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const dragOffset = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
   useEffect(() => {
     const raw = typeof window !== 'undefined' ? window.localStorage.getItem('tt-panel-width') : null;
     if (raw) {
       const parsed = parseInt(raw, 10);
       if (!Number.isNaN(parsed)) setPanelWidth(parsed);
+    }
+    if (typeof window !== 'undefined') {
+      const dockRaw = window.localStorage.getItem('tt-panel-dock');
+      if (dockRaw === 'left' || dockRaw === 'right' || dockRaw === 'floating') setDock(dockRaw);
+      const posRaw = window.localStorage.getItem('tt-panel-pos');
+      if (posRaw) {
+        try {
+          const p = JSON.parse(posRaw);
+          if (typeof p.x === 'number' && typeof p.y === 'number') setPosition(p);
+        } catch {}
+      }
     }
   }, []);
 
@@ -61,6 +87,15 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
       window.localStorage.setItem('tt-panel-width', String(panelWidth));
     }
   }, [panelWidth]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('tt-panel-dock', dock);
+      if (dock === 'floating') {
+        window.localStorage.setItem('tt-panel-pos', JSON.stringify(position));
+      }
+    }
+  }, [dock, position]);
 
   // Calculate total changes across all tabs
   const totalChanges = tokenEdits.length + 
@@ -97,16 +132,33 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
   // Handle resize
   useEffect(() => {
     const onMouseMove = (e: MouseEvent) => {
-      if (!isResizing.current || isMaximized) return;
-      const dx = e.clientX - (window.innerWidth - panelWidth - 16); // 16px for right margin
-      const nextWidth = Math.max(350, Math.min(900, panelWidth - dx));
-      setPanelWidth(nextWidth);
+      if (isResizing.current && !isMaximized) {
+        const delta = resizeSide.current === 'right'
+          ? e.clientX - resizeStartX.current
+          : resizeStartX.current - e.clientX;
+        const nextWidth = Math.max(350, Math.min(900, resizeStartWidth.current + delta));
+        setPanelWidth(nextWidth);
+      }
+      if (isDragging.current && dock === 'floating' && !isMaximized) {
+        const nx = e.clientX - dragOffset.current.x;
+        const ny = e.clientY - dragOffset.current.y;
+        const clampedX = Math.max(8, Math.min(window.innerWidth - panelWidth - 8, nx));
+        const clampedY = Math.max(8, Math.min(window.innerHeight - 120, ny));
+        setPosition({ x: clampedX, y: clampedY });
+      }
     };
     
     const onMouseUp = () => {
       if (isResizing.current) {
         isResizing.current = false;
         window.localStorage.setItem('tt-panel-width', String(panelWidth));
+      }
+      if (isDragging.current) {
+        isDragging.current = false;
+        if (dock === 'floating') {
+          window.localStorage.setItem('tt-panel-pos', JSON.stringify(position));
+        }
+        document.body.style.userSelect = '';
       }
     };
     
@@ -116,7 +168,7 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
     };
-  }, [panelWidth, isMaximized]);
+  }, [panelWidth, isMaximized, dock, position]);
 
   const handleMinimize = () => {
     setIsMinimized((prev) => !prev);
@@ -148,17 +200,43 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
 
   // Component is always visible when rendered
 
-  const wrapperClasses = `
-    fixed z-[9999] transition-all duration-300
-    ${isMaximized ? 'inset-4' : 'top-4 right-4 h-[calc(100vh-2rem)]'}
-    ${isMinimized ? 'h-14' : ''}
-  `;
+  let wrapperClasses = 'fixed z-[9999] transition-all duration-300';
+  if (isMaximized) {
+    wrapperClasses += ' inset-4';
+  } else if (dock === 'right') {
+    wrapperClasses += ' top-4 right-4 h-[calc(100vh-2rem)]';
+  } else if (dock === 'left') {
+    wrapperClasses += ' top-4 left-4 h-[calc(100vh-2rem)]';
+  } else {
+    wrapperClasses += '';
+  }
+  if (isMinimized) wrapperClasses += ' h-14';
 
   return (
-    <div className={wrapperClasses} style={!isMaximized ? { width: panelWidth } : undefined}>
+    <div
+      className={wrapperClasses}
+      style={!isMaximized
+        ? (dock === 'floating'
+            ? { width: panelWidth, left: position.x, top: position.y, height: `calc(100vh - ${position.y + 16}px)` }
+            : { width: panelWidth })
+        : undefined}
+    >
       <Card className="bg-[#774DFF] dark:bg-[#5E3AD8] border border-[#774DFF] dark:border-[#5E3AD8] shadow-2xl h-full flex flex-col">
         {/* Header */}
-        <CardHeader className="pb-3 border-b border-transparent bg-[#774DFF] dark:bg-[#5E3AD8]">
+        <CardHeader
+          className="pb-3 border-b border-transparent bg-[#774DFF] dark:bg-[#5E3AD8] cursor-move select-none"
+          onMouseDown={(e) => {
+            if (dock !== 'floating') return;
+            // don't start drag when clicking header action buttons
+            const target = e.target as HTMLElement;
+            if (target.closest('button')) return;
+            e.preventDefault();
+            isDragging.current = true;
+            dragStart.current = { x: e.clientX, y: e.clientY };
+            dragOffset.current = { x: e.clientX - position.x, y: e.clientY - position.y };
+            document.body.style.userSelect = 'none';
+          }}
+        >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Settings className="w-5 h-5" />
@@ -171,6 +249,22 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
             </div>
             
             <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setDock(dock === 'left' ? 'right' : 'left')}
+                title={dock === 'left' ? 'Dock Right' : 'Dock Left'}
+              >
+                {dock === 'left' ? <PanelRight className="w-4 h-4" /> : <PanelLeft className="w-4 h-4" />}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setDock('floating')}
+                title="Undock / Drag"
+              >
+                <Move className="w-4 h-4" />
+              </Button>
               <Button
                 variant="ghost"
                 size="sm"
@@ -345,12 +439,15 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
       </Card>
       
       {/* Resize handle */}
-      {!isMinimized && !isMaximized && (
+      {!isMinimized && !isMaximized && dock !== 'floating' && (
         <div
-          className="absolute top-0 bottom-0 left-0 w-1 cursor-col-resize hover:bg-white/10"
+          className={`absolute top-0 bottom-0 ${dock === 'right' ? 'left-0' : 'right-0'} w-1 cursor-col-resize hover:bg-white/10`}
           onMouseDown={(e) => {
             e.preventDefault();
             isResizing.current = true;
+            resizeStartX.current = e.clientX;
+            resizeStartWidth.current = panelWidth;
+            resizeSide.current = dock === 'right' ? 'right' : 'left';
           }}
           aria-label="Resize panel"
           role="separator"

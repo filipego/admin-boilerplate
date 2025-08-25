@@ -78,18 +78,25 @@ export function ThemeTweaker() {
 
     const handleElementClick = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
-      const dataUi = target.getAttribute('data-ui');
+      const closestWithDataUi = target.closest('[data-ui]') as HTMLElement | null;
+      const dataUi = closestWithDataUi?.getAttribute('data-ui') || null;
       
       if (dataUi && event.altKey) {
         event.preventDefault();
         event.stopPropagation();
         
         // Find component and highlight for editing
-        const component = repoScanner.findComponentByElement(target);
-        if (component) {
-          toast.success(`Selected ${component.name} for editing`);
-          // Switch to components tab and highlight the component
-          // This would be handled by the store
+        const dataUiName = dataUi;
+        toast.success(`Selected ${dataUiName} for editing`);
+        // Switch to components tab and highlight the component
+        try {
+          const store = useThemeTweakerStore.getState();
+          store.setActiveTab('components');
+          if (store.setHighlightedComponent) {
+            store.setHighlightedComponent(dataUiName);
+          }
+        } catch (e) {
+          console.error(e);
         }
       }
     };
