@@ -62,6 +62,24 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
   const isDragging = useRef(false);
   const dragStart = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const dragOffset = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  // Lock tool UI to initial CSS variable values so site edits don't affect the tool
+  const [lockedVars, setLockedVars] = useState<Record<string, string> | null>(null);
+  const [showTabText, setShowTabText] = useState(true);
+  const tabsListRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!tabsListRef.current) return;
+    const el = tabsListRef.current;
+    const ro = new ResizeObserver(() => {
+      // If each tab would get less than 100px, hide text
+      const width = el.clientWidth;
+      const minPerTab = 100; // threshold for showing labels
+      const tabsCount = 4;
+      setShowTabText(width / tabsCount >= minPerTab);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     const raw = typeof window !== 'undefined' ? window.localStorage.getItem('tt-panel-width') : null;
@@ -79,6 +97,21 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
           if (typeof p.x === 'number' && typeof p.y === 'number') setPosition(p);
         } catch {}
       }
+      // Capture initial global CSS variables to isolate tool UI
+      try {
+        const names = [
+          '--background','--foreground','--card','--card-foreground','--popover','--popover-foreground',
+          '--muted','--muted-foreground','--accent','--accent-foreground','--primary','--primary-foreground',
+          '--secondary','--secondary-foreground','--border','--input','--ring'
+        ];
+        const cs = getComputedStyle(document.documentElement);
+        const map: Record<string,string> = {};
+        for (const n of names) {
+          const v = cs.getPropertyValue(n).trim();
+          if (v) map[n] = v;
+        }
+        setLockedVars(map);
+      } catch {}
     }
   }, []);
 
@@ -238,14 +271,33 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
 
   return (
     <div
-      className={wrapperClasses}
-      style={!isMaximized
-        ? (dock === 'floating'
-            ? { width: panelWidth, left: position.x, top: position.y, height: `calc(100vh - ${position.y + 16}px)` }
-            : { width: panelWidth })
-        : undefined}
+      className={wrapperClasses + ' tt-scope'}
+      style={(() => {
+        const posStyle = !isMaximized
+          ? (dock === 'floating'
+              ? { width: panelWidth, left: position.x, top: position.y, height: `calc(100vh - ${position.y + 16}px)` }
+              : { width: panelWidth })
+          : {};
+        const varsStyle = (lockedVars || {}) as unknown as React.CSSProperties;
+        return { ...posStyle, ...varsStyle } as React.CSSProperties;
+      })()}
     >
-      <UICardContainer className="bg-[#E9E2FF] dark:bg-[#5E3AD8] border border-[#E9E2FF] dark:border-[#5E3AD8] shadow-2xl h-full flex flex-col pt-0">
+      <style jsx>{`
+        .tab-text {
+          transition: opacity 0.2s ease;
+        }
+        @media (max-width: 400px) {
+          .tab-text {
+            display: none;
+          }
+        }
+        @media (max-width: 500px) {
+          .tab-text {
+            opacity: 0.7;
+          }
+        }
+      `}</style>
+      <UICardContainer className="bg-[#E9E2FF] dark:bg-[#5E3AD8] border border-[#E9E2FF] dark:border-[#5E3AD8] shadow-2xl h-full flex flex-col pt-0 tt-container">
         {/* Header */}
         <UICardHeader className="pt-0 pb-2 border-b border-transparent bg-[#E9E2FF] dark:bg-[#5E3AD8] select-none">
           {/* Draggable spacer equal to removed top padding */}
@@ -342,39 +394,39 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
           <UICardContent className="p-0 flex-1 overflow-hidden">
             <UITabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="h-full flex flex-col">
               <div className="px-4 pt-2">
-                <UITabsList className="w-full gap-2 justify-start">
-                  <UITabsTrigger value="tokens" className="flex items-center gap-1">
-                    <Palette className="w-3 h-3" />
-                    <span>Tokens</span>
+                <UITabsList ref={tabsListRef as any} className="w-full gap-1 justify-between">
+                  <UITabsTrigger value="tokens" className="flex items-center gap-1.5 text-xs px-2 py-1 flex-1 min-w-0">
+                    <Palette className="w-2.5 h-2.5 flex-shrink-0" />
+                    {showTabText && <span className="tab-text">Tokens</span>}
                     {tokenEdits.length > 0 && (
-                      <UIBadge variant="secondary" className="ml-1 text-xs">
+                      <UIBadge variant="secondary" className="ml-1 text-xs flex-shrink-0">
                         {tokenEdits.length}
                       </UIBadge>
                     )}
                   </UITabsTrigger>
-                  <UITabsTrigger value="components" className="flex items-center gap-1">
-                    <Component className="w-3 h-3" />
-                    <span>Components</span>
+                  <UITabsTrigger value="components" className="flex items-center gap-1.5 text-xs px-2 py-1 flex-1 min-w-0">
+                    <Component className="w-2.5 h-2.5 flex-shrink-0" />
+                    {showTabText && <span className="tab-text">Components</span>}
                     {componentEdits.length > 0 && (
-                      <UIBadge variant="secondary" className="ml-1 text-xs">
+                      <UIBadge variant="secondary" className="ml-1 text-xs flex-shrink-0">
                         {componentEdits.length}
                       </UIBadge>
                     )}
                   </UITabsTrigger>
-                  <UITabsTrigger value="layout" className="flex items-center gap-1">
-                    <Layout className="w-3 h-3" />
-                    <span>Layout</span>
+                  <UITabsTrigger value="layout" className="flex items-center gap-1.5 text-xs px-2 py-1 flex-1 min-w-0">
+                    <Layout className="w-2.5 h-2.5 flex-shrink-0" />
+                    {showTabText && <span className="tab-text">Layout</span>}
                     {runtimeStyles.length > 0 && (
-                      <UIBadge variant="secondary" className="ml-1 text-xs">
+                      <UIBadge variant="secondary" className="ml-1 text-xs flex-shrink-0">
                         {totalChanges}
                       </UIBadge>
                     )}
                   </UITabsTrigger>
-                  <UITabsTrigger value="diff" className="flex items-center gap-1">
-                    <FileText className="w-3 h-3" />
-                    <span>Diff</span>
+                  <UITabsTrigger value="diff" className="flex items-center gap-1.5 text-xs px-2 py-1 flex-1 min-w-0">
+                    <FileText className="w-2.5 h-2.5 flex-shrink-0" />
+                    {showTabText && <span className="tab-text">Diff</span>}
                     {totalChanges > 0 && (
-                      <UIBadge variant="secondary" className="ml-1 text-xs">
+                      <UIBadge variant="secondary" className="ml-1 text-xs flex-shrink-0">
                         {totalChanges}
                       </UIBadge>
                     )}

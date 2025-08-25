@@ -375,13 +375,12 @@ export function ToolTokensTab() {
     originalValue: string
   ) => {
     const selector = scope === 'dark' ? '.dark' : ':root';
-    if (isValidColor(newValue)) {
-      // Preview raw value immediately
-      addRuntimeStyle({ selector, property: tokenName, value: newValue, type: 'token' });
-      // Stage converted value (fallback to original input if conversion fails)
-      const converted = toOKLCH(newValue) || newValue;
-      addTokenEdit({ token: tokenName, value: converted, originalValue, scope });
-    }
+    if (!isValidColor(newValue)) return;
+    // Stage converted value (fallback to original input if conversion fails)
+    const converted = toOKLCH(newValue) || newValue;
+    addTokenEdit({ token: tokenName, value: converted, originalValue, scope });
+    // Also push to runtimeStyles for immediate preview
+    addRuntimeStyle({ selector, property: tokenName, value: newValue, type: 'token' });
   };
 
   const renderTokenItem = (token: CSSToken) => {

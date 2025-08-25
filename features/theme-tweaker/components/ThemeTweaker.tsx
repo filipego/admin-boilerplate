@@ -8,6 +8,7 @@ import { Palette, Settings } from 'lucide-react';
 import { toast } from 'sonner';
 import { RepoScanner } from '../utils/repoScanner';
 import { RuntimeCSSEngine } from '../utils/runtimeCSSEngine';
+import { applyRuntimeStyles } from '../runtime/applyRuntime';
 
 // Feature flag check
 const isThemeTweakerEnabled = process.env.NEXT_PUBLIC_THEMETWEAKER === '1';
@@ -53,24 +54,14 @@ export function ThemeTweaker() {
     initializeThemeTweaker();
   }, [isInitialized]);
 
-  // Apply runtime CSS changes
+  // Apply runtime CSS changes for live preview (use runtimeStyles only)
   useEffect(() => {
-    if (!runtimeEngine) return;
-
     try {
-      // Combine all edits
-      const allEdits = {
-        ...tokenEdits,
-        ...componentEdits,
-        ...runtimeStyles
-      };
-
-      // Apply to runtime engine
-      runtimeEngine.applyEdits(allEdits);
+      applyRuntimeStyles(runtimeStyles || []);
     } catch (error) {
       console.error('Failed to apply runtime CSS:', error);
     }
-  }, [runtimeEngine, tokenEdits, componentEdits, runtimeStyles]);
+  }, [runtimeEngine, runtimeStyles]);
 
   // Handle click-to-edit functionality
   useEffect(() => {
@@ -134,6 +125,22 @@ export function ThemeTweaker() {
     setToolOpen(false);
   };
 
+  // Snapshot initial vars for the Alt+Click hint so it doesn't react to theme edits
+  const [hintVars, setHintVars] = useState<{ bg: string; border: string; text: string; kbdBg: string; kbdText: string } | null>(null);
+  useEffect(() => {
+    try {
+      const cs = getComputedStyle(document.documentElement);
+      const read = (name: string, fallback: string) => (cs.getPropertyValue(name).trim() || fallback);
+      setHintVars({
+        bg: read('--background', '#0B0C0F'),
+        border: read('--border', 'rgba(255,255,255,0.12)'),
+        text: read('--muted-foreground', '#9CA3AF'),
+        kbdBg: read('--muted', '#F3F4F6'),
+        kbdText: read('--foreground', '#111827'),
+      });
+    } catch {}
+  }, []);
+
   // Don't render if feature flag is disabled
   if (!isThemeTweakerEnabled) {
     return null;
@@ -165,9 +172,26 @@ export function ThemeTweaker() {
 
       {/* Click-to-edit overlay hint */}
       {isToolOpen && (
-        <div className="fixed bottom-6 left-6 bg-background border border-border rounded-lg p-3 shadow-lg z-[9997]">
-          <p className="text-sm text-muted-foreground">
-            Hold <kbd className="px-1 py-0.5 bg-muted rounded text-xs">Alt</kbd> + click to edit components
+        <div
+          className="fixed bottom-6 left-6 rounded-lg p-3 shadow-lg z-[9997]"
+          style={{
+            backgroundColor: hintVars?.bg || '#0B0C0F',
+            border: `1px solid ${hintVars?.border || 'rgba(255,255,255,0.12)'}`,
+            color: hintVars?.text || '#9CA3AF'
+          }}
+        >
+          <p className="text-sm" style={{ color: hintVars?.text || '#9CA3AF' }}>
+            Hold{' '}
+            <kbd
+              className="px-1 py-0.5 rounded text-xs"
+              style={{
+                backgroundColor: hintVars?.kbdBg || '#F3F4F6',
+                color: hintVars?.kbdText || '#111827'
+              }}
+            >
+              Alt
+            </kbd>{' '}
+            + click to edit components
           </p>
         </div>
       )}
