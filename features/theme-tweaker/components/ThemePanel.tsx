@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useThemeTweakerStore } from '../store/useThemeTweakerStore';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+import UIButton from './common/UIButton';
+import UICard from './common/UICard';
+import { UICardContainer, UICardContent, UICardHeader, UICardTitle } from './common/UICardContainer';
+import { UITabs, UITabsContent, UITabsList, UITabsTrigger } from './common/UITabs';
+import UIBadge from './common/UIBadge';
+import UISeparator from './common/UISeparator';
 import ReactLazy = React.lazy;
 const ToolTokensTab = React.lazy(() => import('./tabs/ToolTokensTab').then(m => ({ default: m.ToolTokensTab })));
 const ToolComponentsTab = React.lazy(() => import('./tabs/ToolComponentsTab').then(m => ({ default: m.ToolComponentsTab })));
@@ -132,9 +133,23 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
   useEffect(() => {
     const onMouseMove = (e: MouseEvent) => {
       if (isResizing.current && !isMaximized) {
-        const delta = resizeSide.current === 'right'
-          ? e.clientX - resizeStartX.current
-          : resizeStartX.current - e.clientX;
+        let delta: number;
+        
+        if (dock === 'right') {
+          // When docked on right, resize handle is on left side
+          // Dragging left (decreasing clientX) should make panel wider
+          delta = resizeStartX.current - e.clientX;
+        } else if (dock === 'left') {
+          // When docked on left, resize handle is on right side
+          // Dragging right (increasing clientX) should make panel wider
+          delta = e.clientX - resizeStartX.current;
+        } else {
+          // Floating mode - use the original logic
+          delta = resizeSide.current === 'right'
+            ? e.clientX - resizeStartX.current
+            : resizeStartX.current - e.clientX;
+        }
+        
         const nextWidth = Math.max(350, Math.min(900, resizeStartWidth.current + delta));
         setPanelWidth(nextWidth);
       }
@@ -230,9 +245,9 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
             : { width: panelWidth })
         : undefined}
     >
-      <Card className="bg-[#774DFF] dark:bg-[#5E3AD8] border border-[#774DFF] dark:border-[#5E3AD8] shadow-2xl h-full flex flex-col pt-0">
+      <UICardContainer className="bg-[#E9E2FF] dark:bg-[#5E3AD8] border border-[#E9E2FF] dark:border-[#5E3AD8] shadow-2xl h-full flex flex-col pt-0">
         {/* Header */}
-        <CardHeader className="pt-0 pb-2 border-b border-transparent bg-[#774DFF] dark:bg-[#5E3AD8] select-none">
+        <UICardHeader className="pt-0 pb-2 border-b border-transparent bg-[#E9E2FF] dark:bg-[#5E3AD8] select-none">
           {/* Draggable spacer equal to removed top padding */}
           <div
             className="h-6 w-full cursor-move"
@@ -249,57 +264,57 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Settings className="w-5 h-5" />
-              <CardTitle className="text-lg">Theme Tweaker</CardTitle>
+              <UICardTitle className="text-lg">Theme Tweaker</UICardTitle>
               {totalChanges > 0 && (
-                <Badge variant="secondary">
+                <UIBadge variant="secondary">
                   {totalChanges} change{totalChanges !== 1 ? 's' : ''}
-                </Badge>
+                </UIBadge>
               )}
             </div>
             
             <div className="flex items-center gap-1">
-              <Button
+              <UIButton
                 variant="ghost"
                 size="sm"
                 onClick={() => setDock(dock === 'left' ? 'right' : 'left')}
                 title={dock === 'left' ? 'Dock Right' : 'Dock Left'}
               >
                 {dock === 'left' ? <PanelRight className="w-4 h-4" /> : <PanelLeft className="w-4 h-4" />}
-              </Button>
+              </UIButton>
               
-              <Button
+              <UIButton
                 variant="ghost"
                 size="sm"
                 onClick={handlePreviewToggle}
                 title={previewMode ? 'Disable preview' : 'Enable preview'}
               >
                 {previewMode ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-              </Button>
+              </UIButton>
               
-              <Button
+              <UIButton
                 variant="ghost"
                 size="sm"
                 onClick={handleMaximize}
                 title={isMaximized ? 'Restore' : 'Maximize'}
               >
                 {isMaximized ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-              </Button>
+              </UIButton>
               
-              <Button
+              <UIButton
                 variant="ghost"
                 size="sm"
                 onClick={onClose}
                 title="Close"
               >
                 <X className="w-4 h-4" />
-              </Button>
+              </UIButton>
             </div>
           </div>
           
           {/* Quick Actions */}
           {!isMinimized && (
             <div className="flex items-center gap-2 mt-2">
-              <Button
+              <UIButton
                 variant="outline"
                 size="sm"
                 onClick={handleSave}
@@ -307,9 +322,9 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
               >
                 <Save className="w-3 h-3 mr-1" />
                 Save
-              </Button>
+              </UIButton>
               
-              <Button
+              <UIButton
                 variant="outline"
                 size="sm"
                 onClick={handleResetAll}
@@ -317,112 +332,112 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
               >
                 <RotateCcw className="w-3 h-3 mr-1" />
                 Reset
-              </Button>
+              </UIButton>
             </div>
           )}
-        </CardHeader>
+        </UICardHeader>
 
         {/* Content */}
         {!isMinimized && (
-          <CardContent className="p-0 flex-1 overflow-hidden">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
+          <UICardContent className="p-0 flex-1 overflow-hidden">
+            <UITabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="h-full flex flex-col">
               <div className="px-4 pt-2">
-                <TabsList className="w-full gap-2 justify-start">
-                  <TabsTrigger value="tokens" className="flex items-center gap-1">
+                <UITabsList className="w-full gap-2 justify-start">
+                  <UITabsTrigger value="tokens" className="flex items-center gap-1">
                   <Palette className="w-3 h-3" />
                   <span>Tokens</span>
                   {tokenEdits.length > 0 && (
-                    <Badge variant="secondary" className="ml-1 text-xs">
+                    <UIBadge variant="secondary" className="ml-1 text-xs">
                       {tokenEdits.length}
-                    </Badge>
+                    </UIBadge>
                   )}
-                  </TabsTrigger>
+                  </UITabsTrigger>
                 
-                  <TabsTrigger value="components" className="flex items-center gap-1">
+                  <UITabsTrigger value="components" className="flex items-center gap-1">
                   <Component className="w-3 h-3" />
                   <span>Components</span>
                   {componentEdits.length > 0 && (
-                    <Badge variant="secondary" className="ml-1 text-xs">
+                    <UIBadge variant="secondary" className="ml-1 text-xs">
                       {componentEdits.length}
-                    </Badge>
+                    </UIBadge>
                   )}
-                  </TabsTrigger>
+                  </UITabsTrigger>
                 
-                  <TabsTrigger value="layout" className="flex items-center gap-1">
+                  <UITabsTrigger value="layout" className="flex items-center gap-1">
                   <Layout className="w-3 h-3" />
                   <span>Layout</span>
                   {runtimeStyles.length > 0 && (
-                    <Badge variant="secondary" className="ml-1 text-xs">
+                    <UIBadge variant="secondary" className="ml-1 text-xs">
                       {totalChanges}
-                    </Badge>
+                    </UIBadge>
                   )}
-                  </TabsTrigger>
+                  </UITabsTrigger>
                 
-                  <TabsTrigger value="diff" className="flex items-center gap-1">
+                  <UITabsTrigger value="diff" className="flex items-center gap-1">
                   <FileText className="w-3 h-3" />
                   <span>Diff</span>
                   {totalChanges > 0 && (
-                    <Badge variant="secondary" className="ml-1 text-xs">
+                    <UIBadge variant="secondary" className="ml-1 text-xs">
                       {totalChanges}
-                    </Badge>
+                    </UIBadge>
                   )}
-                  </TabsTrigger>
-                </TabsList>
+                  </UITabsTrigger>
+                </UITabsList>
               </div>
               
               <div className="flex-1 overflow-hidden">
-                <TabsContent value="tokens" className="h-full m-0 p-4 overflow-auto">
+                <UITabsContent value="tokens" className="h-full m-0 p-4 overflow-auto">
                   <React.Suspense fallback={<div className="p-4 text-sm text-muted-foreground">Loading tokens…</div>}>
                     <ToolTokensTab />
                   </React.Suspense>
-                </TabsContent>
+                </UITabsContent>
                 
-                <TabsContent value="components" className="h-full m-0 p-4 overflow-auto">
+                <UITabsContent value="components" className="h-full m-0 p-4 overflow-auto">
                   <React.Suspense fallback={<div className="p-4 text-sm text-muted-foreground">Loading components…</div>}>
                     <ToolComponentsTab />
                   </React.Suspense>
-                </TabsContent>
+                </UITabsContent>
                 
-                <TabsContent value="layout" className="h-full m-0 p-4 overflow-auto">
+                <UITabsContent value="layout" className="h-full m-0 p-4 overflow-auto">
                   <React.Suspense fallback={<div className="p-4 text-sm text-muted-foreground">Loading layout…</div>}>
                     <ToolLayoutTab />
                   </React.Suspense>
-                </TabsContent>
+                </UITabsContent>
                 
-                <TabsContent value="diff" className="h-full m-0 p-4 overflow-auto">
+                <UITabsContent value="diff" className="h-full m-0 p-4 overflow-auto">
                   <ToolDiffTab />
-                </TabsContent>
+                </UITabsContent>
               </div>
-            </Tabs>
-          </CardContent>
+            </UITabs>
+          </UICardContent>
         )}
         
         {/* Minimized State */}
         {isMinimized && (
-          <CardContent className="p-4">
+          <UICardContent className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">Theme Tweaker</span>
                 {totalChanges > 0 && (
-                  <Badge variant="secondary" className="text-xs">
+                  <UIBadge variant="secondary" className="text-xs">
                     {totalChanges}
-                  </Badge>
+                  </UIBadge>
                 )}
               </div>
               
               <div className="flex items-center gap-1">
                 {totalChanges > 0 && (
                   <>
-                    <Button variant="ghost" size="sm" onClick={handleSave}>
+                    <UIButton variant="ghost" size="sm" onClick={handleSave}>
                       <Save className="w-3 h-3" />
-                    </Button>
+                    </UIButton>
                   </>
                 )}
               </div>
             </div>
-          </CardContent>
+          </UICardContent>
         )}
-      </Card>
+      </UICardContainer>
       
       {/* Resize handle */}
       {!isMinimized && !isMaximized && dock !== 'floating' && (
@@ -433,7 +448,8 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
             isResizing.current = true;
             resizeStartX.current = e.clientX;
             resizeStartWidth.current = panelWidth;
-            resizeSide.current = dock === 'right' ? 'right' : 'left';
+            // Set resize side based on dock position for proper calculation
+            resizeSide.current = dock === 'right' ? 'left' : 'right';
           }}
           aria-label="Resize panel"
           role="separator"
