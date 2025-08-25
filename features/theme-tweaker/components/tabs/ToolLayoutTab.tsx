@@ -465,14 +465,14 @@ export function ToolLayoutTab() {
           <CardTitle className="text-sm">Responsive Preview</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {breakpoints.map(breakpoint => (
               <Button
                 key={breakpoint.name}
                 variant={previewMode === breakpoint.name ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => handleBreakpointChange(breakpoint.name as any)}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 shrink-0"
               >
                 {breakpoint.icon}
                 <span className="capitalize">{breakpoint.name}</span>

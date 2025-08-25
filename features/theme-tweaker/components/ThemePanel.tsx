@@ -10,7 +10,7 @@ import UIBadge from './common/UIBadge';
 import UISeparator from './common/UISeparator';
 import ReactLazy = React.lazy;
 const ToolTokensTab = React.lazy(() => import('./tabs/ToolTokensTab').then(m => ({ default: m.ToolTokensTab })));
-const ToolComponentsTab = React.lazy(() => import('./tabs/ToolComponentsTab').then(m => ({ default: m.ToolComponentsTab })));
+const ToolComponentsTab = React.lazy(() => import('./tabs/ToolComponentsTab').then(m => ({ default: m.ToolComponentsTab }))); 
 const ToolLayoutTab = React.lazy(() => import('./tabs/ToolLayoutTab').then(m => ({ default: m.ToolLayoutTab })));
 import { ToolDiffTab } from './tabs/ToolDiffTab';
 import { 
@@ -344,66 +344,59 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
               <div className="px-4 pt-2">
                 <UITabsList className="w-full gap-2 justify-start">
                   <UITabsTrigger value="tokens" className="flex items-center gap-1">
-                  <Palette className="w-3 h-3" />
-                  <span>Tokens</span>
-                  {tokenEdits.length > 0 && (
-                    <UIBadge variant="secondary" className="ml-1 text-xs">
-                      {tokenEdits.length}
-                    </UIBadge>
-                  )}
+                    <Palette className="w-3 h-3" />
+                    <span>Tokens</span>
+                    {tokenEdits.length > 0 && (
+                      <UIBadge variant="secondary" className="ml-1 text-xs">
+                        {tokenEdits.length}
+                      </UIBadge>
+                    )}
                   </UITabsTrigger>
-                
                   <UITabsTrigger value="components" className="flex items-center gap-1">
-                  <Component className="w-3 h-3" />
-                  <span>Components</span>
-                  {componentEdits.length > 0 && (
-                    <UIBadge variant="secondary" className="ml-1 text-xs">
-                      {componentEdits.length}
-                    </UIBadge>
-                  )}
+                    <Component className="w-3 h-3" />
+                    <span>Components</span>
+                    {componentEdits.length > 0 && (
+                      <UIBadge variant="secondary" className="ml-1 text-xs">
+                        {componentEdits.length}
+                      </UIBadge>
+                    )}
                   </UITabsTrigger>
-                
                   <UITabsTrigger value="layout" className="flex items-center gap-1">
-                  <Layout className="w-3 h-3" />
-                  <span>Layout</span>
-                  {runtimeStyles.length > 0 && (
-                    <UIBadge variant="secondary" className="ml-1 text-xs">
-                      {totalChanges}
-                    </UIBadge>
-                  )}
+                    <Layout className="w-3 h-3" />
+                    <span>Layout</span>
+                    {runtimeStyles.length > 0 && (
+                      <UIBadge variant="secondary" className="ml-1 text-xs">
+                        {totalChanges}
+                      </UIBadge>
+                    )}
                   </UITabsTrigger>
-                
                   <UITabsTrigger value="diff" className="flex items-center gap-1">
-                  <FileText className="w-3 h-3" />
-                  <span>Diff</span>
-                  {totalChanges > 0 && (
-                    <UIBadge variant="secondary" className="ml-1 text-xs">
-                      {totalChanges}
-                    </UIBadge>
-                  )}
+                    <FileText className="w-3 h-3" />
+                    <span>Diff</span>
+                    {totalChanges > 0 && (
+                      <UIBadge variant="secondary" className="ml-1 text-xs">
+                        {totalChanges}
+                      </UIBadge>
+                    )}
                   </UITabsTrigger>
                 </UITabsList>
               </div>
-              
               <div className="flex-1 overflow-hidden">
                 <UITabsContent value="tokens" className="h-full m-0 p-4 overflow-auto">
                   <React.Suspense fallback={<div className="p-4 text-sm text-muted-foreground">Loading tokens…</div>}>
                     <ToolTokensTab />
                   </React.Suspense>
                 </UITabsContent>
-                
                 <UITabsContent value="components" className="h-full m-0 p-4 overflow-auto">
                   <React.Suspense fallback={<div className="p-4 text-sm text-muted-foreground">Loading components…</div>}>
                     <ToolComponentsTab />
                   </React.Suspense>
                 </UITabsContent>
-                
                 <UITabsContent value="layout" className="h-full m-0 p-4 overflow-auto">
                   <React.Suspense fallback={<div className="p-4 text-sm text-muted-foreground">Loading layout…</div>}>
                     <ToolLayoutTab />
                   </React.Suspense>
                 </UITabsContent>
-                
                 <UITabsContent value="diff" className="h-full m-0 p-4 overflow-auto">
                   <ToolDiffTab />
                 </UITabsContent>
