@@ -128,7 +128,7 @@
 }
 
 .dark {
-  --background: oklch(0.202 0.119 264);
+  --background: oklch(0.235 0.03 253.1);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);
@@ -237,15 +237,7 @@
   background-clip: padding-box;
 }
 
-/* BEGIN THEME TWEAKER OVERRIDES - DO NOT EDIT MANUALLY */
-/* Generated: 2025-08-25T22:55:22.097Z */
-html.dark,
-body.dark,
-.dark {
-  --background: oklch(0.202 0.119 264) !important;
-}
 
-/* END THEME TWEAKER OVERRIDES */
 
 /* Semantic color utility classes */
 @layer utilities {
@@ -341,3 +333,13 @@ body.dark,
     --tw-ring-color: var(--info-ring);
   }
 }
+
+
+
+/* BEGIN THEME TWEAKER OVERRIDES - DO NOT EDIT MANUALLY */
+/* Generated: 2025-08-26T21:49:33.665Z */
+html.dark, body.dark, .dark {
+  --background: oklch(0.235 0.03 253.1) !important;
+}
+
+/* END THEME TWEAKER OVERRIDES */

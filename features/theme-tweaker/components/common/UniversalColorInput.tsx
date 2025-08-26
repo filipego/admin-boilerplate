@@ -101,7 +101,7 @@ export const UniversalColorInput: React.FC<UniversalColorInputProps> = ({
           }}
           disabled={disabled}
           placeholder="#RRGGBB, rgb(), hsl(), oklch(), lab(), red"
-          className="font-mono text-sm flex-1"
+          className="font-mono text-sm flex-1 tt-input"
         />
 
         <Popover>
@@ -143,7 +143,7 @@ export const UniversalColorInput: React.FC<UniversalColorInputProps> = ({
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') commit();
                   }}
-                  className="font-mono text-xs"
+                  className="font-mono text-xs tt-input"
                   placeholder="e.g. oklch(0.7 0.1 230) or red"
                 />
                 {error && <span className="text-xs text-destructive">{error}</span>}
