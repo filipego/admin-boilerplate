@@ -43,6 +43,7 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
     tokenEdits, 
     componentEdits, 
     runtimeStyles,
+    layoutEdits,
     resetAll
   } = useThemeTweakerStore();
   
@@ -145,10 +146,12 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
     }
   }, [dock, position]);
 
-  // Calculate total changes across all tabs
-  const totalChanges = tokenEdits.length + 
-                      componentEdits.length + 
-                      runtimeStyles.length;
+  // Calculate total changes across all tabs (exclude preview-only runtime styles)
+  const uniqueTokensChanged = new Set((tokenEdits || []).map((e) => e.token)).size;
+  const changedLayoutCount = Object.values(layoutEdits || {}).filter(
+    (e) => e && e.value !== e.originalValue
+  ).length;
+  const totalChanges = uniqueTokensChanged + componentEdits.length + changedLayoutCount;
 
   // Handle keyboard shortcuts
   useEffect(() => {
@@ -335,11 +338,6 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
             <div className="flex items-center gap-2">
               <Settings className="w-5 h-5" />
               <UICardTitle className="text-lg">Theme Tweaker</UICardTitle>
-              {totalChanges > 0 && (
-                <UIBadge variant="secondary">
-                  {totalChanges} change{totalChanges !== 1 ? 's' : ''}
-                </UIBadge>
-              )}
             </div>
             
             <div className="flex items-center gap-1">
@@ -380,6 +378,13 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
               </UIButton>
             </div>
           </div>
+          {totalChanges > 0 && (
+            <div className="mt-2">
+              <UIBadge variant="secondary">
+                {totalChanges} change{totalChanges !== 1 ? 's' : ''}
+              </UIBadge>
+            </div>
+          )}
           
           {/* Quick Actions */}
           {!isMinimized && (
@@ -416,9 +421,9 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
                   <UITabsTrigger value="tokens" className="flex items-center gap-1.5 text-xs px-2 py-1 flex-1 min-w-0 tt-tabs-trigger">
                     <Palette className="w-2.5 h-2.5 flex-shrink-0" />
                     {showTabText && <span className="tab-text">Tokens</span>}
-                    {tokenEdits.length > 0 && (
+                    {uniqueTokensChanged > 0 && (
                       <UIBadge variant="secondary" className="ml-1 text-xs flex-shrink-0">
-                        {tokenEdits.length}
+                        {uniqueTokensChanged}
                       </UIBadge>
                     )}
                   </UITabsTrigger>
@@ -434,9 +439,9 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
                   <UITabsTrigger value="layout" className="flex items-center gap-1.5 text-xs px-2 py-1 flex-1 min-w-0 tt-tabs-trigger">
                     <Layout className="w-2.5 h-2.5 flex-shrink-0" />
                     {showTabText && <span className="tab-text">Layout</span>}
-                    {runtimeStyles.length > 0 && (
+                    {changedLayoutCount > 0 && (
                       <UIBadge variant="secondary" className="ml-1 text-xs flex-shrink-0">
-                        {totalChanges}
+                        {changedLayoutCount}
                       </UIBadge>
                     )}
                   </UITabsTrigger>

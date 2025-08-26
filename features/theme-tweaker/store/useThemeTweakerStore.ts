@@ -93,8 +93,8 @@ interface ThemeTweakerState {
   setHoveredElement: (element: HTMLElement | null) => void;
   
   addTokenEdit: (edit: TokenEdit) => void;
-  updateTokenEdit: (token: string, value: string) => void;
-  removeTokenEdit: (token: string) => void;
+  updateTokenEdit: (token: string, value: string, scope?: 'light' | 'dark' | 'both') => void;
+  removeTokenEdit: (token: string, scope?: 'light' | 'dark' | 'both') => void;
   
   addComponentEdit: (edit: ComponentEdit) => void;
   updateComponentEdit: (id: string, value: string) => void;
@@ -173,25 +173,29 @@ export const useThemeTweakerStore = create<ThemeTweakerState>()(devtools(
     setHoveredElement: (element) => set({ hoveredElement: element }),
     
     addTokenEdit: (edit) => set((state) => {
-      const existing = state.tokenEdits.find(e => e.token === edit.token);
+      const existing = state.tokenEdits.find(e => e.token === edit.token && e.scope === edit.scope);
       if (existing) {
         return {
           tokenEdits: state.tokenEdits.map(e => 
-            e.token === edit.token ? edit : e
+            e.token === edit.token && e.scope === edit.scope ? edit : e
           )
         };
       }
       return { tokenEdits: [...state.tokenEdits, edit] };
     }),
     
-    updateTokenEdit: (token, value) => set((state) => ({
+    updateTokenEdit: (token, value, scope) => set((state) => ({
       tokenEdits: state.tokenEdits.map(edit => 
-        edit.token === token ? { ...edit, value } : edit
+        edit.token === token && (scope === undefined || edit.scope === scope)
+          ? { ...edit, value }
+          : edit
       )
     })),
     
-    removeTokenEdit: (token) => set((state) => ({
-      tokenEdits: state.tokenEdits.filter(edit => edit.token !== token)
+    removeTokenEdit: (token, scope) => set((state) => ({
+      tokenEdits: state.tokenEdits.filter(edit => 
+        !(edit.token === token && (scope === undefined || edit.scope === scope))
+      )
     })),
     
     addComponentEdit: (edit) => set((state) => {

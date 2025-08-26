@@ -39,7 +39,7 @@ interface TokenGroup {
 let tokensLoadedOnce = false;
 
 export function ToolTokensTab() {
-  const { tokenEdits, updateTokenEdit, addTokenEdit, addRuntimeStyle } = useThemeTweakerStore();
+  const { tokenEdits, updateTokenEdit, addTokenEdit, removeTokenEdit, addRuntimeStyle, removeRuntimeStyle } = useThemeTweakerStore();
   const [tokens, setTokens] = useState<CSSToken[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -103,6 +103,44 @@ export function ToolTokensTab() {
     } catch {
       return false;
     }
+  };
+
+  // Normalize any CSS color string to a stable computed rgb() string for equality checks
+  const normalizeColorToRGB = (value: string): string | null => {
+    try {
+      const el = document.createElement('div');
+      el.style.color = value;
+      // If the browser rejects the color, it's not valid
+      if (el.style.color === '') return null;
+      document.body.appendChild(el);
+      const computed = getComputedStyle(el).color; // e.g., "rgb(255, 255, 255)"
+      document.body.removeChild(el);
+      return computed.replace(/\s+/g, '').toLowerCase();
+    } catch {
+      return null;
+    }
+  };
+
+  const areColorsEquivalent = (a: string, b: string): boolean => {
+    if (!a || !b) return false;
+    // Fast path: hex equality (case-insensitive) using high-precision conversions
+    const hexA = toHEX(a);
+    const hexB = toHEX(b);
+    if (hexA && hexB && hexA.toUpperCase() === hexB.toUpperCase()) return true;
+    // Fallback: computed rgb equality
+    const na = normalizeColorToRGB(a);
+    const nb = normalizeColorToRGB(b);
+    return !!na && !!nb && na === nb;
+  };
+
+  // Ensure no lingering no-op edits for a token remain
+  const cleanupNoOpEditsForToken = (tokenName: string) => {
+    const edits = tokenEdits.filter(e => e.token === tokenName);
+    edits.forEach(e => {
+      if (areColorsEquivalent(e.value, e.originalValue)) {
+        removeTokenEdit(e.token, e.scope);
+      }
+    });
   };
 
   // Convert any CSS color string to HEX for display
@@ -431,10 +469,32 @@ export function ToolTokensTab() {
     if (!isValidColor(newValue)) return;
     // Stage converted value (fallback to original input if conversion fails)
     const converted = toOKLCH(newValue) || newValue;
-    addTokenEdit({ token: tokenName, value: converted, originalValue, scope });
+
+    // Determine stable baseline original (sticky to first change for this scope)
+    const existingScoped = tokenEdits.find(e => e.token === tokenName && e.scope === scope);
+    const baselineOriginal = existingScoped?.originalValue ?? originalValue;
+
+    // No-op guard: if new value is equivalent to baseline original, remove existing edit
+    if (
+      areColorsEquivalent(newValue, baselineOriginal) ||
+      areColorsEquivalent(converted, baselineOriginal)
+    ) {
+      removeTokenEdit(tokenName, scope);
+      removeRuntimeStyle(selector, tokenName);
+      cleanupNoOpEditsForToken(tokenName);
+      return;
+    }
+
+    addTokenEdit({ token: tokenName, value: converted, originalValue: baselineOriginal, scope });
     console.log('[ThemeTweaker] addTokenEdit', { token: tokenName, scope, input: newValue, stored: converted });
     // Also push to runtimeStyles for immediate preview
     addRuntimeStyle({ selector, property: tokenName, value: newValue, type: 'token' });
+
+    // Debounced cleanup to catch the end of a drag that returns to original
+    window.clearTimeout((cleanupNoOpEditsForToken as any)._t);
+    (cleanupNoOpEditsForToken as any)._t = window.setTimeout(() => {
+      cleanupNoOpEditsForToken(tokenName);
+    }, 150);
   };
 
   const renderTokenItem = (token: CSSToken) => {
@@ -448,8 +508,8 @@ export function ToolTokensTab() {
     const darkValue = darkEdit?.value || dark;
     const lightDisplay = userColorInputs[`${token.name}|light`] ?? (toHEX(lightValue) || lightValue);
     const darkDisplay = userColorInputs[`${token.name}|dark`] ?? (toHEX(darkValue) || darkValue);
-    const lightChanged = !!lightEdit && lightEdit.value !== lightEdit.originalValue;
-    const darkChanged = !!darkEdit && darkEdit.value !== darkEdit.originalValue;
+    const lightChanged = !!lightEdit && !areColorsEquivalent(lightEdit.value, lightEdit.originalValue);
+    const darkChanged = !!darkEdit && !areColorsEquivalent(darkEdit.value, darkEdit.originalValue);
 
     return (
       <Card key={uniqueKey} className="transition-all">
