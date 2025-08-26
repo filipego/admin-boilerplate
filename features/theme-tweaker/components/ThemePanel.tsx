@@ -287,7 +287,7 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
   return (
     <div
       ref={wrapperRef}
-      className={wrapperClasses + ' tt-scope'}
+      className={`${wrapperClasses} tt-scope ${toolStyles.scope}`}
       style={(() => {
         const posStyle = !isMaximized
           ? (dock === 'floating'
@@ -299,8 +299,7 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
       })()}
       data-tt-root
     >
-      {/* Private CSS (module-scoped) */}
-      <div className={toolStyles.__nonexistent || ''} />
+      {/* Private CSS (module-scoped) applied via toolStyles.scope on wrapper */}
       <style jsx>{`
         .tab-text {
           transition: opacity 0.2s ease;

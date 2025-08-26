@@ -1,6 +1,6 @@
 /* Scoped tool UI styles. Loaded via CSS module to ensure it actually applies. */
 
-:global([data-tt-root]) {
+.scope {
   --light-input-bg: #ffffff;
   --light-input-border: #e5e7eb;
   --light-tabs-bg: #f3f4f6;
@@ -12,43 +12,41 @@
 }
 
 /* LIGHT MODE — explicit light */
-:global(html:not(.dark) [data-tt-root] .tt-search),
-:global(html:not(.dark) [data-tt-root] .tt-input),
-:global(html:not(.dark) [data-tt-root] input.tt-input) {
+:global(html:not(.dark)) .scope :global(.tt-search),
+:global(html:not(.dark)) .scope :global(.tt-input),
+:global(html:not(.dark)) .scope :global(input.tt-input) {
   background-color: var(--light-input-bg) !important;
   color: inherit !important;
   border-color: var(--light-input-border) !important;
 }
 
-:global(html:not(.dark) [data-tt-root] .tt-tabs-list) {
+:global(html:not(.dark)) .scope :global(.tt-tabs-list) {
   background-color: var(--light-tabs-bg) !important;
   color: var(--light-tabs-fg) !important;
 }
 
-:global(html:not(.dark) [data-tt-root] .tt-tabs-trigger[data-state="active"]) {
+:global(html:not(.dark)) .scope :global(.tt-tabs-trigger[data-state="active"]) {
   background-color: var(--light-input-bg) !important;
   color: var(--light-tabs-fg) !important;
 }
 
 /* DARK MODE — requested dark */
-:global(html.dark [data-tt-root] .tt-search),
-:global(html.dark [data-tt-root] .tt-input),
-:global(html.dark [data-tt-root] input.tt-input) {
+:global(html.dark) .scope :global(.tt-search),
+:global(html.dark) .scope :global(.tt-input),
+:global(html.dark) .scope :global(input.tt-input) {
   background-color: var(--dark-input-bg) !important;
   color: #e9ecf6 !important;
   border-color: var(--dark-input-border) !important;
 }
 
-:global(html.dark [data-tt-root] .tt-tabs-list) {
+:global(html.dark) .scope :global(.tt-tabs-list) {
   background-color: var(--dark-tabs-bg) !important;
   color: var(--dark-tabs-fg) !important;
 }
 
-:global(html.dark [data-tt-root] .tt-tabs-trigger[data-state="active"]) {
+:global(html.dark) .scope :global(.tt-tabs-trigger[data-state="active"]) {
   background-color: var(--dark-input-bg) !important;
   color: #e9ecf6 !important;
 }
 
 /* Dummy class to ensure module is included */
-.scope {
-}
