@@ -49,7 +49,9 @@ export default function LoginForm() {
         />
       </div>
       {state?.error && (
-        <p id="login-error" className="text-sm text-red-500">{state.error}</p>
+        <p id="login-error" className="text-sm text-error">
+          {state.error}
+        </p>
       )}
       <SubmitButton />
     </form>

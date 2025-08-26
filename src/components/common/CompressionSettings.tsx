@@ -53,7 +53,7 @@ export default function CompressionSettings({
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Total savings:</span>
-                  <span className="text-emerald-600">{formatBytes(summary.savings)} ({Math.max(0, summary.savingsPercent)}% smaller)</span>
+                  <span className="text-success">{formatBytes(summary.savings)} ({Math.max(0, summary.savingsPercent)}% smaller)</span>
                 </div>
               </div>
             )}
@@ -158,7 +158,7 @@ export default function CompressionSettings({
           </button>
         </div>
 
-        <div className="rounded-md border p-2 text-xs text-emerald-700 bg-emerald-50">
+        <div className="rounded-md border p-2 text-xs bg-success-subtle text-success-subtle-foreground">
           Workers available ({support.cores} cores){support.hasOffscreen ? " • Canvas" : ""}
         </div>
       </CardContent>

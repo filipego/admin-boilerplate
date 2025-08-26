@@ -14,7 +14,7 @@ export default function NotificationBell({ items = [] }: { items?: NotificationI
       <button type="button" onClick={() => setOpen(true)} aria-label="Open notifications" className="relative inline-flex items-center justify-center h-8 w-8 rounded-full hover:bg-accent cursor-pointer">
         <Bell className="h-4 w-4" />
         {unread > 0 ? (
-          <span className="absolute inline-flex h-3 w-3 items-center justify-center rounded-full bg-blue-500 [top:4px] [right:4px]" />
+          <span className="absolute inline-flex h-3 w-3 items-center justify-center rounded-full bg-info [top:4px] [right:4px]" />
         ) : null}
       </button>
       <Sheet open={open} onOpenChange={setOpen}>

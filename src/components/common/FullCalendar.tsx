@@ -72,7 +72,7 @@ export default function FullCalendar({ events, current, onCurrentChange, selecte
                 "w-full aspect-square rounded-md border p-2 text-left hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 !isCurrentMonth && "opacity-50",
                 isSelected && "ring-2 ring-ring",
-                isToday && "border-blue-500"
+                isToday && "border-info"
               )}
             >
               <div className="flex h-full flex-col">

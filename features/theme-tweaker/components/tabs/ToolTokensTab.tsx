@@ -259,8 +259,12 @@ export function ToolTokensTab() {
   // Helper to exclude non-style tokens
   const isStyleToken = (name: string) => {
     const n = name.toLowerCase();
-    // Exclude Tailwind runtime/internal vars and motion/transform utilities
+    // Exclude Tailwind runtime/internal vars and palette color variables
     if (n.startsWith('--tw-')) return false;
+    if (n.startsWith('--color-')) return false;
+    // Exclude tool UI local tokens (not part of site theme)
+    if (n.startsWith('--light-')) return false;
+    if (n.startsWith('--dark-')) return false;
     return !(
       n.includes('transition') ||
       n.includes('animation') ||
@@ -279,9 +283,37 @@ export function ToolTokensTab() {
     );
   };
 
+  // Helper to keep only site-sanctioned tokens from globals.css
+  const isSiteToken = (name: string) => {
+    const n = name.toLowerCase();
+    // Exact tokens we intentionally expose (from globals.css)
+    const allowedExact = new Set([
+      '--background','--foreground',
+      '--card','--card-foreground',
+      '--popover','--popover-foreground',
+      '--primary','--primary-foreground',
+      '--secondary','--secondary-foreground',
+      '--muted','--muted-foreground',
+      '--accent','--accent-foreground',
+      '--destructive',
+      '--border','--input','--ring',
+      // Semantic: success
+      '--success','--success-foreground','--success-subtle','--success-subtle-foreground','--success-border','--success-ring',
+      // Semantic: warning
+      '--warning','--warning-foreground','--warning-subtle','--warning-subtle-foreground','--warning-border','--warning-ring',
+      // Semantic: error
+      '--error','--error-foreground','--error-subtle','--error-subtle-foreground','--error-border','--error-ring',
+      // Semantic: info
+      '--info','--info-foreground','--info-subtle','--info-subtle-foreground','--info-border','--info-ring'
+    ]);
+    // Prefixes safe to include (numbered or structured families)
+    const allowedPrefixes = ['--chart-','--sidebar-','--brand-'];
+    return allowedExact.has(n) || allowedPrefixes.some(p => n.startsWith(p));
+  };
+
   // Filter tokens based on search and category; exclude only non-style tokens; dedupe by name
   const filteredTokens = useMemo(() => {
-    let filtered = tokens.filter(t => isStyleToken(t.name));
+    let filtered = tokens.filter(t => isStyleToken(t.name)).filter(t => isSiteToken(t.name));
 
     if (selectedCategory !== 'all') {
       filtered = filtered.filter(token => token.category === selectedCategory);

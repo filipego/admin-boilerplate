@@ -21,10 +21,10 @@ const sizeClasses: Record<Size, string> = {
 
 const variantClasses: Record<Status, string> = {
   default: "bg-muted text-foreground/80 dark:text-muted-foreground",
-  success: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300",
-  warning: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
-  destructive: "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-300",
-  info: "bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-300",
+  success: "bg-success-subtle text-success-subtle-foreground",
+  warning: "bg-warning-subtle text-warning-subtle-foreground",
+  destructive: "bg-error-subtle text-error-subtle-foreground",
+  info: "bg-info-subtle text-info-subtle-foreground",
 };
 
 export default function StatusBadge({ children, label, status = "default", size = "sm", withDot = true, className }: StatusBadgeProps) {
@@ -46,13 +46,13 @@ export default function StatusBadge({ children, label, status = "default", size 
 function dotColor(status: Status) {
   switch (status) {
     case "success":
-      return "bg-emerald-500";
+      return "bg-success";
     case "warning":
-      return "bg-amber-500";
+      return "bg-warning";
     case "destructive":
-      return "bg-rose-500";
+      return "bg-error";
     case "info":
-      return "bg-sky-500";
+      return "bg-info";
     default:
       return "bg-foreground/50";
   }

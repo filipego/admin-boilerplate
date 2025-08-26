@@ -143,8 +143,12 @@ export default function ProfileViewEdit({ profile }: { profile: Profile }) {
           value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
-        {usernameStatus === "taken" && <p className="text-xs text-red-500">Username is taken</p>}
-        {usernameStatus === "available" && <p className="text-xs text-green-600">Username is available</p>}
+        {usernameStatus === "taken" && (
+          <p className="text-xs text-error">Username is taken</p>
+        )}
+        {usernameStatus === "available" && (
+          <p className="text-xs text-success">Username is available</p>
+        )}
       </div>
       <div className="flex gap-3">
         <UIButton type="submit" disabled={usernameStatus === "taken"}>Save</UIButton>
