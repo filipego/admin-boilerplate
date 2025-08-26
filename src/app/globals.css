@@ -95,7 +95,7 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
+  --background: oklch(0.202 0.119 264);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);
@@ -170,3 +170,14 @@
   padding-left: 1rem; /* gutter */
   background-clip: padding-box;
 }
+
+
+
+
+/* BEGIN THEME TWEAKER OVERRIDES - DO NOT EDIT MANUALLY */
+/* Generated: 2025-08-25T22:55:22.097Z */
+html.dark, body.dark, .dark {
+  --background: oklch(0.202 0.119 264) !important;
+}
+
+/* END THEME TWEAKER OVERRIDES */

@@ -173,20 +173,21 @@ export function ThemeTweaker() {
       {/* Click-to-edit overlay hint */}
       {isToolOpen && (
         <div
-          className="fixed bottom-6 left-6 rounded-lg p-3 shadow-lg z-[9997]"
+          className="fixed bottom-6 left-6 rounded-lg p-3 shadow-lg z-[999999]"
           style={{
-            backgroundColor: hintVars?.bg || '#0B0C0F',
-            border: `1px solid ${hintVars?.border || 'rgba(255,255,255,0.12)'}`,
-            color: hintVars?.text || '#9CA3AF'
+            // hard-coded palette for isolation; never influenced by site tokens
+            backgroundColor: '#0B0D2A',
+            border: '1px solid rgba(255,255,255,0.15)',
+            color: '#C8D0E0'
           }}
         >
-          <p className="text-sm" style={{ color: hintVars?.text || '#9CA3AF' }}>
+          <p className="text-sm" style={{ color: '#C8D0E0' }}>
             Hold{' '}
             <kbd
               className="px-1 py-0.5 rounded text-xs"
               style={{
-                backgroundColor: hintVars?.kbdBg || '#F3F4F6',
-                color: hintVars?.kbdText || '#111827'
+                backgroundColor: '#11131F',
+                color: '#E8ECF6'
               }}
             >
               Alt

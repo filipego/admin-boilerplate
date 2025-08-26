@@ -1,0 +1,32 @@
+/* Theme Tweaker private UI scope.
+   Purpose: Freeze tool UI colors so site token previews do not affect it. */
+
+[data-tt-root] {
+  /* Dark panel + inputs, matching existing look */
+  --background: #0e0f14;
+  --foreground: #e9ecf6;
+  --muted: #14161d;
+  --muted-foreground: #9aa3b2;
+  --border: #2b2f3a;
+  --input: #2b2f3a;
+  --ring: #394057;
+}
+
+/* Make search and text inputs consistent inside the tool */
+[data-tt-root] input,
+[data-tt-root] .tt-search,
+[data-tt-root] .tt-input {
+  background-color: #0c0c0c !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+}
+
+/* Tabs strip color consistency (uses current shades, not site tokens) */
+[data-tt-root] .tt-tabs-list {
+  background-color: #23252e !important;
+  color: #c8d0e0 !important;
+}
+[data-tt-root] .tt-tabs-trigger[data-state="active"] {
+  background-color: #0c0c0c !important;
+  color: var(--foreground) !important;
+}

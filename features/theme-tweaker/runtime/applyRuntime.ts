@@ -7,6 +7,11 @@ const RUNTIME_STYLE_ID = 'tt-runtime';
  * Handles token edits, class overrides, and instance-only changes
  */
 export const applyRuntimeStyles = (styles: RuntimeStyle[]): void => {
+  try {
+    // Debug incoming styles
+    // eslint-disable-next-line no-console
+    console.log('[ThemeTweaker][runtime] applying styles', styles);
+  } catch {}
   let styleElement = document.getElementById(RUNTIME_STYLE_ID) as HTMLStyleElement;
   
   // Create style element if it doesn't exist
@@ -31,17 +36,17 @@ export const applyRuntimeStyles = (styles: RuntimeStyle[]): void => {
     const darkTokens = tokenStyles.filter(s => s.selector.includes('.dark'));
     
     if (lightTokens.length > 0) {
-      cssContent += ':root {\n';
+      cssContent += ':root, html:root, body:root {\n';
       lightTokens.forEach(style => {
-        cssContent += `  ${style.property}: ${style.value};\n`;
+        cssContent += `  ${style.property}: ${style.value} !important;\n`;
       });
       cssContent += '}\n\n';
     }
     
     if (darkTokens.length > 0) {
-      cssContent += '.dark {\n';
+      cssContent += 'html.dark, body.dark, .dark {\n';
       darkTokens.forEach(style => {
-        cssContent += `  ${style.property}: ${style.value};\n`;
+        cssContent += `  ${style.property}: ${style.value} !important;\n`;
       });
       cssContent += '}\n\n';
     }
@@ -86,6 +91,10 @@ export const applyRuntimeStyles = (styles: RuntimeStyle[]): void => {
   }
   
   // Apply the CSS content
+  try {
+    // eslint-disable-next-line no-console
+    console.log('[ThemeTweaker][runtime] css', cssContent);
+  } catch {}
   styleElement.textContent = cssContent;
 };
 
@@ -124,8 +133,8 @@ export const applyRuntimeStyle = (style: RuntimeStyle): void => {
   
   // Simple append for immediate feedback
   if (style.type === 'token') {
-    const selector = style.selector.includes('.dark') ? '.dark' : ':root';
-    const tokenRule = `${selector} { ${style.property}: ${style.value}; }`;
+    const selector = style.selector.includes('.dark') ? 'html.dark, body.dark, .dark' : ':root, html:root, body:root';
+    const tokenRule = `${selector} { ${style.property}: ${style.value} !important; }`;
     styleElement.textContent = currentCSS + '\n' + tokenRule;
   } else {
     const rule = `${style.selector} { ${style.property}: ${style.value} !important; }`;

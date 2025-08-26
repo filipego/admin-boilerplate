@@ -85,7 +85,9 @@ export function ToolTokensTab() {
       const round = (n: number, d = 3) => Math.round(n * Math.pow(10, d)) / Math.pow(10, d);
       const round1 = (n: number) => Math.round(n * 10) / 10;
       const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n));
-      return `oklch(${round(clamp(L, 0, 1), 3)} ${round(clamp(C, 0, 1), 3)} ${round1(((H % 360) + 360) % 360)})`;
+      const out = `oklch(${round(clamp(L, 0, 1), 3)} ${round(clamp(C, 0, 1), 3)} ${round1(((H % 360) + 360) % 360)})`;
+      console.log('[ThemeTweaker] HEX->OKLCH', { input, parsed: computed, oklch: out });
+      return out;
     } catch {
       return null;
     }
@@ -106,6 +108,40 @@ export function ToolTokensTab() {
   const toHEX = (input: string): string | null => {
     const value = input.trim();
     try {
+      // Stable OKLCH -> HEX conversion (high precision, round at the very end)
+      const oklchToHex = (L: number, C: number, H: number): string => {
+        const a = C * Math.cos((H * Math.PI) / 180);
+        const b = C * Math.sin((H * Math.PI) / 180);
+
+        let l_ = L + 0.3963377774 * a + 0.2158037573 * b;
+        let m_ = L - 0.1055613458 * a - 0.0638541728 * b;
+        let s_ = L - 0.0894841775 * a - 1.2914855480 * b;
+
+        l_ = l_ ** 3;
+        m_ = m_ ** 3;
+        s_ = s_ ** 3;
+
+        let r = 4.0767416621 * l_ - 3.3077115913 * m_ + 0.2309699292 * s_;
+        let g = -1.2684380046 * l_ + 2.6097574011 * m_ - 0.3413193965 * s_;
+        let b_ = -0.0041960863 * l_ - 0.7034186147 * m_ + 1.7076147010 * s_;
+
+        const lin2srgb = (x: number) => (x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(x, 1 / 2.4) - 0.055);
+
+        r = lin2srgb(r);
+        g = lin2srgb(g);
+        b_ = lin2srgb(b_);
+
+        r = Math.min(1, Math.max(0, r));
+        g = Math.min(1, Math.max(0, g));
+        b_ = Math.min(1, Math.max(0, b_));
+
+        const hex = [r, g, b_]
+          .map((v) => Math.round(v * 255).toString(16).padStart(2, '0'))
+          .join('')
+          .toUpperCase();
+        return `#${hex}`;
+      };
+
       if (/^lab\(/i.test(value)) {
         // Parse CSS Lab: lab(L a b / [alpha]) ; L may be %
         const m = value.match(/lab\(([^)]+)\)/i);
@@ -143,7 +179,6 @@ export function ToolTokensTab() {
         return `#${to2(r)}${to2(g)}${to2(bV)}`;
       }
       if (/^oklch\(/i.test(value)) {
-        // Parse OKLCH: oklch(L C H / A?) where L in 0..1 or %, H in deg
         const m = value.match(/oklch\(([^)]+)\)/i);
         if (!m) return null;
         const parts = m[1].split(/[\s\/]+/).filter(Boolean);
@@ -152,25 +187,10 @@ export function ToolTokensTab() {
         if (parts[0].includes('%')) L = parseFloat(parts[0]) / 100;
         const C = parseFloat(parts[1]);
         const Hdeg = parseFloat(parts[2]);
-        const Hr = (Hdeg * Math.PI) / 180;
-        const a = C * Math.cos(Hr);
-        const b = C * Math.sin(Hr);
-        // OKLab -> linear sRGB
-        const l_ = L + 0.3963377774 * a + 0.2158037573 * b;
-        const m_ = L - 0.1055613458 * a - 0.0638541728 * b;
-        const s_ = L - 0.0894841775 * a - 1.2914855480 * b;
-        const l = l_ * l_ * l_;
-        const m2 = m_ * m_ * m_;
-        const s = s_ * s_ * s_;
-        let rLin = +4.0767416621 * l - 3.3077115913 * m2 + 0.2309699292 * s;
-        let gLin = -1.2684380046 * l + 2.6097574011 * m2 - 0.3413193965 * s;
-        let bLin = -0.0041960863 * l - 0.7034186147 * m2 + 1.7076147010 * s;
-        const compand = (c: number) => c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(Math.max(0, c), 1 / 2.4) - 0.055;
-        const r = Math.round(Math.min(1, Math.max(0, compand(rLin))) * 255);
-        const g = Math.round(Math.min(1, Math.max(0, compand(gLin))) * 255);
-        const bV = Math.round(Math.min(1, Math.max(0, compand(bLin))) * 255);
-        const to2 = (n: number) => n.toString(16).padStart(2, '0').toUpperCase();
-        return `#${to2(r)}${to2(g)}${to2(bV)}`;
+        const hex = oklchToHex(L, C, Hdeg);
+        // Debug for stability comparisons
+        console.log('[ThemeTweaker] OKLCH->HEX stable', { input, L, C, H: Hdeg, hex });
+        return hex;
       }
       // Fallback: let the browser parse to rgb()
       const probe = document.createElement('div');
@@ -379,6 +399,7 @@ export function ToolTokensTab() {
     // Stage converted value (fallback to original input if conversion fails)
     const converted = toOKLCH(newValue) || newValue;
     addTokenEdit({ token: tokenName, value: converted, originalValue, scope });
+    console.log('[ThemeTweaker] addTokenEdit', { token: tokenName, scope, input: newValue, stored: converted });
     // Also push to runtimeStyles for immediate preview
     addRuntimeStyle({ selector, property: tokenName, value: newValue, type: 'token' });
   };
@@ -425,7 +446,7 @@ export function ToolTokensTab() {
                     handleScopedTokenChange(token.name, 'light', v, light);
                   }}
                   placeholder="#RRGGBB"
-                  className="font-mono text-sm flex-1"
+                  className="font-mono text-sm flex-1 tt-input"
                 />
                 <Button
                   type="button"
@@ -455,7 +476,7 @@ export function ToolTokensTab() {
                     handleScopedTokenChange(token.name, 'dark', v, dark);
                   }}
                   placeholder="#RRGGBB"
-                  className="font-mono text-sm flex-1"
+                  className="font-mono text-sm flex-1 tt-input"
                 />
                 <Button
                   type="button"
@@ -516,7 +537,7 @@ export function ToolTokensTab() {
             placeholder="Search tokens..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 h-10"
+            className="pl-10 h-10 tt-search"
           />
         </div>
         

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import toolStyles from './tool-ui.module.css';
 import { useThemeTweakerStore } from '../store/useThemeTweakerStore';
 import UIButton from './common/UIButton';
 import UICard from './common/UICard';
@@ -64,6 +65,7 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
   const dragOffset = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   // Lock tool UI to initial CSS variable values so site edits don't affect the tool
   const [lockedVars, setLockedVars] = useState<Record<string, string> | null>(null);
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
   const [showTabText, setShowTabText] = useState(true);
   const tabsListRef = useRef<HTMLDivElement | null>(null);
 
@@ -102,7 +104,8 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
         const names = [
           '--background','--foreground','--card','--card-foreground','--popover','--popover-foreground',
           '--muted','--muted-foreground','--accent','--accent-foreground','--primary','--primary-foreground',
-          '--secondary','--secondary-foreground','--border','--input','--ring'
+          '--secondary','--secondary-foreground','--border','--input','--ring',
+          '--sidebar','--sidebar-foreground','--sidebar-border','--sidebar-accent','--sidebar-accent-foreground'
         ];
         const cs = getComputedStyle(document.documentElement);
         const map: Record<string,string> = {};
@@ -114,6 +117,18 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
       } catch {}
     }
   }, []);
+
+  // Apply locked vars with !important to the panel wrapper to avoid runtime preview affecting the tool
+  useEffect(() => {
+    if (!lockedVars || !wrapperRef.current) return;
+    try {
+      const el = wrapperRef.current as HTMLElement;
+      Object.entries(lockedVars).forEach(([name, value]) => {
+        // Use priority 'important' so these beat global preview rules
+        el.style.setProperty(name, value, 'important');
+      });
+    } catch {}
+  }, [lockedVars]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -271,6 +286,7 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
 
   return (
     <div
+      ref={wrapperRef}
       className={wrapperClasses + ' tt-scope'}
       style={(() => {
         const posStyle = !isMaximized
@@ -281,7 +297,10 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
         const varsStyle = (lockedVars || {}) as unknown as React.CSSProperties;
         return { ...posStyle, ...varsStyle } as React.CSSProperties;
       })()}
+      data-tt-root
     >
+      {/* Private CSS (module-scoped) */}
+      <div className={toolStyles.__nonexistent || ''} />
       <style jsx>{`
         .tab-text {
           transition: opacity 0.2s ease;
@@ -394,8 +413,8 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
           <UICardContent className="p-0 flex-1 overflow-hidden">
             <UITabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="h-full flex flex-col">
               <div className="px-4 pt-2">
-                <UITabsList ref={tabsListRef as any} className="w-full gap-1 justify-between">
-                  <UITabsTrigger value="tokens" className="flex items-center gap-1.5 text-xs px-2 py-1 flex-1 min-w-0">
+                <UITabsList ref={tabsListRef as any} className="w-full gap-1 justify-between tt-tabs-list">
+                  <UITabsTrigger value="tokens" className="flex items-center gap-1.5 text-xs px-2 py-1 flex-1 min-w-0 tt-tabs-trigger">
                     <Palette className="w-2.5 h-2.5 flex-shrink-0" />
                     {showTabText && <span className="tab-text">Tokens</span>}
                     {tokenEdits.length > 0 && (
@@ -404,7 +423,7 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
                       </UIBadge>
                     )}
                   </UITabsTrigger>
-                  <UITabsTrigger value="components" className="flex items-center gap-1.5 text-xs px-2 py-1 flex-1 min-w-0">
+                  <UITabsTrigger value="components" className="flex items-center gap-1.5 text-xs px-2 py-1 flex-1 min-w-0 tt-tabs-trigger">
                     <Component className="w-2.5 h-2.5 flex-shrink-0" />
                     {showTabText && <span className="tab-text">Components</span>}
                     {componentEdits.length > 0 && (
@@ -413,7 +432,7 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
                       </UIBadge>
                     )}
                   </UITabsTrigger>
-                  <UITabsTrigger value="layout" className="flex items-center gap-1.5 text-xs px-2 py-1 flex-1 min-w-0">
+                  <UITabsTrigger value="layout" className="flex items-center gap-1.5 text-xs px-2 py-1 flex-1 min-w-0 tt-tabs-trigger">
                     <Layout className="w-2.5 h-2.5 flex-shrink-0" />
                     {showTabText && <span className="tab-text">Layout</span>}
                     {runtimeStyles.length > 0 && (
@@ -422,7 +441,7 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
                       </UIBadge>
                     )}
                   </UITabsTrigger>
-                  <UITabsTrigger value="diff" className="flex items-center gap-1.5 text-xs px-2 py-1 flex-1 min-w-0">
+                  <UITabsTrigger value="diff" className="flex items-center gap-1.5 text-xs px-2 py-1 flex-1 min-w-0 tt-tabs-trigger">
                     <FileText className="w-2.5 h-2.5 flex-shrink-0" />
                     {showTabText && <span className="tab-text">Diff</span>}
                     {totalChanges > 0 && (
