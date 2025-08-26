@@ -14,6 +14,10 @@ const ToolTokensTab = React.lazy(() => import('./tabs/ToolTokensTab').then(m => 
 const ToolComponentsTab = React.lazy(() => import('./tabs/ToolComponentsTab').then(m => ({ default: m.ToolComponentsTab }))); 
 const ToolLayoutTab = React.lazy(() => import('./tabs/ToolLayoutTab').then(m => ({ default: m.ToolLayoutTab })));
 import { ToolDiffTab } from './tabs/ToolDiffTab';
+import { useTheme } from 'next-themes';
+import { Sun, Moon, Monitor } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
 import { 
   X, 
   Minimize2, 
@@ -50,6 +54,8 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
   const [isMinimized, setIsMinimized] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
   const [previewMode, setPreviewMode] = useState(true);
+  const { theme, resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const [panelWidth, setPanelWidth] = useState<number>(450);
   const isResizing = useRef(false);
   const resizeStartX = useRef(0);
@@ -85,6 +91,7 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
   }, []);
 
   useEffect(() => {
+    setMounted(true);
     const raw = typeof window !== 'undefined' ? window.localStorage.getItem('tt-panel-width') : null;
     if (raw) {
       const parsed = parseInt(raw, 10);
@@ -118,6 +125,36 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
       } catch {}
     }
   }, []);
+
+  // Re-capture global CSS variables whenever theme changes so the tool UI follows light/dark
+  useEffect(() => {
+    const capture = () => {
+      try {
+        const names = [
+          '--background','--foreground','--card','--card-foreground','--popover','--popover-foreground',
+          '--muted','--muted-foreground','--accent','--accent-foreground','--primary','--primary-foreground',
+          '--secondary','--secondary-foreground','--border','--input','--ring',
+          '--sidebar','--sidebar-foreground','--sidebar-border','--sidebar-accent','--sidebar-accent-foreground'
+        ];
+        const cs = getComputedStyle(document.documentElement);
+        const map: Record<string,string> = {};
+        for (const n of names) {
+          const v = cs.getPropertyValue(n).trim();
+          if (v) map[n] = v;
+        }
+        setLockedVars(map);
+      } catch {}
+    };
+    // Allow next-themes to apply class changes before reading
+    const id = window.requestAnimationFrame(() => {
+      const id2 = window.requestAnimationFrame(capture);
+      (capture as any)._id2 = id2;
+    });
+    return () => {
+      window.cancelAnimationFrame(id);
+      if ((capture as any)._id2) window.cancelAnimationFrame((capture as any)._id2);
+    };
+  }, [resolvedTheme]);
 
   // Apply locked vars with !important to the panel wrapper to avoid runtime preview affecting the tool
   useEffect(() => {
@@ -341,6 +378,26 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
             </div>
             
             <div className="flex items-center gap-1">
+              {/* Global theme switcher (linked to next-themes) */}
+              {mounted && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" aria-label="Theme" className="h-8 w-8">
+                      {(() => {
+                        const t = theme ?? resolvedTheme;
+                        if (theme === 'system') return <Monitor className="h-4 w-4" aria-hidden />;
+                        if (t === 'dark') return <Moon className="h-4 w-4" aria-hidden />;
+                        return <Sun className="h-4 w-4" aria-hidden />;
+                      })()}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="center" sideOffset={8} className="min-w-[160px] z-[10000]">
+                    <DropdownMenuItem onClick={() => setTheme('light')}>Light</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setTheme('dark')}>Dark</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setTheme('system')}>System</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
               <UIButton
                 variant="ghost"
                 size="sm"

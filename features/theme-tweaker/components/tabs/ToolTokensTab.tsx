@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useTheme } from 'next-themes';
 import { useThemeTweakerStore } from '../../store/useThemeTweakerStore';
 import { TokenScanner, CSSToken } from '../../utils/tokenScanner';
 import { RepoScanner } from '../../utils/repoScanner';
@@ -39,6 +40,7 @@ interface TokenGroup {
 let tokensLoadedOnce = false;
 
 export function ToolTokensTab() {
+  const { resolvedTheme } = useTheme();
   const { tokenEdits, updateTokenEdit, addTokenEdit, removeTokenEdit, addRuntimeStyle, removeRuntimeStyle } = useThemeTweakerStore();
   const [tokens, setTokens] = useState<CSSToken[]>([]);
   const [loading, setLoading] = useState(true);
@@ -452,12 +454,13 @@ export function ToolTokensTab() {
 
       // Restore
       if (!wasDark) html.classList.remove('dark');
+      else html.classList.add('dark');
 
       return map;
     } catch {
       return new Map<string, { light: string; dark: string }>();
     }
-  }, [tokens]);
+  }, [tokens, resolvedTheme]);
 
   const handleScopedTokenChange = (
     tokenName: string,
