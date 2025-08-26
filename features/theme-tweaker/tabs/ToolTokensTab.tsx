@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Search, Palette, Spacing, Type, RefreshCw, Shadow, ChevronDown, ChevronRight, Star, Filter, Layers } from 'lucide-react';
 import { useThemeTweakerStore } from '../store/useThemeTweakerStore';
-import { ColorPicker } from '../controls/ColorPicker';
+import { UniversalColorInput } from '../components/common/UniversalColorInput';
 import { SliderControl } from '../controls/SliderControl';
 import { TextControl } from '../controls/TextControl';
 
@@ -461,21 +461,7 @@ export const ToolTokensTab: React.FC = () => {
                               </span>
                             </div>
                             
-                            {/* Light/Dark value display */}
-                            {lightDarkValues.light && (
-                              <div className="mt-2 text-xs text-muted-foreground">
-                                <div className="flex items-center gap-2">
-                                  <span className="w-3 h-3 rounded-full bg-white border border-gray-300"></span>
-                                  <span className="font-mono">{lightDarkValues.light}</span>
-                                </div>
-                                {lightDarkValues.dark && (
-                                  <div className="flex items-center gap-2 mt-1">
-                                    <span className="w-3 h-3 rounded-full bg-gray-800"></span>
-                                    <span className="font-mono">{lightDarkValues.dark}</span>
-                                  </div>
-                                )}
-                              </div>
-                            )}
+                            {/* Removed raw light/dark value readouts for cleaner UI */}
                             
                             {/* Scope options */}
                             <div className="flex items-center gap-1 mt-2">
@@ -512,7 +498,7 @@ export const ToolTokensTab: React.FC = () => {
                             {/* Token Control */}
                             <div className="flex-shrink-0">
                               {token.type === 'color' && (
-                                <ColorPicker
+                                <UniversalColorInput
                                   value={currentValue}
                                   onChange={(value) => handleTokenChange(token.name, value)}
                                 />

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Target, Palette, Type, Box, Layers } from 'lucide-react';
 import { useThemeTweakerStore } from './store/useThemeTweakerStore';
-import { ColorPicker } from './controls/ColorPicker';
+import { UniversalColorInput } from './components/common/UniversalColorInput';
 import { SpacingControl } from './controls/SpacingControl';
 import { BorderControl } from './controls/BorderControl';
 import { TypographyControl } from './controls/TypographyControl';
@@ -106,13 +106,13 @@ export const ToolInspector: React.FC = () => {
             <h4 className="text-sm font-medium text-gray-900 dark:text-white">Colors</h4>
           </div>
           
-          <ColorPicker
+          <UniversalColorInput
             label="Text Color"
             value={elementInfo.computedStyles.color}
             onChange={(value) => handleStyleChange('color', value)}
           />
           
-          <ColorPicker
+          <UniversalColorInput
             label="Background"
             value={elementInfo.computedStyles.backgroundColor}
             onChange={(value) => handleStyleChange('background-color', value)}

@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SliderControl } from '../controls/SliderControl';
 import { TextControl } from '../controls/TextControl';
 import { getContrastColor } from '../controls/ColorPicker';
+import { UniversalColorInput } from '../common/UniversalColorInput';
 import { 
   Search, 
   Palette, 
@@ -466,61 +467,29 @@ export function ToolTokensTab() {
             <div className="space-y-2">
               <div className="text-xs text-muted-foreground flex items-center gap-2">
                 <Badge variant="outline" className="text-xs">Light</Badge>
-                <code className="bg-muted px-1 py-0.5 rounded">{light}</code>
                 {lightChanged && <Badge variant="secondary" className="text-xs">Modified</Badge>}
               </div>
-              <div className="flex items-center gap-2">
-                <Input
-                  value={lightDisplay}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setUserColorInputs(prev => ({ ...prev, [`${token.name}|light`]: v }));
-                    handleScopedTokenChange(token.name, 'light', v, light);
-                  }}
-                  placeholder="#RRGGBB"
-                  className="font-mono text-sm flex-1 tt-input"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="w-10 h-10 p-0 border-2"
-                  style={{ backgroundColor: lightDisplay }}
-                  title="Color swatch"
-                >
-                  <Palette className="w-4 h-4" style={{ color: iconColorFor(lightDisplay) }} />
-                </Button>
-              </div>
+              <UniversalColorInput
+                value={lightDisplay}
+                onChange={(v) => {
+                  setUserColorInputs(prev => ({ ...prev, [`${token.name}|light`]: v }));
+                  handleScopedTokenChange(token.name, 'light', v, light);
+                }}
+              />
             </div>
 
             <div className="space-y-2">
               <div className="text-xs text-muted-foreground flex items-center gap-2">
                 <Badge variant="outline" className="text-xs">Dark</Badge>
-                <code className="bg-muted px-1 py-0.5 rounded">{dark}</code>
                 {darkChanged && <Badge variant="secondary" className="text-xs">Modified</Badge>}
               </div>
-              <div className="flex items-center gap-2">
-                <Input
-                  value={darkDisplay}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setUserColorInputs(prev => ({ ...prev, [`${token.name}|dark`]: v }));
-                    handleScopedTokenChange(token.name, 'dark', v, dark);
-                  }}
-                  placeholder="#RRGGBB"
-                  className="font-mono text-sm flex-1 tt-input"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="w-10 h-10 p-0 border-2"
-                  style={{ backgroundColor: darkDisplay }}
-                  title="Color swatch"
-                >
-                  <Palette className="w-4 h-4" style={{ color: iconColorFor(darkDisplay) }} />
-                </Button>
-              </div>
+              <UniversalColorInput
+                value={darkDisplay}
+                onChange={(v) => {
+                  setUserColorInputs(prev => ({ ...prev, [`${token.name}|dark`]: v }));
+                  handleScopedTokenChange(token.name, 'dark', v, dark);
+                }}
+              />
             </div>
           </div>
         </CardContent>

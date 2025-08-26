@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ColorPicker } from '../controls/ColorPicker';
+import { UniversalColorInput } from '../common/UniversalColorInput';
 import { SliderControl } from '../controls/SliderControl';
 import { SelectControl } from '../controls/SelectControl';
 import { 
@@ -227,13 +227,11 @@ export function ToolComponentsTab() {
 
     // Determine control type based on property and value
     if (property.includes('color') || property.includes('Color') || 
-        (typeof value === 'string' && value.match(/^#[0-9a-fA-F]{6}$|^rgb|^hsl/))) {
+        (typeof value === 'string' && value.match(/^#[0-9a-fA-F]{6}$|^rgb|^hsl|^oklch|^lab/))) {
       return (
-        <ColorPicker
+        <UniversalColorInput
           value={currentValue}
-          originalValue={value}
           onChange={(newValue) => handleComponentEdit(component.id, property, newValue)}
-          hasChanged={hasChanged}
         />
       );
     }
