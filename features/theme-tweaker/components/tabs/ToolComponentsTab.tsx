@@ -11,12 +11,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { UniversalColorInput } from '../common/UniversalColorInput';
 import { SliderControl } from '../controls/SliderControl';
 import { SelectControl } from '../controls/SelectControl';
-import { 
-  Search, 
-  Component, 
-  Layers, 
-  Eye, 
-  EyeOff, 
+import { UISearchBar } from '../common/UISearchBar';
+import { UIFilterButtons } from '../common/UIFilterButtons';
+import {
+  Component,
+  Layers,
+  Eye,
+  EyeOff,
   RefreshCw,
   Filter,
   Zap,
@@ -110,6 +111,28 @@ export function ToolComponentsTab() {
     }
   };
 
+  // Prepare filter options for common component
+  const filterOptions = useMemo(() => {
+    const typeCounts = new Map<string, number>();
+    components.forEach(component => {
+      typeCounts.set(component.type, (typeCounts.get(component.type) || 0) + 1);
+    });
+
+    const options = [
+      { key: 'all', label: 'All', count: components.length }
+    ];
+
+    Array.from(typeCounts.entries()).forEach(([type, count]) => {
+      options.push({
+        key: type,
+        label: type,
+        count
+      });
+    });
+
+    return options;
+  }, [components]);
+
   // Filter components based on search and type
   const filteredComponents = useMemo(() => {
     let filtered = components;
@@ -122,7 +145,7 @@ export function ToolComponentsTab() {
     // Filter by search query
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(component => 
+      filtered = filtered.filter(component =>
         component.selector.toLowerCase().includes(query) ||
         component.type.toLowerCase().includes(query) ||
         component.classes.some(cls => cls.toLowerCase().includes(query))
@@ -422,40 +445,17 @@ export function ToolComponentsTab() {
 
       {/* Search and Filters */}
       <div className="space-y-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-          <Input
-            placeholder="Search components..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 h-10"
-          />
-        </div>
-        
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            variant={selectedType === 'all' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setSelectedType('all')}
-            className="h-10"
-          >
-            All
-          </Button>
-          {Array.from(new Set(components.map(c => c.type))).map(type => {
-            const count = components.filter(c => c.type === type).length;
-            return (
-              <Button
-                key={type}
-                variant={selectedType === type ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setSelectedType(type)}
-                className="h-10"
-              >
-                {type} ({count})
-              </Button>
-            );
-          })}
-        </div>
+        <UISearchBar
+          placeholder="Search components..."
+          value={searchQuery}
+          onChange={setSearchQuery}
+        />
+
+        <UIFilterButtons
+          options={filterOptions}
+          selectedKey={selectedType}
+          onSelect={setSelectedType}
+        />
       </div>
 
       {/* Components */}

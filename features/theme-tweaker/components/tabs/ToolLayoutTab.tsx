@@ -11,14 +11,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { SliderControl } from '../controls/SliderControl';
 import { SelectControl } from '../controls/SelectControl';
-import { 
-  Layout, 
-  Grid, 
-  Columns, 
-  Rows, 
-  Move, 
-  Maximize, 
-  Minimize, 
+import { UISearchBar } from '../common/UISearchBar';
+import { UIFilterButtons } from '../common/UIFilterButtons';
+import {
+  Layout,
+  Grid,
+  Columns,
+  Rows,
+  Move,
+  Maximize,
+  Minimize,
   RotateCcw,
   Smartphone,
   Tablet,
@@ -225,6 +227,26 @@ export function ToolLayoutTab() {
     }
   ];
 
+  // Prepare filter options for common component
+  const filterOptions = useMemo(() => {
+    const options = [
+      { key: 'all', label: 'All', count: layoutProperties.length }
+    ];
+
+    (['spacing', 'sizing', 'positioning', 'display'] as const).forEach(category => {
+      const count = layoutProperties.filter(p => p.category === category).length;
+      if (count > 0) {
+        options.push({
+          key: category,
+          label: category,
+          count
+        });
+      }
+    });
+
+    return options;
+  }, [layoutProperties]);
+
   // Filter properties based on search and category
   const filteredProperties = useMemo(() => {
     let filtered = layoutProperties;
@@ -237,7 +259,7 @@ export function ToolLayoutTab() {
     // Filter by search query
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(prop => 
+      filtered = filtered.filter(prop =>
         prop.name.toLowerCase().includes(query) ||
         prop.property.toLowerCase().includes(query) ||
         prop.description?.toLowerCase().includes(query)
@@ -485,38 +507,19 @@ export function ToolLayoutTab() {
         </CardContent>
       </Card>
 
-      {/* Search */}
-      <div className="w-full">
-        <Input
+      {/* Search and Filters */}
+      <div className="space-y-4">
+        <UISearchBar
           placeholder="Search properties..."
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full"
+          onChange={setSearchQuery}
         />
-      </div>
 
-      {/* Filters */}
-      <div className="flex items-center gap-1 flex-wrap">
-        <Button
-          variant={selectedCategory === 'all' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => setSelectedCategory('all')}
-        >
-          All
-        </Button>
-        {(['spacing', 'sizing', 'positioning', 'display'] as const).map(category => {
-          const count = layoutProperties.filter(p => p.category === category).length;
-          return (
-            <Button
-              key={category}
-              variant={selectedCategory === category ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setSelectedCategory(category)}
-            >
-              {category} ({count})
-            </Button>
-          );
-        })}
+        <UIFilterButtons
+          options={filterOptions}
+          selectedKey={selectedCategory}
+          onSelect={setSelectedCategory}
+        />
       </div>
 
       {/* Properties */}
