@@ -485,37 +485,38 @@ export function ToolLayoutTab() {
         </CardContent>
       </Card>
 
-      {/* Search and Filters */}
-      <div className="flex items-center gap-2">
+      {/* Search */}
+      <div className="w-full">
         <Input
           placeholder="Search properties..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="flex-1"
+          className="w-full"
         />
-        
-        <div className="flex items-center gap-1">
-          <Button
-            variant={selectedCategory === 'all' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setSelectedCategory('all')}
-          >
-            All
-          </Button>
-          {(['spacing', 'sizing', 'positioning', 'display'] as const).map(category => {
-            const count = layoutProperties.filter(p => p.category === category).length;
-            return (
-              <Button
-                key={category}
-                variant={selectedCategory === category ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setSelectedCategory(category)}
-              >
-                {category} ({count})
-              </Button>
-            );
-          })}
-        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="flex items-center gap-1 flex-wrap">
+        <Button
+          variant={selectedCategory === 'all' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setSelectedCategory('all')}
+        >
+          All
+        </Button>
+        {(['spacing', 'sizing', 'positioning', 'display'] as const).map(category => {
+          const count = layoutProperties.filter(p => p.category === category).length;
+          return (
+            <Button
+              key={category}
+              variant={selectedCategory === category ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setSelectedCategory(category)}
+            >
+              {category} ({count})
+            </Button>
+          );
+        })}
       </div>
 
       {/* Properties */}
