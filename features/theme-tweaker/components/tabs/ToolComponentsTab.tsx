@@ -8,7 +8,7 @@ import { formatCSSValue } from '../../utils/colorUtils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { UniversalColorInput } from '../common/UniversalColorInput';
 import { SliderControl } from '../controls/SliderControl';
 import { SelectControl } from '../controls/SelectControl';
@@ -17,8 +17,6 @@ import { UIFilterButtons } from '../common/UIFilterButtons';
 import {
   Component,
   Layers,
-  Eye,
-  EyeOff,
   RefreshCw,
   Filter,
   Zap,
@@ -459,44 +457,7 @@ export function ToolComponentsTab() {
         onMouseLeave={() => handleComponentHover(null)}
         onClick={() => handleComponentClick(component.id)}
       >
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <code className="text-sm font-mono bg-muted px-2 py-1 rounded">
-                {component.selector}
-              </code>
-              {hasChanges && (
-                <Badge variant="secondary" className="text-xs">
-                  Modified
-                </Badge>
-              )}
-              {isHighlighted && (
-                <Badge variant="default" className="text-xs">
-                  <Eye className="w-3 h-3 mr-1" />
-                  Highlighted
-                </Badge>
-              )}
-            </div>
-            <Badge variant="outline" className="text-xs">
-              {component.type}
-            </Badge>
-          </div>
-          
-          {component.classes.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-2">
-              {component.classes.slice(0, 5).map(cls => (
-                <Badge key={cls} variant="outline" className="text-xs">
-                  {cls}
-                </Badge>
-              ))}
-              {component.classes.length > 5 && (
-                <Badge variant="outline" className="text-xs">
-                  +{component.classes.length - 5} more
-                </Badge>
-              )}
-            </div>
-          )}
-        </CardHeader>
+        {/* Header removed — group already shows the component type */}
         
         <CardContent>
           <div className="space-y-3">
