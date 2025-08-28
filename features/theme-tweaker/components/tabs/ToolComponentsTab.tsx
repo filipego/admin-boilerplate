@@ -8,6 +8,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { SliderControl } from '../controls/SliderControl';
+import { SelectControl } from '../controls/SelectControl';
+import { formatCSSValue } from '../../utils/colorUtils';
+import FourSideEditor from '../controls/FourSideEditor'
+import CornerRadiusEditor from '../controls/CornerRadiusEditor'
+import BoxShadowEditor, { ShadowLayer } from '../controls/BoxShadowEditor'
+import TokenColorInput from '../controls/TokenColorInput'
 import { UniversalColorInput } from '../common/UniversalColorInput';
 import { UISearchBar } from '../common/UISearchBar';
 import { UIFilterButtons } from '../common/UIFilterButtons';
@@ -225,6 +232,13 @@ export function ToolComponentsTab() {
     }
   };
 
+  // Utility: read computed style of first element matching component
+  const getComputedFor = (selector: string): CSSStyleDeclaration | null => {
+    const el = document.querySelector(selector) as HTMLElement | null;
+    if (!el) return null;
+    return getComputedStyle(el);
+  };
+
   const handleRescan = async () => {
     setIsScanning(true);
     try {
@@ -380,6 +394,87 @@ export function ToolComponentsTab() {
   };
 
   // No renderStyleControl; we show token-only controls
+  const handleComponentStyleEdit = (componentId: string, property: string, value: string) => {
+    const scope = (scopeSelector[componentId] || '').trim();
+    const base = `${scope ? scope + ' ' : ''}${getComponentSelectorById(componentId)}`;
+    addRuntimeStyle({
+      id: `${componentId}-${property}`,
+      selector: base,
+      property,
+      value,
+      element: document.documentElement,
+      type: 'class'
+    });
+  };
+
+  const renderStyleControl = (component: ScannedComponent, property: string, value: string) => {
+    const scope = (scopeSelector[component.id] || '').trim();
+    const disabled = scope.length === 0;
+    // Current value: prefer runtime override if present
+    const base = `${scope ? scope + ' ' : ''}${getComponentSelectorById(component.id)}`;
+    const override = runtimeStyles.find(s => s.selector === base && s.property === property);
+    const currentValue = override?.value || value;
+
+    if (property.includes('color') || property.includes('Color')) {
+      // For now, color properties can be edited as text; tokens should be preferred above
+      return (
+        <Input
+          value={formatCSSValue(property, currentValue)}
+          disabled={disabled}
+          onChange={(e) => handleComponentStyleEdit(component.id, property, e.target.value)}
+          className="h-9 font-mono text-xs"
+        />
+      );
+    }
+
+    if (property.includes('width') || property.includes('height') || 
+        property.includes('margin') || property.includes('padding') ||
+        property.includes('border') || property.includes('radius')) {
+      const match = currentValue.toString().match(/^([\d.]+)(.*)$/);
+      const unit = match ? match[2] : 'px';
+      return (
+        <SliderControl
+          label={property}
+          value={currentValue}
+          originalValue={value}
+          onChange={(v) => handleComponentStyleEdit(component.id, property, v)}
+          min={0}
+          max={property.includes('radius') ? 50 : 100}
+          step={0.5}
+          unit={unit}
+          disabled={disabled}
+        />
+      );
+    }
+
+    return (
+      <SelectControl
+        label={property}
+        value={currentValue}
+        originalValue={value}
+        onChange={(v) => handleComponentStyleEdit(component.id, property, v)}
+        options={getPropertyOptions(property)}
+        disabled={disabled}
+      />
+    );
+  };
+
+  const getPropertyOptions = (property: string): string[] => {
+    switch (property) {
+      case 'display':
+        return ['block', 'inline', 'inline-block', 'flex', 'grid', 'none'];
+      case 'position':
+        return ['static', 'relative', 'absolute', 'fixed', 'sticky'];
+      case 'textAlign':
+        return ['left', 'center', 'right', 'justify'];
+      case 'fontWeight':
+        return ['normal', 'bold', '100', '200', '300', '400', '500', '600', '700', '800', '900'];
+      case 'fontSize':
+        return ['12px', '14px', '16px', '18px', '20px', '24px', '32px', '48px'];
+      default:
+        return [];
+    }
+  };
 
   // No property option mapping required in token-only UI
 
@@ -427,7 +522,7 @@ export function ToolComponentsTab() {
             </div>
 
             {/* Tokens (Light/Dark) same UI style as Tokens tab */}
-            {(isHighlighted || isExpanded) && (() => {
+            {(() => {
               const componentTokens = detectComponentTokens(component);
               const tokensToShow = componentTokens.length > 0 ? componentTokens : ['--background', '--foreground', '--border'];
               return (
@@ -469,6 +564,151 @@ export function ToolComponentsTab() {
                       </div>
                     );
                   })}
+                </div>
+              );
+            })()}
+
+            {/* Spacing */}
+            {(() => {
+              const scope = (scopeSelector[component.id] || '').trim();
+              const disabled = scope.length === 0;
+              const cs = getComputedFor(component.selector);
+              const pad = {
+                top: cs?.paddingTop || '0px',
+                right: cs?.paddingRight || '0px',
+                bottom: cs?.paddingBottom || '0px',
+                left: cs?.paddingLeft || '0px',
+              };
+              const mar = {
+                top: cs?.marginTop || '0px',
+                right: cs?.marginRight || '0px',
+                bottom: cs?.marginBottom || '0px',
+                left: cs?.marginLeft || '0px',
+              };
+              const base = `${scope ? scope + ' ' : ''}${component.selector}`;
+              return (
+                <div className="space-y-3 mt-2 pt-2 border-t">
+                  <div className="text-sm font-medium">Spacing</div>
+                  <FourSideEditor
+                    title="Padding"
+                    values={pad}
+                    disabled={disabled}
+                    onChange={(v) => {
+                      addRuntimeStyle({ id: `${component.id}-padding-top`, selector: base, property: 'padding-top', value: v.top, element: document.documentElement, type: 'class' });
+                      addRuntimeStyle({ id: `${component.id}-padding-right`, selector: base, property: 'padding-right', value: v.right, element: document.documentElement, type: 'class' });
+                      addRuntimeStyle({ id: `${component.id}-padding-bottom`, selector: base, property: 'padding-bottom', value: v.bottom, element: document.documentElement, type: 'class' });
+                      addRuntimeStyle({ id: `${component.id}-padding-left`, selector: base, property: 'padding-left', value: v.left, element: document.documentElement, type: 'class' });
+                    }}
+                  />
+                  <FourSideEditor
+                    title="Margin"
+                    values={mar}
+                    allowNegative
+                    disabled={disabled}
+                    onChange={(v) => {
+                      addRuntimeStyle({ id: `${component.id}-margin-top`, selector: base, property: 'margin-top', value: v.top, element: document.documentElement, type: 'class' });
+                      addRuntimeStyle({ id: `${component.id}-margin-right`, selector: base, property: 'margin-right', value: v.right, element: document.documentElement, type: 'class' });
+                      addRuntimeStyle({ id: `${component.id}-margin-bottom`, selector: base, property: 'margin-bottom', value: v.bottom, element: document.documentElement, type: 'class' });
+                      addRuntimeStyle({ id: `${component.id}-margin-left`, selector: base, property: 'margin-left', value: v.left, element: document.documentElement, type: 'class' });
+                    }}
+                  />
+                </div>
+              );
+            })()}
+
+            {/* Border */}
+            {(() => {
+              const scope = (scopeSelector[component.id] || '').trim();
+              const disabled = scope.length === 0;
+              const cs = getComputedFor(component.selector);
+              const base = `${scope ? scope + ' ' : ''}${component.selector}`;
+              const radius = {
+                tl: cs?.borderTopLeftRadius || '0px',
+                tr: cs?.borderTopRightRadius || '0px',
+                br: cs?.borderBottomRightRadius || '0px',
+                bl: cs?.borderBottomLeftRadius || '0px',
+              };
+              const width = {
+                top: cs?.borderTopWidth || '0px',
+                right: cs?.borderRightWidth || '0px',
+                bottom: cs?.borderBottomWidth || '0px',
+                left: cs?.borderLeftWidth || '0px',
+              };
+              const style = cs?.borderStyle || 'solid';
+              const colorVal = cs?.borderColor || 'var(--border)';
+              return (
+                <div className="space-y-3 mt-2 pt-2 border-t">
+                  <div className="text-sm font-medium">Border</div>
+                  <CornerRadiusEditor
+                    values={radius}
+                    disabled={disabled}
+                    onChange={(v) => {
+                      addRuntimeStyle({ id: `${component.id}-radius-tl`, selector: base, property: 'border-top-left-radius', value: v.tl, element: document.documentElement, type: 'class' });
+                      addRuntimeStyle({ id: `${component.id}-radius-tr`, selector: base, property: 'border-top-right-radius', value: v.tr, element: document.documentElement, type: 'class' });
+                      addRuntimeStyle({ id: `${component.id}-radius-br`, selector: base, property: 'border-bottom-right-radius', value: v.br, element: document.documentElement, type: 'class' });
+                      addRuntimeStyle({ id: `${component.id}-radius-bl`, selector: base, property: 'border-bottom-left-radius', value: v.bl, element: document.documentElement, type: 'class' });
+                    }}
+                  />
+                  <FourSideEditor
+                    title="Border width"
+                    values={width}
+                    disabled={disabled}
+                    onChange={(v) => {
+                      addRuntimeStyle({ id: `${component.id}-bw-top`, selector: base, property: 'border-top-width', value: v.top, element: document.documentElement, type: 'class' });
+                      addRuntimeStyle({ id: `${component.id}-bw-right`, selector: base, property: 'border-right-width', value: v.right, element: document.documentElement, type: 'class' });
+                      addRuntimeStyle({ id: `${component.id}-bw-bottom`, selector: base, property: 'border-bottom-width', value: v.bottom, element: document.documentElement, type: 'class' });
+                      addRuntimeStyle({ id: `${component.id}-bw-left`, selector: base, property: 'border-left-width', value: v.left, element: document.documentElement, type: 'class' });
+                    }}
+                  />
+                  <div>
+                    <div className="text-xs text-muted-foreground mb-1">Border style</div>
+                    <div className="flex items-center gap-2">
+                      {['none','solid','dashed','dotted'].map(opt => (
+                        <Button key={opt} size="sm" variant={style===opt? 'secondary':'outline'} disabled={disabled}
+                          onClick={() => addRuntimeStyle({ id: `${component.id}-bs`, selector: base, property: 'border-style', value: opt, element: document.documentElement, type: 'class' })}
+                        >{opt}</Button>
+                      ))}
+                    </div>
+                  </div>
+                  <TokenColorInput
+                    label="Border color (token-first)"
+                    value={colorVal}
+                    disabled={disabled}
+                    onChange={(v) => addRuntimeStyle({ id: `${component.id}-bc`, selector: base, property: 'border-color', value: v, element: document.documentElement, type: 'class' })}
+                  />
+                </div>
+              );
+            })()}
+
+            {/* Shadows */}
+            {(() => {
+              const scope = (scopeSelector[component.id] || '').trim();
+              const disabled = scope.length === 0;
+              const cs = getComputedFor(component.selector);
+              const base = `${scope ? scope + ' ' : ''}${component.selector}`;
+              const boxShadow = cs?.boxShadow || 'none';
+              const initial: any[] = boxShadow === 'none' ? [] : boxShadow.split(',').map(s => {
+                const parts = s.trim().split(/\s+/);
+                let inset = false; let idx=0;
+                if (parts[0]==='inset') { inset=true; idx=1; }
+                const x=parts[idx]||'0px';
+                const y=parts[idx+1]||'0px';
+                const blur=parts[idx+2]||'0px';
+                const spread=parts[idx+3]||'0px';
+                const color=parts.slice(idx+4).join(' ')||'var(--border)';
+                return { inset, x, y, blur, spread, color };
+              });
+              return (
+                <div className="space-y-3 mt-2 pt-2 border-t">
+                  <div className="text-sm font-medium">Shadows</div>
+                  <BoxShadowEditor
+                    layers={initial}
+                    disabled={disabled}
+                    onChange={(layers) => {
+                      const css = layers.map((l: any) => `${l.inset? 'inset ': ''}${l.x} ${l.y} ${l.blur} ${l.spread} ${l.color}`).join(', ');
+                      addRuntimeStyle({ id: `${component.id}-shadow`, selector: base, property: 'box-shadow', value: css || 'none', element: document.documentElement, type: 'class' });
+                    }}
+                  />
                 </div>
               );
             })()}
