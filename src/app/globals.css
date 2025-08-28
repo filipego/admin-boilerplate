@@ -128,7 +128,7 @@
 }
 
 .dark {
-  --background: oklch(0.235 0.03 253.1);
+  --background: oklch(0.154 0 89.9);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);
@@ -214,12 +214,12 @@
 
 /* Theme Tweaker highlighting */
 .tt-highlight {
-  outline: 2px dashed var(--success);
+  outline: 2px dashed #eab308; /* amber-500 */
   outline-offset: 2px;
 }
 
 .tt-selected {
-  outline: 2px solid var(--success);
+  outline: 2px solid #eab308; /* amber-500 */
   outline-offset: 2px;
 }
 
@@ -236,8 +236,6 @@
   padding-left: 1rem; /* gutter */
   background-clip: padding-box;
 }
-
-
 
 /* Semantic color utility classes */
 @layer utilities {
@@ -337,9 +335,9 @@
 
 
 /* BEGIN THEME TWEAKER OVERRIDES - DO NOT EDIT MANUALLY */
-/* Generated: 2025-08-26T21:49:33.665Z */
+/* Generated: 2025-08-27T03:33:43.553Z */
 html.dark, body.dark, .dark {
-  --background: oklch(0.235 0.03 253.1) !important;
+  --background: oklch(0.154 0 89.9) !important;
 }
 
 /* END THEME TWEAKER OVERRIDES */

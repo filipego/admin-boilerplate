@@ -28,7 +28,7 @@ export const ToolFab: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-[10000] flex flex-col items-end gap-2">
+    <div data-theme-tweaker-ui className="fixed bottom-6 right-6 z-[10000] flex flex-col items-end gap-2">
       {/* Expanded Actions */}
       {isExpanded && (
         <div className="flex flex-col gap-2 animate-in slide-in-from-bottom-2 duration-200">

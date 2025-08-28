@@ -69,6 +69,10 @@ export function ThemeTweaker() {
 
     const handleElementClick = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
+      // Ignore clicks inside the Theme Tweaker UI
+      if (target.closest('[data-theme-tweaker-ui]')) {
+        return;
+      }
       const closestWithDataUi = target.closest('[data-ui]') as HTMLElement | null;
       const dataUi = closestWithDataUi?.getAttribute('data-ui') || null;
       
@@ -151,6 +155,7 @@ export function ThemeTweaker() {
       {/* Floating Action Button */}
       {!isToolOpen && (
         <Button
+          data-theme-tweaker-ui
           onClick={handleToggle}
           disabled={!isInitialized}
           className="fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 z-[9998]"
@@ -173,6 +178,7 @@ export function ThemeTweaker() {
       {/* Click-to-edit overlay hint */}
       {isToolOpen && (
         <div
+          data-theme-tweaker-ui
           className="fixed bottom-6 left-6 rounded-lg p-3 shadow-lg z-[999999]"
           style={{
             // hard-coded palette for isolation; never influenced by site tokens

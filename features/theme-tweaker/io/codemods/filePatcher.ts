@@ -251,8 +251,35 @@ export class FilePatcher {
       results.push(result);
     }
 
-    // Runtime edits are applied via the runtime CSS engine, not file patches
-    // They're included here for completeness but don't result in file changes
+    // Runtime edits: if they target CSS custom properties under a class selector,
+    // append them to globals.css so overrides persist.
+    const runtimeClassVarEdits = runtimeEdits.filter(e => e.selector && e.selector.startsWith('.') && e.property.startsWith('--'));
+    if (runtimeClassVarEdits.length > 0) {
+      const globPath = process.cwd() + '/src/app/globals.css';
+      const cssBlockLightLines: string[] = [];
+      const cssBlockDarkLines: string[] = [];
+      const bySelector = new Map<string, RuntimeStyleEdit[]>();
+      runtimeClassVarEdits.forEach(e => {
+        const arr = bySelector.get(e.selector) || [];
+        arr.push(e);
+        bySelector.set(e.selector, arr);
+      });
+
+      // For now, write light overrides under the selector, and dark overrides under .dark selector
+      // We cannot distinguish light/dark here without scope info; assume callers pass two entries with selectors '.class' and '.dark .class'.
+      let appendCSS = '';
+      bySelector.forEach((edits, selector) => {
+        appendCSS += `${selector} {\n`;
+        edits.forEach(e => {
+          appendCSS += `  ${e.property}: ${e.value};\n`;
+        });
+        appendCSS += `}\n\n`;
+      });
+
+      // Append to globals.css (placeholder write; real implementation should read/append/write atomically)
+      await CSSTokenPatcher.writeFile(globPath, (await CSSTokenPatcher.readFile(globPath)) + '\n' + appendCSS);
+      results.push({ success: true, filePath: globPath, changes: ['Appended component override CSS'] });
+    }
 
     return results;
   }

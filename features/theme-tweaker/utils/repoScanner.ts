@@ -248,6 +248,10 @@ export class ComponentScanner {
       const elements = document.querySelectorAll('[data-ui]');
 
       for (const element of elements) {
+        // Skip any elements that are part of the Theme Tweaker UI
+        if ((element as HTMLElement).closest('[data-theme-tweaker-ui]')) {
+          continue;
+        }
         const dataUi = element.getAttribute('data-ui');
         if (!dataUi) continue;
 

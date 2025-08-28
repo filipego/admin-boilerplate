@@ -10,10 +10,12 @@ export interface SelectedElement {
 }
 
 export interface RuntimeStyle {
+  id: string;
   selector: string;
   property: string;
   value: string;
-  type: 'token' | 'class' | 'instance';
+  element: HTMLElement;
+  type?: 'token' | 'class' | 'instance';
 }
 
 export interface TokenEdit {
@@ -104,6 +106,8 @@ interface ThemeTweakerState {
   updateRuntimeStyle: (selector: string, property: string, value: string) => void;
   removeRuntimeStyle: (selector: string, property: string) => void;
   clearRuntimeStyles: () => void;
+  clearSavedEdits: (tokens: TokenEdit[], components: ComponentEdit[], runtime: RuntimeStyle[]) => void;
+  clearAllEdits: () => void;
   
   // Layout edits
   updateLayoutEdit: (id: string, edit: {
@@ -258,6 +262,12 @@ export const useThemeTweakerStore = create<ThemeTweakerState>()(devtools(
     })),
     
     clearRuntimeStyles: () => set({ runtimeStyles: [] }),
+    clearSavedEdits: (tokens, components, runtime) => set((state) => ({
+      tokenEdits: state.tokenEdits.filter(e => !tokens.includes(e)),
+      componentEdits: state.componentEdits.filter(e => !components.includes(e)),
+      runtimeStyles: state.runtimeStyles.filter(e => !runtime.includes(e))
+    })),
+    clearAllEdits: () => set({ tokenEdits: [], componentEdits: [], runtimeStyles: [], componentEdits: [], layoutEdits: {} }),
 
     updateLayoutEdit: (id, edit) => set((state) => ({
       layoutEdits: { ...state.layoutEdits, [id]: edit }

@@ -25,8 +25,8 @@ const createOverlayElements = (): void => {
   overlayElement.style.cssText = `
     position: fixed;
     pointer-events: none;
-    border: 2px solid #3b82f6;
-    background: rgba(59, 130, 246, 0.1);
+    border: 2px solid #eab308;
+    background: rgba(234, 179, 8, 0.12);
     z-index: 9999;
     display: none;
     border-radius: 4px;
@@ -60,6 +60,11 @@ const attachEventListeners = (): void => {
   document.addEventListener('keydown', handleKeyDown);
 };
 
+/** Utility: returns true if element is inside Theme Tweaker UI */
+const isInsideTweakerUI = (el: HTMLElement | null): boolean => {
+  return !!el?.closest('[data-theme-tweaker-ui]');
+};
+
 /**
  * Handles mouse over events for hover feedback
  */
@@ -68,6 +73,8 @@ const handleMouseOver = (event: MouseEvent): void => {
   if (!isInspectorMode) return;
   
   const target = event.target as HTMLElement;
+  // Ignore any element within Theme Tweaker UI
+  if (isInsideTweakerUI(target)) return;
   const selectableElement = findSelectableElement(target);
   
   if (selectableElement && hoverOverlayElement) {
@@ -104,6 +111,8 @@ const handleClick = (event: MouseEvent): void => {
   event.stopPropagation();
   
   const target = event.target as HTMLElement;
+  // Ignore any element within Theme Tweaker UI
+  if (isInsideTweakerUI(target)) return;
   const selectableElement = findSelectableElement(target);
   
   if (selectableElement) {
@@ -137,6 +146,8 @@ const handleKeyDown = (event: KeyboardEvent): void => {
  * Only selects top-level components, not inner elements
  */
 const findSelectableElement = (element: HTMLElement): HTMLElement | null => {
+  // Never select elements from inside Theme Tweaker UI
+  if (isInsideTweakerUI(element)) return null;
   let current = element;
   
   // Traverse up to find data-ui attribute

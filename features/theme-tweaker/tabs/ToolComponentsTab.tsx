@@ -38,6 +38,8 @@ export const ToolComponentsTab: React.FC = () => {
       const componentMap = new Map<string, ComponentInfo>();
       
       elementsWithDataUi.forEach((element) => {
+        // Ignore components that exist inside the Theme Tweaker UI itself
+        if ((element as HTMLElement).closest('[data-theme-tweaker-ui]')) return;
         const dataUi = element.getAttribute('data-ui');
         if (!dataUi) return;
         
@@ -123,7 +125,7 @@ export const ToolComponentsTab: React.FC = () => {
   const highlightComponent = (component: ComponentInfo) => {
     // Temporarily highlight all instances of this component
     component.elements.forEach((element) => {
-      element.style.outline = '2px solid #3b82f6';
+      element.style.outline = '2px solid #eab308';
       element.style.outlineOffset = '2px';
     });
     

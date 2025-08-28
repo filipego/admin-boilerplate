@@ -327,6 +327,7 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
   return (
     <div
       ref={wrapperRef}
+      data-theme-tweaker-ui
       className={`${wrapperClasses} tt-scope ${toolStyles.scope}`}
       style={(() => {
         const posStyle = !isMaximized

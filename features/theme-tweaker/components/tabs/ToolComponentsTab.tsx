@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useThemeTweakerStore } from '../../store/useThemeTweakerStore';
 import { ComponentScanner, ScannedComponent } from '../../utils/componentScanner';
 import { RepoScanner } from '../../utils/repoScanner';
+import { formatCSSValue } from '../../utils/colorUtils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -21,7 +22,8 @@ import {
   RefreshCw,
   Filter,
   Zap,
-  MousePointer
+  MousePointer,
+  Palette
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -33,12 +35,14 @@ interface ComponentGroup {
 }
 
 export function ToolComponentsTab() {
-  const { 
-    componentEdits, 
-    updateComponentEdit, 
-    highlightedComponent, 
-    setHighlightedComponent 
+  const {
+    componentEdits,
+    updateComponentEdit,
+    highlightedComponent,
+    setHighlightedComponent
   } = useThemeTweakerStore();
+
+
   
   const [components, setComponents] = useState<ScannedComponent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,8 +52,106 @@ export function ToolComponentsTab() {
   const [hoveredComponent, setHoveredComponent] = useState<string | null>(null);
   const [expandedComponents, setExpandedComponents] = useState<Record<string, boolean>>({});
 
+  // Token usage state for component overrides
+  const [componentTokenOverrides, setComponentTokenOverrides] = useState<Record<string, Record<string, { light?: string; dark?: string }>>>({});
+  
+
+
   const componentScanner = useMemo(() => ComponentScanner.getInstance(), []);
   const repoScanner = useMemo(() => new RepoScanner(), []);
+
+  // Function to detect which CSS custom properties (tokens) a component uses
+  // TODO: Tomorrow - Fix token detection to properly analyze actual CSS usage instead of guessing
+  const detectComponentTokens = (component: ScannedComponent): string[] => {
+    const tokens = new Set<string>();
+
+    // Most components use these core design system tokens
+    const commonTokens = ['--background', '--foreground', '--border', '--muted', '--muted-foreground'];
+
+    // Check if component uses color-related classes
+    const hasColorClasses = component.classes.some(cls =>
+      cls.startsWith('bg-') || cls.startsWith('text-') || cls.startsWith('border-')
+    );
+
+    // If component uses any color classes, assume it uses core tokens
+    if (hasColorClasses) {
+      tokens.add('--background');
+      tokens.add('--foreground');
+      tokens.add('--border');
+    } else {
+      // Even components without explicit color classes typically inherit from design system
+      tokens.add('--background');
+      tokens.add('--foreground');
+    }
+
+    return Array.from(tokens);
+  };
+
+  // Function to get resolved light/dark values for tokens
+  const getTokenValues = (tokenName: string): { light: string; dark: string } => {
+    const html = document.documentElement;
+    const wasDark = html.classList.contains('dark');
+
+    let lightValue = '';
+    let darkValue = '';
+
+    try {
+      // Light mode
+      html.classList.remove('dark');
+      void html.offsetHeight;
+      lightValue = getComputedStyle(html).getPropertyValue(tokenName).trim();
+
+      // Dark mode
+      html.classList.add('dark');
+      void html.offsetHeight;
+      darkValue = getComputedStyle(html).getPropertyValue(tokenName).trim();
+
+      // Restore original state
+      if (!wasDark) html.classList.remove('dark');
+    } catch (error) {
+      console.error('Error getting token values:', error);
+    }
+
+    return {
+      light: lightValue || '—',
+      dark: darkValue || '—'
+    };
+  };
+
+  // Function to check if component has custom classes (non-utility)
+  const hasCustomClasses = (component: ScannedComponent): boolean => {
+    // For now, let's be more permissive - if component has any classes at all,
+    // assume it could have custom classes. In a real implementation, you'd
+    // check the actual element's classes against a comprehensive list of utilities
+    return component.classes.length > 0;
+  };
+
+  // Function to handle component token overrides
+  const handleComponentTokenOverride = (componentId: string, tokenName: string, value: string, theme: 'light' | 'dark') => {
+    setComponentTokenOverrides(prev => ({
+      ...prev,
+      [componentId]: {
+        ...prev[componentId],
+        [tokenName]: {
+          ...prev[componentId]?.[tokenName],
+          [theme]: value
+        }
+      }
+    }));
+
+    // Apply the override using the existing runtime style system
+    const selector = theme === 'dark' ? `.dark [data-component-id="${componentId}"]` : `[data-component-id="${componentId}"]`;
+    addRuntimeStyle({
+      id: `${componentId}-${tokenName}-${theme}`,
+      selector,
+      property: tokenName,
+      value,
+      element: document.querySelector(`[data-component-id="${componentId}"]`) || document.body,
+      type: 'token'
+    });
+  };
+
+
 
   // Load components on mount
   useEffect(() => {
@@ -74,6 +176,8 @@ export function ToolComponentsTab() {
     }
   }, [highlightedComponent, components]);
 
+
+
   // Apply page-level selection outline when highlightedComponent changes (Alt+Click or card click)
   useEffect(() => {
     // Clear any previous selection
@@ -81,7 +185,11 @@ export function ToolComponentsTab() {
     if (!highlightedComponent) return;
     const comp = components.find(c => c.id === highlightedComponent);
     if (comp) {
-      document.querySelectorAll(comp.selector).forEach(el => el.classList.add('tt-selected'));
+      document.querySelectorAll(comp.selector).forEach(el => {
+        if (!(el as HTMLElement).closest('[data-theme-tweaker-ui]')) {
+          el.classList.add('tt-selected');
+        }
+      });
     }
   }, [highlightedComponent, components]);
 
@@ -101,8 +209,21 @@ export function ToolComponentsTab() {
     setIsScanning(true);
     try {
       const { components: newComponents } = await repoScanner.rescan();
-      setComponents(newComponents);
-      toast.success(`Rescanned and found ${newComponents.length} components`);
+      // Convert ComponentInfo[] to ScannedComponent[]
+      const scannedComponents: ScannedComponent[] = newComponents.map(comp => ({
+        id: comp.dataUi || comp.selector,
+        selector: comp.selector,
+        type: comp.dataUi.split(':')[0] || 'component',
+        classes: comp.element instanceof Element ? Array.from(comp.element.classList) : [],
+        styles: comp.styles.reduce((acc, style) => {
+          acc[style.property] = (style as any).computed ?? style.value;
+          return acc;
+        }, {} as Record<string, string>)
+      }));
+
+
+      setComponents(scannedComponents);
+      toast.success(`Rescanned and found ${scannedComponents.length} components`);
     } catch (error) {
       console.error('Error rescanning:', error);
       toast.error('Failed to rescan components');
@@ -204,13 +325,7 @@ export function ToolComponentsTab() {
     const component = components.find(c => c.id === componentId);
     if (!component) return;
 
-    updateComponentEdit(componentId, {
-      [property]: {
-        value,
-        originalValue: component.styles[property] || '',
-        property
-      }
-    });
+    updateComponentEdit(`${componentId}-${property}`, value);
   };
 
   const handleComponentHover = (componentId: string | null) => {
@@ -218,10 +333,12 @@ export function ToolComponentsTab() {
     if (componentId) {
       const component = components.find(c => c.id === componentId);
       if (component) {
-        // Highlight the component in the DOM
+        // Highlight the component in the DOM (exclude Theme Tweaker UI)
         const elements = document.querySelectorAll(component.selector);
         elements.forEach(el => {
-          el.classList.add('tt-highlight');
+          if (!(el as HTMLElement).closest('[data-theme-tweaker-ui]')) {
+            el.classList.add('tt-highlight');
+          }
         });
       }
     } else {
@@ -237,23 +354,30 @@ export function ToolComponentsTab() {
     if (next) {
       const component = components.find(c => c.id === next);
       if (component) {
-        document.querySelectorAll(component.selector).forEach(el => el.classList.add('tt-selected'));
+        document.querySelectorAll(component.selector).forEach(el => {
+          if (!(el as HTMLElement).closest('[data-theme-tweaker-ui]')) {
+            el.classList.add('tt-selected');
+          }
+        });
       }
     }
     setHighlightedComponent(next);
   };
 
   const renderStyleControl = (component: ScannedComponent, property: string, value: string) => {
-    const currentEdit = componentEdits[component.id]?.[property];
+    const editId = `${component.id}-${property}`;
+    const currentEdit = componentEdits[editId];
     const currentValue = currentEdit?.value || value;
     const hasChanged = currentEdit && currentEdit.value !== currentEdit.originalValue;
 
     // Determine control type based on property and value
-    if (property.includes('color') || property.includes('Color') || 
+    if (property.includes('color') || property.includes('Color') ||
         (typeof value === 'string' && value.match(/^#[0-9a-fA-F]{6}$|^rgb|^hsl|^oklch|^lab/))) {
+      // Format color value for display in UniversalColorInput
+      const displayValue = formatCSSValue(property, currentValue);
       return (
         <UniversalColorInput
-          value={currentValue}
+          value={displayValue}
           onChange={(newValue) => handleComponentEdit(component.id, property, newValue)}
         />
       );
@@ -268,14 +392,14 @@ export function ToolComponentsTab() {
       
       return (
         <SliderControl
-          value={numericValue}
-          originalValue={parseFloat(value.toString())}
-          onChange={(newValue) => handleComponentEdit(component.id, property, `${newValue}${unit}`)}
+          label={property}
+          value={currentValue}
+          originalValue={value}
+          onChange={(newValue) => handleComponentEdit(component.id, property, newValue)}
           min={0}
           max={property.includes('radius') ? 50 : 100}
           step={0.5}
           unit={unit}
-          hasChanged={hasChanged}
         />
       );
     }
@@ -283,11 +407,11 @@ export function ToolComponentsTab() {
     // For other properties, use select or text input
     return (
       <SelectControl
-        value={currentValue.toString()}
-        originalValue={value.toString()}
+        label={property}
+        value={currentValue}
+        originalValue={value}
         onChange={(newValue) => handleComponentEdit(component.id, property, newValue)}
         options={getPropertyOptions(property)}
-        hasChanged={hasChanged}
       />
     );
   };
@@ -309,9 +433,13 @@ export function ToolComponentsTab() {
     }
   };
 
+
+
   const renderComponentItem = (component: ScannedComponent) => {
-    const currentEdits = componentEdits[component.id] || {};
-    const hasChanges = Object.keys(currentEdits).length > 0;
+
+    // Find all edits for this component
+    const componentEditKeys = Object.keys(componentEdits).filter(key => key.startsWith(`${component.id}-`));
+    const hasChanges = componentEditKeys.length > 0;
     const isHighlighted = highlightedComponent === component.id;
     const isHovered = hoveredComponent === component.id;
     const isExpanded = !!expandedComponents[component.id];
@@ -321,11 +449,12 @@ export function ToolComponentsTab() {
         className={`transition-all cursor-pointer ${
           hasChanges ? 'ring-2 ring-blue-500' : ''
         } ${
-          isHighlighted ? 'ring-2 ring-green-500' : ''
+          isHighlighted ? 'ring-2 ring-yellow-500' : ''
         } ${
           isHovered ? 'shadow-sm' : ''
         }`}
         data-tt-component-id={component.id}
+        data-component-id={component.id}
         onMouseEnter={() => handleComponentHover(component.id)}
         onMouseLeave={() => handleComponentHover(null)}
         onClick={() => handleComponentClick(component.id)}
@@ -381,7 +510,7 @@ export function ToolComponentsTab() {
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-medium">{property}</label>
                   <code className="text-xs bg-muted px-1 py-0.5 rounded">
-                    {value}
+                    {formatCSSValue(property, value)}
                   </code>
                 </div>
                 {renderStyleControl(component, property, value)}
@@ -389,9 +518,9 @@ export function ToolComponentsTab() {
             ))}
             
             {Object.keys(component.styles).length > 3 && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 className="w-full text-xs"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -404,6 +533,85 @@ export function ToolComponentsTab() {
                 {isExpanded ? 'Show less' : `Show ${Object.keys(component.styles).length - 3} more properties`}
               </Button>
             )}
+
+            {/* Token Usage & Overrides Section */}
+            {(() => {
+              const componentTokens = detectComponentTokens(component);
+              const canOverride = hasCustomClasses(component);
+
+              // Always show at least some common tokens for demonstration
+              const tokensToShow = componentTokens.length > 0 ? componentTokens : ['--background', '--foreground'];
+
+
+
+              return (
+                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Palette size={14} className="text-blue-500" />
+                    <h5 className="text-sm font-medium text-gray-900 dark:text-white">
+                      Token Usage {canOverride && <span className="text-xs text-green-600">(Overrideable)</span>}
+                    </h5>
+                  </div>
+
+                  <div className="space-y-3">
+                    {tokensToShow.map(tokenName => {
+                      const values = getTokenValues(tokenName);
+                      const overrides = componentTokenOverrides[component.id]?.[tokenName] || {};
+
+                      return (
+                        <div key={tokenName} className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <code className="text-xs font-mono bg-muted px-2 py-1 rounded">
+                              {tokenName}
+                            </code>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <div className="text-[10px] text-muted-foreground mb-1">Light</div>
+                              <code className="block bg-muted px-2 py-1 rounded font-mono text-xs">
+                                {values.light}
+                              </code>
+                              {canOverride && (
+                                <div className="mt-1">
+                                  <UniversalColorInput
+                                    value={overrides.light || ''}
+                                    onChange={(value) => handleComponentTokenOverride(component.id, tokenName, value, 'light')}
+                                    className="scale-90"
+                                  />
+                                </div>
+                              )}
+                            </div>
+
+                            <div>
+                              <div className="text-[10px] text-muted-foreground mb-1">Dark</div>
+                              <code className="block bg-muted px-2 py-1 rounded font-mono text-xs">
+                                {values.dark}
+                              </code>
+                              {canOverride && (
+                                <div className="mt-1">
+                                  <UniversalColorInput
+                                    value={overrides.dark || ''}
+                                    onChange={(value) => handleComponentTokenOverride(component.id, tokenName, value, 'dark')}
+                                    className="scale-90"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    {!canOverride && (
+                      <div className="text-xs text-muted-foreground p-2 border rounded-lg">
+                        Add a custom class (e.g. <code className="font-mono">.my-component</code>) to enable overrides
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </CardContent>
       </Card>
@@ -491,6 +699,11 @@ export function ToolComponentsTab() {
           </div>
         </div>
       )}
+
+
+
+
+
     </div>
   );
 }

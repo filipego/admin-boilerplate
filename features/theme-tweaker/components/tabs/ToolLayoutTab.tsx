@@ -13,6 +13,7 @@ import { SliderControl } from '../controls/SliderControl';
 import { SelectControl } from '../controls/SelectControl';
 import { UISearchBar } from '../common/UISearchBar';
 import { UIFilterButtons } from '../common/UIFilterButtons';
+import { formatCSSValue } from '../../utils/colorUtils';
 import {
   Layout,
   Grid,
@@ -450,7 +451,7 @@ export function ToolLayoutTab() {
           <div className="space-y-3">
             <div className="text-xs text-muted-foreground">
               Current: <code className="bg-muted px-1 py-0.5 rounded">
-                {currentEdit?.value || property.value}
+                {formatCSSValue(property.property, currentEdit?.value || property.value)}
               </code>
             </div>
             {renderPropertyControl(property)}

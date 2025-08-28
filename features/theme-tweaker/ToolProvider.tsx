@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { useThemeTweakerStore } from './store/useThemeTweakerStore';
 import { ToolFab } from './ToolFab';
 import { ToolPanel } from './ToolPanel';
-import { ToolInspector } from './ToolInspector';
+
 import { applyRuntimeStyles } from './runtime/applyRuntime';
 import { initializeSelectionOverlay } from './runtime/selectionOverlay';
 
@@ -27,7 +27,7 @@ interface ToolProviderProps {
 export const ToolProvider: React.FC<ToolProviderProps> = ({ children }) => {
   const [isEnabled, setIsEnabled] = useState(false);
   const [isDevMode, setIsDevMode] = useState(false);
-  const { isToolOpen, selectedElement, runtimeStyles } = useThemeTweakerStore();
+  const { isToolOpen, runtimeStyles } = useThemeTweakerStore();
 
   useEffect(() => {
     // Check feature flag and dev mode
@@ -58,7 +58,6 @@ export const ToolProvider: React.FC<ToolProviderProps> = ({ children }) => {
       {/* ThemeTweaker UI Components */}
       <ToolFab />
       {isToolOpen && <ToolPanel />}
-      {selectedElement && <ToolInspector />}
     </ThemeTweakerContext.Provider>
   );
 };

@@ -88,7 +88,11 @@ export const ToolPanel: React.FC = () => {
       <div className="fixed inset-0 bg-black/50 z-[9998]" onClick={handleClose} />
       
       {/* Modal Panel */}
-      <div className={`fixed top-4 right-4 bottom-4 bg-[#774DFF] dark:bg-[#5E3AD8] border border-[#774DFF] dark:border-[#5E3AD8] rounded-lg shadow-xl z-[9999] flex flex-col min-h-0 ${isResizing ? 'cursor-col-resize select-none' : ''}`} style={{ width: panelWidth }}>
+      <div
+        data-theme-tweaker-ui
+        className={`fixed top-4 right-4 bottom-4 bg-[#774DFF] dark:bg-[#5E3AD8] border border-[#774DFF] dark:border-[#5E3AD8] rounded-lg shadow-xl z-[9999] flex flex-col min-h-0 ${isResizing ? 'cursor-col-resize select-none' : ''}`}
+        style={{ width: panelWidth }}
+      >
       {/* Header */}
       <div className="relative flex items-center justify-between p-3 sm:p-4 border-b border-transparent bg-[#774DFF] dark:bg-[#5E3AD8]">
         <div className="flex items-center gap-2">

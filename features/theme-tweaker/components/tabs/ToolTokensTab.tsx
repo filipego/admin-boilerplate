@@ -5,6 +5,7 @@ import { useTheme } from 'next-themes';
 import { useThemeTweakerStore } from '../../store/useThemeTweakerStore';
 import { TokenScanner, CSSToken } from '../../utils/tokenScanner';
 import { RepoScanner } from '../../utils/repoScanner';
+import { toHEX } from '../../utils/colorUtils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -145,111 +146,7 @@ export function ToolTokensTab() {
     });
   };
 
-  // Convert any CSS color string to HEX for display
-  const toHEX = (input: string): string | null => {
-    const value = input.trim();
-    try {
-      // Stable OKLCH -> HEX conversion (high precision, round at the very end)
-      const oklchToHex = (L: number, C: number, H: number): string => {
-        const a = C * Math.cos((H * Math.PI) / 180);
-        const b = C * Math.sin((H * Math.PI) / 180);
 
-        let l_ = L + 0.3963377774 * a + 0.2158037573 * b;
-        let m_ = L - 0.1055613458 * a - 0.0638541728 * b;
-        let s_ = L - 0.0894841775 * a - 1.2914855480 * b;
-
-        l_ = l_ ** 3;
-        m_ = m_ ** 3;
-        s_ = s_ ** 3;
-
-        let r = 4.0767416621 * l_ - 3.3077115913 * m_ + 0.2309699292 * s_;
-        let g = -1.2684380046 * l_ + 2.6097574011 * m_ - 0.3413193965 * s_;
-        let b_ = -0.0041960863 * l_ - 0.7034186147 * m_ + 1.7076147010 * s_;
-
-        const lin2srgb = (x: number) => (x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(x, 1 / 2.4) - 0.055);
-
-        r = lin2srgb(r);
-        g = lin2srgb(g);
-        b_ = lin2srgb(b_);
-
-        r = Math.min(1, Math.max(0, r));
-        g = Math.min(1, Math.max(0, g));
-        b_ = Math.min(1, Math.max(0, b_));
-
-        const hex = [r, g, b_]
-          .map((v) => Math.round(v * 255).toString(16).padStart(2, '0'))
-          .join('')
-          .toUpperCase();
-        return `#${hex}`;
-      };
-
-      if (/^lab\(/i.test(value)) {
-        // Parse CSS Lab: lab(L a b / [alpha]) ; L may be %
-        const m = value.match(/lab\(([^)]+)\)/i);
-        if (!m) return null;
-        const parts = m[1].split(/[\s\/]+/).filter(Boolean);
-        if (parts.length < 3) return null;
-        let L = parseFloat(parts[0]);
-        if (/%$/.test(parts[0])) L = parseFloat(parts[0]) ; // already % 0..100
-        // L is specified as percentage in CSS, convert to 0..100
-        if (parts[0].includes('%')) L = parseFloat(parts[0]);
-        const a = parseFloat(parts[1]);
-        const b = parseFloat(parts[2]);
-        // Lab -> XYZ -> sRGB
-        const fy = (L + 16) / 116;
-        const fx = fy + a / 500;
-        const fz = fy - b / 200;
-        const fInv = (t: number) => {
-          const t3 = t * t * t;
-          return t3 > 0.008856 ? t3 : (t - 16 / 116) / 7.787;
-        };
-        const Xn = 95.047, Yn = 100, Zn = 108.883;
-        const X = Xn * fInv(fx);
-        const Y = Yn * fInv(fy);
-        const Z = Zn * fInv(fz);
-        // XYZ -> linear sRGB
-        const x = X / 100, y = Y / 100, z = Z / 100;
-        let rLin = 3.2406 * x - 1.5372 * y - 0.4986 * z;
-        let gLin = -0.9689 * x + 1.8758 * y + 0.0415 * z;
-        let bLin = 0.0557 * x - 0.2040 * y + 1.0570 * z;
-        const compand = (c: number) => c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(Math.max(0, c), 1 / 2.4) - 0.055;
-        const r = Math.round(Math.min(1, Math.max(0, compand(rLin))) * 255);
-        const g = Math.round(Math.min(1, Math.max(0, compand(gLin))) * 255);
-        const bV = Math.round(Math.min(1, Math.max(0, compand(bLin))) * 255);
-        const to2 = (n: number) => n.toString(16).padStart(2, '0').toUpperCase();
-        return `#${to2(r)}${to2(g)}${to2(bV)}`;
-      }
-      if (/^oklch\(/i.test(value)) {
-        const m = value.match(/oklch\(([^)]+)\)/i);
-        if (!m) return null;
-        const parts = m[1].split(/[\s\/]+/).filter(Boolean);
-        if (parts.length < 3) return null;
-        let L = parseFloat(parts[0]);
-        if (parts[0].includes('%')) L = parseFloat(parts[0]) / 100;
-        const C = parseFloat(parts[1]);
-        const Hdeg = parseFloat(parts[2]);
-        const hex = oklchToHex(L, C, Hdeg);
-        // Debug for stability comparisons
-        console.log('[ThemeTweaker] OKLCH->HEX stable', { input, L, C, H: Hdeg, hex });
-        return hex;
-      }
-      // Fallback: let the browser parse to rgb()
-      const probe = document.createElement('div');
-      probe.style.color = value;
-      probe.style.display = 'none';
-      document.body.appendChild(probe);
-      const computed = getComputedStyle(probe).color; // rgb(...)
-      document.body.removeChild(probe);
-      const m = computed.match(/rgba?\((\d+)[,\s]+(\d+)[,\s]+(\d+)/i);
-      if (!m) return null;
-      const r = Number(m[1]).toString(16).padStart(2, '0');
-      const g = Number(m[2]).toString(16).padStart(2, '0');
-      const b = Number(m[3]).toString(16).padStart(2, '0');
-      return `#${r}${g}${b}`.toUpperCase();
-    } catch {
-      return null;
-    }
-  };
 
   const iconColorFor = (bg: string): string => {
     const hex = toHEX(bg) || '#000000';
@@ -338,6 +235,8 @@ export function ToolTokensTab() {
       '--accent','--accent-foreground',
       '--destructive',
       '--border','--input','--ring',
+      // Sidebar root
+      '--sidebar',
       // Semantic: success
       '--success','--success-foreground','--success-subtle','--success-subtle-foreground','--success-border','--success-ring',
       // Semantic: warning
