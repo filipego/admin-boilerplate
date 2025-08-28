@@ -48,7 +48,9 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
     componentEdits, 
     runtimeStyles,
     layoutEdits,
-    resetAll
+    resetAll,
+    highlightedComponent,
+    setHighlightedComponent
   } = useThemeTweakerStore();
   
   const [isMinimized, setIsMinimized] = useState(false);
@@ -216,6 +218,21 @@ export function ThemePanel({ onClose }: ThemePanelProps) {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
+
+  // When switching away from the Components tab, clear any tool/site highlights
+  useEffect(() => {
+    if (activeTab !== 'components') {
+      // Remove page-level classes
+      try {
+        document.querySelectorAll('.tt-selected').forEach(el => el.classList.remove('tt-selected'));
+        document.querySelectorAll('.tt-highlight').forEach(el => el.classList.remove('tt-highlight'));
+      } catch {}
+      // Reset store highlight
+      try {
+        setHighlightedComponent(null);
+      } catch {}
+    }
+  }, [activeTab, setHighlightedComponent]);
 
   // Handle resize
   useEffect(() => {

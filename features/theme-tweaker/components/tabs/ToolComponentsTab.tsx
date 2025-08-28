@@ -85,8 +85,13 @@ export function ToolComponentsTab() {
     return Array.from(tokens);
   };
 
-  // Function to get resolved light/dark values for tokens
+  // Cache token values to avoid repeated document reflows when rendering many cards
+  const tokenValuesCache = React.useRef<Map<string, { light: string; dark: string }>>(new Map());
+
+  // Function to get resolved light/dark values for tokens (memoized)
   const getTokenValues = (tokenName: string): { light: string; dark: string } => {
+    const cached = tokenValuesCache.current.get(tokenName);
+    if (cached) return cached;
     const html = document.documentElement;
     const wasDark = html.classList.contains('dark');
 
@@ -110,10 +115,12 @@ export function ToolComponentsTab() {
       console.error('Error getting token values:', error);
     }
 
-    return {
+    const result = {
       light: lightValue || '—',
       dark: darkValue || '—'
-    };
+    } as const;
+    tokenValuesCache.current.set(tokenName, result as { light: string; dark: string });
+    return result as { light: string; dark: string };
   };
 
   // Function to check if component has custom classes (non-utility)
@@ -173,6 +180,26 @@ export function ToolComponentsTab() {
       setSelectedType(comp.type);
     }
   }, [highlightedComponent, components]);
+
+  // When selecting a type via the filter chips, auto-select and highlight
+  // the first component of that type so both the tool and the page highlight.
+  useEffect(() => {
+    if (selectedType === 'all') return;
+    const firstOfType = components.find(c => c.type === selectedType);
+    if (firstOfType && firstOfType.id !== highlightedComponent) {
+      setHighlightedComponent(firstOfType.id);
+    }
+  }, [selectedType, components]);
+
+  // If "All" is selected, clear any highlight/selection both in the tool and on the page
+  useEffect(() => {
+    if (selectedType !== 'all') return;
+    // Clear page highlights
+    document.querySelectorAll('.tt-selected').forEach(el => el.classList.remove('tt-selected'));
+    document.querySelectorAll('.tt-highlight').forEach(el => el.classList.remove('tt-highlight'));
+    // Clear store highlight
+    setHighlightedComponent(null);
+  }, [selectedType]);
 
 
 
@@ -496,7 +523,8 @@ export function ToolComponentsTab() {
             )}
 
             {/* Token Usage & Overrides Section */}
-            {(() => {
+            {/* Performance: only render this heavy section when the card is highlighted or expanded */}
+            {(isHighlighted || isExpanded) && (() => {
               const componentTokens = detectComponentTokens(component);
               const canOverride = hasCustomClasses(component);
 

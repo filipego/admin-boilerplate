@@ -76,7 +76,7 @@ Use this **only** as a scaffold for the tool; adjust to repo norms.
 features/theme-tweaker/
   ToolProvider.tsx
   ToolFab.tsx
-  ToolPanel.tsx
+  (Legacy ToolPanel.tsx removed)
   ToolInspector.tsx
   ToolComponentPicker.tsx
   controls/
