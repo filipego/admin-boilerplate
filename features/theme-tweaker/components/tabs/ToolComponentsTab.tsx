@@ -4,25 +4,15 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useThemeTweakerStore } from '../../store/useThemeTweakerStore';
 import { ComponentScanner, ScannedComponent } from '../../utils/componentScanner';
 import { RepoScanner } from '../../utils/repoScanner';
-import { formatCSSValue } from '../../utils/colorUtils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { UniversalColorInput } from '../common/UniversalColorInput';
-import { SliderControl } from '../controls/SliderControl';
-import { SelectControl } from '../controls/SelectControl';
 import { UISearchBar } from '../common/UISearchBar';
 import { UIFilterButtons } from '../common/UIFilterButtons';
-import {
-  Component,
-  Layers,
-  RefreshCw,
-  Filter,
-  Zap,
-  MousePointer,
-  Palette
-} from 'lucide-react';
+import { Component, Layers, RefreshCw, Zap, MousePointer, Palette } from 'lucide-react';
+import { toHEX } from '../../utils/colorUtils';
 import { toast } from 'sonner';
 
 interface ComponentGroup {
@@ -34,10 +24,10 @@ interface ComponentGroup {
 
 export function ToolComponentsTab() {
   const {
-    componentEdits,
-    updateComponentEdit,
     highlightedComponent,
-    setHighlightedComponent
+    setHighlightedComponent,
+    addRuntimeStyle,
+    runtimeStyles
   } = useThemeTweakerStore();
 
 
@@ -49,6 +39,14 @@ export function ToolComponentsTab() {
   const [isScanning, setIsScanning] = useState(false);
   const [hoveredComponent, setHoveredComponent] = useState<string | null>(null);
   const [expandedComponents, setExpandedComponents] = useState<Record<string, boolean>>({});
+  // User-provided scope selectors (prepended to component selector)
+  const [scopeSelector, setScopeSelector] = useState<Record<string, string>>({});
+
+  // Resolve the selector for a given component id, fallback to data-ui
+  function getComponentSelectorById(id: string): string {
+    const comp = components.find(c => c.id === id);
+    return comp?.selector || `[data-ui="${id}"]`;
+  }
 
   // Token usage state for component overrides
   const [componentTokenOverrides, setComponentTokenOverrides] = useState<Record<string, Record<string, { light?: string; dark?: string }>>>({});
@@ -123,36 +121,33 @@ export function ToolComponentsTab() {
     return result as { light: string; dark: string };
   };
 
-  // Function to check if component has custom classes (non-utility)
-  const hasCustomClasses = (component: ScannedComponent): boolean => {
-    // For now, let's be more permissive - if component has any classes at all,
-    // assume it could have custom classes. In a real implementation, you'd
-    // check the actual element's classes against a comprehensive list of utilities
-    return component.classes.length > 0;
-  };
+  // No need to check for custom classes; overrides are always allowed with optional scope
 
-  // Function to handle component token overrides
+  // Function to handle component token overrides (scoped, class-based)
   const handleComponentTokenOverride = (componentId: string, tokenName: string, value: string, theme: 'light' | 'dark') => {
+    const hex = toHEX(value) || value;
     setComponentTokenOverrides(prev => ({
       ...prev,
       [componentId]: {
         ...prev[componentId],
         [tokenName]: {
           ...prev[componentId]?.[tokenName],
-          [theme]: value
+          [theme]: hex
         }
       }
     }));
 
-    // Apply the override using the existing runtime style system
-    const selector = theme === 'dark' ? `.dark [data-component-id="${componentId}"]` : `[data-component-id="${componentId}"]`;
+    // Apply as a class-scoped token so it only affects this component (optionally within user scope)
+    const userScope = (scopeSelector[componentId] || '').trim();
+    const baseSelector = `${userScope ? userScope + ' ' : ''}${getComponentSelectorById(componentId)}`;
+    const selector = theme === 'dark' ? `.dark ${baseSelector}` : baseSelector;
     addRuntimeStyle({
       id: `${componentId}-${tokenName}-${theme}`,
       selector,
       property: tokenName,
-      value,
-      element: document.querySelector(`[data-component-id="${componentId}"]`) || document.body,
-      type: 'token'
+      value: hex,
+      element: document.documentElement,
+      type: 'class'
     });
   };
 
@@ -346,12 +341,7 @@ export function ToolComponentsTab() {
     return colors[index % colors.length];
   }
 
-  const handleComponentEdit = (componentId: string, property: string, value: string) => {
-    const component = components.find(c => c.id === componentId);
-    if (!component) return;
-
-    updateComponentEdit(`${componentId}-${property}`, value);
-  };
+  // Raw CSS property edits are not exposed in this simplified UI
 
   const handleComponentHover = (componentId: string | null) => {
     setHoveredComponent(componentId);
@@ -389,82 +379,16 @@ export function ToolComponentsTab() {
     setHighlightedComponent(next);
   };
 
-  const renderStyleControl = (component: ScannedComponent, property: string, value: string) => {
-    const editId = `${component.id}-${property}`;
-    const currentEdit = componentEdits[editId];
-    const currentValue = currentEdit?.value || value;
-    const hasChanged = currentEdit && currentEdit.value !== currentEdit.originalValue;
+  // No renderStyleControl; we show token-only controls
 
-    // Determine control type based on property and value
-    if (property.includes('color') || property.includes('Color') ||
-        (typeof value === 'string' && value.match(/^#[0-9a-fA-F]{6}$|^rgb|^hsl|^oklch|^lab/))) {
-      // Format color value for display in UniversalColorInput
-      const displayValue = formatCSSValue(property, currentValue);
-      return (
-        <UniversalColorInput
-          value={displayValue}
-          onChange={(newValue) => handleComponentEdit(component.id, property, newValue)}
-        />
-      );
-    }
-
-    if (property.includes('width') || property.includes('height') || 
-        property.includes('margin') || property.includes('padding') ||
-        property.includes('border') || property.includes('radius')) {
-      const match = currentValue.toString().match(/^([\d.]+)(.*)$/);
-      const numericValue = match ? parseFloat(match[1]) : 0;
-      const unit = match ? match[2] : 'px';
-      
-      return (
-        <SliderControl
-          label={property}
-          value={currentValue}
-          originalValue={value}
-          onChange={(newValue) => handleComponentEdit(component.id, property, newValue)}
-          min={0}
-          max={property.includes('radius') ? 50 : 100}
-          step={0.5}
-          unit={unit}
-        />
-      );
-    }
-
-    // For other properties, use select or text input
-    return (
-      <SelectControl
-        label={property}
-        value={currentValue}
-        originalValue={value}
-        onChange={(newValue) => handleComponentEdit(component.id, property, newValue)}
-        options={getPropertyOptions(property)}
-      />
-    );
-  };
-
-  const getPropertyOptions = (property: string): string[] => {
-    switch (property) {
-      case 'display':
-        return ['block', 'inline', 'inline-block', 'flex', 'grid', 'none'];
-      case 'position':
-        return ['static', 'relative', 'absolute', 'fixed', 'sticky'];
-      case 'textAlign':
-        return ['left', 'center', 'right', 'justify'];
-      case 'fontWeight':
-        return ['normal', 'bold', '100', '200', '300', '400', '500', '600', '700', '800', '900'];
-      case 'fontSize':
-        return ['12px', '14px', '16px', '18px', '20px', '24px', '32px', '48px'];
-      default:
-        return [];
-    }
-  };
+  // No property option mapping required in token-only UI
 
 
 
   const renderComponentItem = (component: ScannedComponent) => {
 
-    // Find all edits for this component
-    const componentEditKeys = Object.keys(componentEdits).filter(key => key.startsWith(`${component.id}-`));
-    const hasChanges = componentEditKeys.length > 0;
+    // Detect if any runtime style currently targets this component
+    const hasChanges = (runtimeStyles || []).some(s => s.selector.includes(component.selector));
     const isHighlighted = highlightedComponent === component.id;
     const isHovered = hoveredComponent === component.id;
     const isExpanded = !!expandedComponents[component.id];
@@ -487,117 +411,64 @@ export function ToolComponentsTab() {
         {/* Header removed — group already shows the component type */}
         
         <CardContent>
-          <div className="space-y-3">
-            <div className="text-xs text-muted-foreground">
-              {Object.keys(component.styles).length} style properties
-            </div>
-            
-            {/* Show key style properties */}
-            {(isExpanded ? Object.entries(component.styles) : Object.entries(component.styles).slice(0, 3)).map(([property, value]) => (
-              <div key={property} className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-medium">{property}</label>
-                  <code className="text-xs bg-muted px-1 py-0.5 rounded">
-                    {formatCSSValue(property, value)}
-                  </code>
-                </div>
-                {renderStyleControl(component, property, value)}
+          <div className="space-y-4">
+            {/* Scope selector (prepended to component selector) */}
+            <div onClick={(e) => e.stopPropagation()}>
+              <label className="text-xs font-medium block mb-1">Scope selector (optional, prepended)</label>
+              <Input
+                placeholder="e.g. .my-landing or .dashboard"
+                value={scopeSelector[component.id] || ''}
+                onChange={(e) => setScopeSelector(prev => ({ ...prev, [component.id]: e.target.value }))}
+                className="h-9"
+              />
+              <div className="text-[11px] text-muted-foreground mt-1">
+                Applies to: <code className="font-mono bg-muted px-1 py-0.5 rounded">{`${(scopeSelector[component.id] || '').trim() ? (scopeSelector[component.id] + ' ') : ''}${component.selector}`}</code>
               </div>
-            ))}
-            
-            {Object.keys(component.styles).length > 3 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full text-xs"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setExpandedComponents(prev => ({
-                    ...prev,
-                    [component.id]: !prev[component.id]
-                  }));
-                }}
-              >
-                {isExpanded ? 'Show less' : `Show ${Object.keys(component.styles).length - 3} more properties`}
-              </Button>
-            )}
+            </div>
 
-            {/* Token Usage & Overrides Section */}
-            {/* Performance: only render this heavy section when the card is highlighted or expanded */}
+            {/* Tokens (Light/Dark) same UI style as Tokens tab */}
             {(isHighlighted || isExpanded) && (() => {
               const componentTokens = detectComponentTokens(component);
-              const canOverride = hasCustomClasses(component);
-
-              // Always show at least some common tokens for demonstration
-              const tokensToShow = componentTokens.length > 0 ? componentTokens : ['--background', '--foreground'];
-
-
-
+              const tokensToShow = componentTokens.length > 0 ? componentTokens : ['--background', '--foreground', '--border'];
               return (
-                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Palette size={14} className="text-blue-500" />
-                    <h5 className="text-sm font-medium text-gray-900 dark:text-white">
-                      Token Usage {canOverride && <span className="text-xs text-green-600">(Overrideable)</span>}
-                    </h5>
-                  </div>
+                <div className="space-y-3" onClick={(e) => e.stopPropagation()}>
+                  {tokensToShow.map((tokenName) => {
+                    const values = getTokenValues(tokenName);
+                    const overrides = componentTokenOverrides[component.id]?.[tokenName] || {};
+                    const scope = (scopeSelector[component.id] || '').trim();
+                    const disabled = scope.length === 0; // require scope to enable edits
 
-                  <div className="space-y-3">
-                    {tokensToShow.map(tokenName => {
-                      const values = getTokenValues(tokenName);
-                      const overrides = componentTokenOverrides[component.id]?.[tokenName] || {};
+                    const lightDisplay = overrides.light ?? (toHEX(values.light) || values.light || '');
+                    const darkDisplay = overrides.dark ?? (toHEX(values.dark) || values.dark || '');
 
-                      return (
-                        <div key={tokenName} className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <code className="text-xs font-mono bg-muted px-2 py-1 rounded">
-                              {tokenName}
-                            </code>
-                          </div>
+                    return (
+                      <div key={tokenName} className="space-y-2 rounded-md border p-3 bg-background">
+                        <code className="text-xs font-mono bg-muted px-2 py-1 rounded inline-block">{tokenName}</code>
 
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>
-                              <div className="text-[10px] text-muted-foreground mb-1">Light</div>
-                              <code className="block bg-muted px-2 py-1 rounded font-mono text-xs">
-                                {values.light}
-                              </code>
-                              {canOverride && (
-                                <div className="mt-1">
-                                  <UniversalColorInput
-                                    value={overrides.light || ''}
-                                    onChange={(value) => handleComponentTokenOverride(component.id, tokenName, value, 'light')}
-                                    className="scale-90"
-                                  />
-                                </div>
-                              )}
-                            </div>
-
-                            <div>
-                              <div className="text-[10px] text-muted-foreground mb-1">Dark</div>
-                              <code className="block bg-muted px-2 py-1 rounded font-mono text-xs">
-                                {values.dark}
-                              </code>
-                              {canOverride && (
-                                <div className="mt-1">
-                                  <UniversalColorInput
-                                    value={overrides.dark || ''}
-                                    onChange={(value) => handleComponentTokenOverride(component.id, tokenName, value, 'dark')}
-                                    className="scale-90"
-                                  />
-                                </div>
-                              )}
-                            </div>
-                          </div>
+                        <div className="space-y-2 mt-2">
+                          <div className="text-xs text-muted-foreground">Light</div>
+                          <UniversalColorInput
+                            value={lightDisplay}
+                            onChange={(value) => handleComponentTokenOverride(component.id, tokenName, value, 'light')}
+                            disabled={disabled}
+                          />
                         </div>
-                      );
-                    })}
 
-                    {!canOverride && (
-                      <div className="text-xs text-muted-foreground p-2 border rounded-lg">
-                        Add a custom class (e.g. <code className="font-mono">.my-component</code>) to enable overrides
+                        <div className="space-y-2 mt-2">
+                          <div className="text-xs text-muted-foreground">Dark</div>
+                          <UniversalColorInput
+                            value={darkDisplay}
+                            onChange={(value) => handleComponentTokenOverride(component.id, tokenName, value, 'dark')}
+                            disabled={disabled}
+                          />
+                        </div>
+
+                        {disabled && (
+                          <div className="text-[11px] text-muted-foreground mt-1">Add a scope selector above to enable editing</div>
+                        )}
                       </div>
-                    )}
-                  </div>
+                    );
+                  })}
                 </div>
               );
             })()}
