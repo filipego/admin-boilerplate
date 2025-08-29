@@ -17,6 +17,7 @@ import { SliderControl } from '../controls/SliderControl';
 import { TextControl } from '../controls/TextControl';
 import { getContrastColor } from '../controls/ColorPicker';
 import { UniversalColorInput } from '../common/UniversalColorInput';
+import SimpleShadowEditor from '../controls/SimpleShadowEditor';
 import { 
   Search, 
   Palette, 
@@ -26,8 +27,7 @@ import {
   Type, 
   MoreHorizontal,
   RefreshCw,
-  Filter,
-  Shadow
+  Filter
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -405,6 +405,38 @@ export function ToolTokensTab() {
   };
 
   const renderTokenItem = (token: CSSToken) => {
+    if (token.category === 'shadow') {
+      const light = lightDarkMap.get(token.name)?.light || '';
+      const dark = lightDarkMap.get(token.name)?.dark || '';
+      const lightChanged = !!tokenEdits.find(e => e.token === token.name && e.scope !== 'dark');
+      const darkChanged = !!tokenEdits.find(e => e.token === token.name && e.scope === 'dark');
+      return (
+        <Card key={token.name}>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Zap className="w-4 h-4" />
+              <code className="font-mono">{token.name}</code>
+              {(lightChanged || darkChanged) && (<Badge variant="secondary" className="text-xs">Modified</Badge>)}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="space-y-2">
+              <div className="text-xs text-muted-foreground flex items-center gap-2">
+                <Badge variant="outline" className="text-xs">Light</Badge>
+              </div>
+              <SimpleShadowEditor value={light} showOpacity onChange={(css) => handleScopedTokenChange(token.name, 'light', css, light)} />
+            </div>
+            <div className="space-y-2">
+              <div className="text-xs text-muted-foreground flex items-center gap-2">
+                <Badge variant="outline" className="text-xs">Dark</Badge>
+              </div>
+              <SimpleShadowEditor value={dark} showOpacity onChange={(css) => handleScopedTokenChange(token.name, 'dark', css, dark)} />
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+
     const uniqueKey = `${token.name}`;
     const pair = lightDarkMap.get(token.name);
     const light = pair?.light ?? token.value;

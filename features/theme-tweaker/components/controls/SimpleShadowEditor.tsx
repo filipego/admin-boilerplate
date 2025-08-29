@@ -9,6 +9,7 @@ export interface SimpleShadowEditorProps {
   tokens?: string[];
   disabled?: boolean;
   onChange: (css: string) => void;
+  showOpacity?: boolean;
 }
 
 type Layer = { inset?: boolean; x: string; y: string; blur: string; spread: string; color: string };
@@ -43,7 +44,25 @@ function toCss(l: Layer): string {
   return segs.join(' ');
 }
 
-export default function SimpleShadowEditor({ value, tokens = [], disabled, onChange }: SimpleShadowEditorProps) {
+function toRGBA(base: string, alpha: number): string {
+  try {
+    const el = document.createElement('div');
+    el.style.color = base;
+    if (!el.style.color) return base;
+    document.body.appendChild(el);
+    const rgb = getComputedStyle(el).color; // rgb(r, g, b)
+    document.body.removeChild(el);
+    const m = rgb.match(/rgba?\((\d+)\D+(\d+)\D+(\d+)/i);
+    if (!m) return base;
+    const r = m[1], g = m[2], b = m[3];
+    const a = Math.max(0, Math.min(1, alpha));
+    return `rgba(${r}, ${g}, ${b}, ${a})`;
+  } catch {
+    return base;
+  }
+}
+
+export default function SimpleShadowEditor({ value, tokens = [], disabled, onChange, showOpacity = false }: SimpleShadowEditorProps) {
   const layer = useMemo(() => parseFirstLayer(value), [value]);
   const emit = (patch: Partial<Layer>) => onChange(toCss({ ...layer, ...patch }));
 
@@ -56,6 +75,30 @@ export default function SimpleShadowEditor({ value, tokens = [], disabled, onCha
         <NumberUnitInput label="Spread" value={layer.spread} onChange={(v) => emit({ spread: v })} disabled={disabled} allowNegative />
       </div>
       <TokenColorInput label="Color" value={layer.color} onChange={(v) => emit({ color: v })} tokens={tokens} disabled={disabled} />
+      {showOpacity && (
+        <div className="flex items-center gap-2">
+          <div className="text-xs text-muted-foreground w-16">Opacity</div>
+          <input
+            type="number"
+            step={0.05}
+            min={0}
+            max={1}
+            className="h-9 w-20 rounded-md border bg-background px-2 text-sm"
+            disabled={disabled || /^var\(/.test(layer.color.trim())}
+            value={(() => {
+              const m = layer.color.match(/rgba\([^,]+,[^,]+,[^,]+,\s*([\d.]+)\)/i);
+              return m ? parseFloat(m[1]) : 1;
+            })()}
+            onChange={(e) => {
+              const a = parseFloat(e.target.value);
+              if (!isNaN(a)) emit({ color: toRGBA(layer.color, a) });
+            }}
+          />
+          {/\^var\(/.test(layer.color.trim()) && (
+            <span className="text-[11px] text-muted-foreground">opacity disabled for token color</span>
+          )}
+        </div>
+      )}
       <div className="flex items-center gap-2 text-xs">
         <input type="checkbox" id="shadow-inset" checked={!!layer.inset} disabled={disabled} onChange={(e) => emit({ inset: e.target.checked })} />
         <label htmlFor="shadow-inset">Inset</label>
