@@ -52,7 +52,7 @@ export const NumberUnitInput: React.FC<NumberUnitInputProps> = ({
   return (
     <div className="flex items-center gap-2">
       {label && <div className="text-xs text-muted-foreground w-16">{label}</div>}
-      <div className="flex items-center gap-1 flex-1">
+      <div className="flex items-center gap-1 flex-1 flex-nowrap">
         <Button
           type="button"
           size="icon"
@@ -83,7 +83,7 @@ export const NumberUnitInput: React.FC<NumberUnitInputProps> = ({
           }}
         />
         <select
-          className="h-9 rounded-md border bg-background px-2 text-sm"
+          className="h-9 w-16 rounded-md border bg-background px-2 text-sm"
           value={unit}
           disabled={disabled}
           onChange={(e) => emit(num, e.target.value as Unit)}

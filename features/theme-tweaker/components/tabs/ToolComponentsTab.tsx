@@ -13,7 +13,7 @@ import { SelectControl } from '../controls/SelectControl';
 import { formatCSSValue } from '../../utils/colorUtils';
 import FourSideEditor from '../controls/FourSideEditor'
 import CornerRadiusEditor from '../controls/CornerRadiusEditor'
-import BoxShadowEditor, { ShadowLayer } from '../controls/BoxShadowEditor'
+import SimpleShadowEditor from '../controls/SimpleShadowEditor'
 import TokenColorInput from '../controls/TokenColorInput'
 import { UniversalColorInput } from '../common/UniversalColorInput';
 import { UISearchBar } from '../common/UISearchBar';
@@ -793,22 +793,11 @@ export function ToolComponentsTab() {
               return (
                 <div className="space-y-3 mt-2 pt-2 border-t">
                   <div className="text-sm font-medium">Shadows</div>
-                  <BoxShadowEditor
-                    layers={layersToShow}
+                  <SimpleShadowEditor
+                    value={initial[0] ? `${initial[0].inset? 'inset ': ''}${initial[0].x} ${initial[0].y} ${initial[0].blur} ${initial[0].spread} ${initial[0].color}` : 'none'}
                     disabled={disabled}
-                    onChange={(layers) => {
-                      const css = layers.map((l: any) => `${l.inset? 'inset ': ''}${l.x} ${l.y} ${l.blur} ${l.spread} ${l.color}`).join(', ');
-                      addRuntimeStyle({ id: `${component.id}-shadow`, selector: base, property: 'box-shadow', value: css || 'none', element: document.documentElement, type: 'class' });
-                    }}
+                    onChange={(css) => addRuntimeStyle({ id: `${component.id}-shadow`, selector: base, property: 'box-shadow', value: css || 'none', element: document.documentElement, type: 'class' })}
                   />
-                  {initial.length > 1 && (
-                    <button
-                      className="w-full text-xs rounded-md border px-2 py-1"
-                      onClick={(e) => { e.stopPropagation(); setExpandedComponents(prev => ({ ...prev, [component.id + '-shadow']: !prev[component.id + '-shadow'] })); }}
-                    >
-                      {showAllShadows ? 'Show less layers' : `Show ${initial.length - 1} more layers`}
-                    </button>
-                  )}
                 </div>
               );
             })()}
