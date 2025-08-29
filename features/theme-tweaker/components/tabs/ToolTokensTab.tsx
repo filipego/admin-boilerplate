@@ -251,9 +251,25 @@ export function ToolTokensTab() {
     return allowedExact.has(n) || allowedPrefixes.some(p => n.startsWith(p));
   };
 
-  // Filter tokens based on search and category; exclude only non-style tokens; dedupe by name
+  // Base allowed tokens: site-sanctioned colors + all non-color categories; dedupe by name
+  const allowedTokens = useMemo(() => {
+    const looksLikeColor = (val: string) => {
+      const v = val.trim().toLowerCase();
+      return (/^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(v) || v.startsWith('rgb') || v.startsWith('hsl') || v.startsWith('oklch') || /^(red|blue|green|yellow|purple|pink|gray|grey|black|white|orange|teal|cyan|lime|indigo)$/i.test(v));
+    };
+    const styled = tokens.filter(t => isStyleToken(t.name));
+    const siteOrNonColor = styled.filter(t => (t.category !== 'color') || isSiteToken(t.name));
+    const map = new Map<string, CSSToken>();
+    for (const t of siteOrNonColor) {
+      const normalized: CSSToken = looksLikeColor(t.value) ? { ...t, category: 'color' } : t;
+      if (!map.has(normalized.name)) map.set(normalized.name, normalized);
+    }
+    return Array.from(map.values());
+  }, [tokens]);
+
+  // Filter tokens based on search and selected category
   const filteredTokens = useMemo(() => {
-    let filtered = tokens.filter(t => isStyleToken(t.name)).filter(t => isSiteToken(t.name));
+    let filtered = allowedTokens;
 
     if (selectedCategory !== 'all') {
       filtered = filtered.filter(token => token.category === selectedCategory);
@@ -267,13 +283,8 @@ export function ToolTokensTab() {
       );
     }
 
-    // Deduplicate by token name so each variable appears once
-    const map = new Map<string, CSSToken>();
-    for (const t of filtered) {
-      if (!map.has(t.name)) map.set(t.name, t);
-    }
-    return Array.from(map.values());
-  }, [tokens, searchQuery, selectedCategory]);
+    return filtered;
+  }, [allowedTokens, searchQuery, selectedCategory]);
 
   // Group tokens by category
   const tokenGroups: TokenGroup[] = useMemo(() => {
@@ -307,12 +318,6 @@ export function ToolTokensTab() {
         tokens: filteredTokens.filter(t => t.category === 'font'),
         icon: <Type className="w-4 h-4" />,
         color: 'bg-yellow-100 text-yellow-800'
-      },
-      {
-        category: 'other',
-        tokens: filteredTokens.filter(t => t.category === 'other'),
-        icon: <MoreHorizontal className="w-4 h-4" />,
-        color: 'bg-gray-100 text-gray-800'
       }
     ];
     return groups.filter(g => g.tokens.length > 0);
@@ -477,7 +482,7 @@ export function ToolTokensTab() {
         <div>
           <h3 className="text-lg font-medium">CSS Tokens</h3>
           <p className="text-sm text-muted-foreground">
-            {tokens.length} token{tokens.length !== 1 ? 's' : ''} discovered
+            {allowedTokens.length} token{allowedTokens.length !== 1 ? 's' : ''} available
           </p>
         </div>
         
@@ -513,8 +518,8 @@ export function ToolTokensTab() {
           >
             All
           </Button>
-          {(['color', 'spacing', 'radius', 'shadow', 'font', 'other'] as const).map(category => {
-            const count = tokens.filter(t => t.category === category).length;
+          {(['color', 'spacing', 'radius', 'shadow', 'font'] as const).map(category => {
+            const count = allowedTokens.filter(t => t.category === category).length;
             if (count === 0) return null;
             
             return (
