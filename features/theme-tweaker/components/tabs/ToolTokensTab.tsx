@@ -158,6 +158,27 @@ export function ToolTokensTab() {
     loadTokens();
   }, []);
 
+  // Helper: detect color-like values
+  const looksLikeColor = (val: string) => {
+    const v = (val || '').trim().toLowerCase();
+    return (
+      /^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(v) ||
+      v.startsWith('rgb') || v.startsWith('hsl') || v.startsWith('oklch') ||
+      /^(red|blue|green|yellow|purple|pink|gray|grey|black|white|orange|teal|cyan|lime|indigo)$/i.test(v)
+    );
+  };
+
+  const computeAllowedTokensCount = (list: CSSToken[]) => {
+    const styled = list.filter(t => isStyleToken(t.name));
+    const siteOrNonColor = styled.filter(t => (t.category !== 'color') || isSiteToken(t.name));
+    const map = new Map<string, CSSToken>();
+    for (const t of siteOrNonColor) {
+      const normalized: CSSToken = looksLikeColor(t.value) ? { ...t, category: 'color' } : t;
+      if (!map.has(normalized.name)) map.set(normalized.name, normalized);
+    }
+    return Array.from(map.values()).length;
+  };
+
   const loadTokens = async () => {
     setLoading(true);
     try {
@@ -165,10 +186,11 @@ export function ToolTokensTab() {
       setTokens(scannedTokens);
       
       if (!tokensLoadedOnce) {
-        if (scannedTokens.length === 0) {
+        const availableCount = computeAllowedTokensCount(scannedTokens);
+        if (availableCount === 0) {
           toast.info('No CSS tokens found. Try adding some CSS custom properties.');
         } else {
-          toast.success(`Found ${scannedTokens.length} CSS tokens`);
+          toast.success(`Found ${availableCount} CSS tokens`);
         }
         tokensLoadedOnce = true;
       }
@@ -185,7 +207,8 @@ export function ToolTokensTab() {
     try {
       const { tokens: newTokens } = await repoScanner.rescan();
       setTokens(newTokens);
-      toast.success(`Rescanned and found ${newTokens.length} tokens`);
+      const availableCount = computeAllowedTokensCount(newTokens);
+      toast.success(`Rescanned and found ${availableCount} tokens`);
     } catch (error) {
       console.error('Error rescanning:', error);
       toast.error('Failed to rescan tokens');
