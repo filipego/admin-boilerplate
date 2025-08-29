@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import NumberUnitInput from "./NumberUnitInput";
 import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
+import { SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export interface CornerRadiusEditorProps {
   title?: string;
@@ -27,11 +29,20 @@ export const CornerRadiusEditor: React.FC<CornerRadiusEditorProps> = ({
       <div className="flex items-center justify-between mb-2">
         <div className="text-sm font-medium">{title}</div>
         <div className="flex items-center gap-2">
-          {PRESETS.map((p) => (
-            <Button key={p} size="sm" variant="outline" className="h-7" disabled={disabled} onClick={() => setAll(p)}>
-              {p === "9999px" ? "pill" : p}
-            </Button>
-          ))}
+          <div className="min-w-32">
+            <Select onValueChange={(v) => setAll(v)} disabled={disabled}>
+              <SelectTrigger className="h-7 text-xs">
+                <SelectValue placeholder="Preset" />
+              </SelectTrigger>
+              <SelectContent>
+                {PRESETS.map((p) => (
+                  <SelectItem key={p} value={p}>
+                    {p === "9999px" ? "pill" : p}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <Button size="sm" variant={linked ? "secondary" : "outline"} className="h-7" disabled={disabled} onClick={() => setLinked(!linked)}>
             {linked ? "Linked" : "Unlinked"}
           </Button>
@@ -53,4 +64,3 @@ export const CornerRadiusEditor: React.FC<CornerRadiusEditorProps> = ({
 };
 
 export default CornerRadiusEditor;
-

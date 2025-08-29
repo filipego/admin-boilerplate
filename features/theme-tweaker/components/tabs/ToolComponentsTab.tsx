@@ -48,6 +48,9 @@ export function ToolComponentsTab() {
   const [expandedComponents, setExpandedComponents] = useState<Record<string, boolean>>({});
   // User-provided scope selectors (prepended to component selector)
   const [scopeSelector, setScopeSelector] = useState<Record<string, string>>({});
+  // Optional size scope per component (e.g., button)
+  const [sizeScope, setSizeScope] = useState<Record<string, 'all' | 'sm' | 'default' | 'lg'>>({});
+  const [variantScope, setVariantScope] = useState<Record<string, 'all' | 'default' | 'outline' | 'secondary' | 'ghost' | 'destructive' | 'link'>>({});
 
   // Resolve the selector for a given component id, fallback to data-ui
   function getComponentSelectorById(id: string): string {
@@ -146,7 +149,11 @@ export function ToolComponentsTab() {
 
     // Apply as a class-scoped token so it only affects this component (optionally within user scope)
     const userScope = (scopeSelector[componentId] || '').trim();
-    const baseSelector = `${userScope ? userScope + ' ' : ''}${getComponentSelectorById(componentId)}`;
+    const size = (sizeScope[componentId] || 'all');
+    const vr = (variantScope[componentId] || 'all');
+    const sizeSuffix = size !== 'all' ? `[data-size="${size}"]` : '';
+    const varSuffix = vr !== 'all' ? `[data-variant="${vr}"]` : '';
+    const baseSelector = `${userScope ? userScope + ' ' : ''}${getComponentSelectorById(componentId)}${sizeSuffix}${varSuffix}`;
     const selector = theme === 'dark' ? `.dark ${baseSelector}` : baseSelector;
     addRuntimeStyle({
       id: `${componentId}-${tokenName}-${theme}`,
@@ -234,7 +241,8 @@ export function ToolComponentsTab() {
 
   // Utility: read computed style of first element matching component
   const getComputedFor = (selector: string): CSSStyleDeclaration | null => {
-    const el = document.querySelector(selector) as HTMLElement | null;
+    const all = Array.from(document.querySelectorAll(selector)) as HTMLElement[];
+    const el = all.find(e => !(e.closest('[data-theme-tweaker-ui]')));
     if (!el) return null;
     return getComputedStyle(el);
   };
@@ -396,7 +404,8 @@ export function ToolComponentsTab() {
   // No renderStyleControl; we show token-only controls
   const handleComponentStyleEdit = (componentId: string, property: string, value: string) => {
     const scope = (scopeSelector[componentId] || '').trim();
-    const base = `${scope ? scope + ' ' : ''}${getComponentSelectorById(componentId)}`;
+    const size = (sizeScope[componentId] || 'all');
+    const base = `${scope ? scope + ' ' : ''}${getComponentSelectorById(componentId)}${size !== 'all' ? `[data-size="${size}"]` : ''}`;
     addRuntimeStyle({
       id: `${componentId}-${property}`,
       selector: base,
@@ -411,7 +420,8 @@ export function ToolComponentsTab() {
     const scope = (scopeSelector[component.id] || '').trim();
     const disabled = scope.length === 0;
     // Current value: prefer runtime override if present
-    const base = `${scope ? scope + ' ' : ''}${getComponentSelectorById(component.id)}`;
+    const sizeSel = (sizeScope[component.id] || 'all');
+    const base = `${scope ? scope + ' ' : ''}${getComponentSelectorById(component.id)}${sizeSel !== 'all' ? `[data-size="${sizeSel}"]` : ''}`;
     const override = runtimeStyles.find(s => s.selector === base && s.property === property);
     const currentValue = override?.value || value;
 
@@ -517,17 +527,62 @@ export function ToolComponentsTab() {
                 className="h-9"
               />
               <div className="text-[11px] text-muted-foreground mt-1">
-                Applies to: <code className="font-mono bg-muted px-1 py-0.5 rounded">{`${(scopeSelector[component.id] || '').trim() ? (scopeSelector[component.id] + ' ') : ''}${component.selector}`}</code>
+                {(() => {
+                  const scope = (scopeSelector[component.id] || '').trim();
+                  const sz = (sizeScope[component.id] || 'all');
+                  const vr = (variantScope[component.id] || 'all');
+                  const suffix = (sz !== 'all' ? `[data-size="${sz}"]` : ``) + (vr !== 'all' ? `[data-variant="${vr}"]` : ``);
+                  return (
+                    <>
+                      Applies to: <code className="font-mono bg-muted px-1 py-0.5 rounded">{`${scope ? (scope + ' ') : ''}${component.selector}${suffix}`}</code>
+                    </>
+                  );
+                })()}
               </div>
+              {component.id.toLowerCase().includes('button') && (
+                <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-xs font-medium block mb-1">Button size</label>
+                    <select
+                      className="h-9 rounded-md border bg-background px-2 text-sm w-full"
+                      value={sizeScope[component.id] || 'all'}
+                      onChange={(e) => setSizeScope(prev => ({ ...prev, [component.id]: e.target.value as any }))}
+                    >
+                      <option value="all">all</option>
+                      <option value="sm">sm</option>
+                      <option value="default">default</option>
+                      <option value="lg">lg</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium block mb-1">Button variant</label>
+                    <select
+                      className="h-9 rounded-md border bg-background px-2 text-sm w-full"
+                      value={variantScope[component.id] || 'all'}
+                      onChange={(e) => setVariantScope(prev => ({ ...prev, [component.id]: e.target.value as any }))}
+                    >
+                      <option value="all">all</option>
+                      <option value="default">default</option>
+                      <option value="outline">outline</option>
+                      <option value="secondary">secondary</option>
+                      <option value="ghost">ghost</option>
+                      <option value="destructive">destructive</option>
+                      <option value="link">link</option>
+                    </select>
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Tokens (Light/Dark) same UI style as Tokens tab */}
+            {/* Tokens (Light/Dark) same UI style as Tokens tab with Show more */}
             {(() => {
               const componentTokens = detectComponentTokens(component);
               const tokensToShow = componentTokens.length > 0 ? componentTokens : ['--background', '--foreground', '--border'];
+              const showAll = !!expandedComponents[component.id + '-tokens'];
+              const list = showAll ? tokensToShow : tokensToShow.slice(0, 2);
               return (
                 <div className="space-y-3" onClick={(e) => e.stopPropagation()}>
-                  {tokensToShow.map((tokenName) => {
+                  {list.map((tokenName) => {
                     const values = getTokenValues(tokenName);
                     const overrides = componentTokenOverrides[component.id]?.[tokenName] || {};
                     const scope = (scopeSelector[component.id] || '').trim();
@@ -564,6 +619,16 @@ export function ToolComponentsTab() {
                       </div>
                     );
                   })}
+                  {tokensToShow.length > 2 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full text-xs"
+                      onClick={(e) => { e.stopPropagation(); setExpandedComponents(prev => ({ ...prev, [component.id + '-tokens']: !prev[component.id + '-tokens'] })); }}
+                    >
+                      {showAll ? 'Show less colors' : `Show ${tokensToShow.length - 2} more colors`}
+                    </Button>
+                  )}
                 </div>
               );
             })()}
@@ -572,7 +637,11 @@ export function ToolComponentsTab() {
             {(() => {
               const scope = (scopeSelector[component.id] || '').trim();
               const disabled = scope.length === 0;
-              const cs = getComputedFor(component.selector);
+              const sz = (sizeScope[component.id] || 'all');
+              const vr = (variantScope[component.id] || 'all');
+              const suffix = `${sz !== 'all' ? `[data-size=\"${sz}\"]` : ''}${vr !== 'all' ? `[data-variant=\"${vr}\"]` : ''}`;
+              const fullSel = `${component.selector}${suffix}`;
+              const cs = getComputedFor(fullSel);
               const pad = {
                 top: cs?.paddingTop || '0px',
                 right: cs?.paddingRight || '0px',
@@ -585,7 +654,7 @@ export function ToolComponentsTab() {
                 bottom: cs?.marginBottom || '0px',
                 left: cs?.marginLeft || '0px',
               };
-              const base = `${scope ? scope + ' ' : ''}${component.selector}`;
+              const base = `${scope ? scope + ' ' : ''}${fullSel}`;
               return (
                 <div className="space-y-3 mt-2 pt-2 border-t">
                   <div className="text-sm font-medium">Spacing</div>
@@ -620,8 +689,12 @@ export function ToolComponentsTab() {
             {(() => {
               const scope = (scopeSelector[component.id] || '').trim();
               const disabled = scope.length === 0;
-              const cs = getComputedFor(component.selector);
-              const base = `${scope ? scope + ' ' : ''}${component.selector}`;
+              const sz = (sizeScope[component.id] || 'all');
+              const vr = (variantScope[component.id] || 'all');
+              const suffix = `${sz !== 'all' ? `[data-size=\"${sz}\"]` : ''}${vr !== 'all' ? `[data-variant=\"${vr}\"]` : ''}`;
+              const fullSel = `${component.selector}${suffix}`;
+              const cs = getComputedFor(fullSel);
+              const base = `${scope ? scope + ' ' : ''}${fullSel}`;
               const radius = {
                 tl: cs?.borderTopLeftRadius || '0px',
                 tr: cs?.borderTopRightRadius || '0px',
@@ -660,16 +733,13 @@ export function ToolComponentsTab() {
                       addRuntimeStyle({ id: `${component.id}-bw-left`, selector: base, property: 'border-left-width', value: v.left, element: document.documentElement, type: 'class' });
                     }}
                   />
-                  <div>
-                    <div className="text-xs text-muted-foreground mb-1">Border style</div>
-                    <div className="flex items-center gap-2">
-                      {['none','solid','dashed','dotted'].map(opt => (
-                        <Button key={opt} size="sm" variant={style===opt? 'secondary':'outline'} disabled={disabled}
-                          onClick={() => addRuntimeStyle({ id: `${component.id}-bs`, selector: base, property: 'border-style', value: opt, element: document.documentElement, type: 'class' })}
-                        >{opt}</Button>
-                      ))}
-                    </div>
-                  </div>
+                  <SelectControl
+                    label="Border style"
+                    value={style}
+                    originalValue={style}
+                    onChange={(v) => addRuntimeStyle({ id: `${component.id}-bs`, selector: base, property: 'border-style', value: v, element: document.documentElement, type: 'class' })}
+                    options={['none','solid','dashed','dotted']}
+                  />
                   <TokenColorInput
                     label="Border color (token-first)"
                     value={colorVal}
@@ -684,31 +754,61 @@ export function ToolComponentsTab() {
             {(() => {
               const scope = (scopeSelector[component.id] || '').trim();
               const disabled = scope.length === 0;
-              const cs = getComputedFor(component.selector);
-              const base = `${scope ? scope + ' ' : ''}${component.selector}`;
+              const sz = (sizeScope[component.id] || 'all');
+              const vr = (variantScope[component.id] || 'all');
+              const suffix = `${sz !== 'all' ? `[data-size=\"${sz}\"]` : ''}${vr !== 'all' ? `[data-variant=\"${vr}\"]` : ''}`;
+              const fullSel = `${component.selector}${suffix}`;
+              const cs = getComputedFor(fullSel);
+              const base = `${scope ? scope + ' ' : ''}${fullSel}`;
               const boxShadow = cs?.boxShadow || 'none';
-              const initial: any[] = boxShadow === 'none' ? [] : boxShadow.split(',').map(s => {
-                const parts = s.trim().split(/\s+/);
+              const splitShadowLayers = (input: string): string[] => {
+                const out: string[] = [];
+                let depth = 0;
+                let start = 0;
+                for (let i = 0; i < input.length; i++) {
+                  const ch = input[i];
+                  if (ch === '(') depth++;
+                  else if (ch === ')') depth = Math.max(0, depth - 1);
+                  else if (ch === ',' && depth === 0) {
+                    out.push(input.slice(start, i));
+                    start = i + 1;
+                  }
+                }
+                out.push(input.slice(start));
+                return out.map(s => s.trim()).filter(Boolean);
+              };
+              const initial: any[] = boxShadow === 'none' ? [] : splitShadowLayers(boxShadow).map(s => {
+                const parts = s.trim().split(/\s+(?![^()]*\))/);
                 let inset = false; let idx=0;
-                if (parts[0]==='inset') { inset=true; idx=1; }
-                const x=parts[idx]||'0px';
-                const y=parts[idx+1]||'0px';
-                const blur=parts[idx+2]||'0px';
-                const spread=parts[idx+3]||'0px';
-                const color=parts.slice(idx+4).join(' ')||'var(--border)';
+                if (parts[0] === 'inset') { inset = true; idx = 1; }
+                const x = parts[idx] || '0px';
+                const y = parts[idx+1] || '0px';
+                const blur = parts[idx+2] || '0px';
+                const spread = parts[idx+3] || '0px';
+                const color = parts.slice(idx+4).join(' ') || 'var(--border)';
                 return { inset, x, y, blur, spread, color };
               });
+              const showAllShadows = !!expandedComponents[component.id + '-shadow'];
+              const layersToShow = showAllShadows ? initial : initial.slice(0, 1);
               return (
                 <div className="space-y-3 mt-2 pt-2 border-t">
                   <div className="text-sm font-medium">Shadows</div>
                   <BoxShadowEditor
-                    layers={initial}
+                    layers={layersToShow}
                     disabled={disabled}
                     onChange={(layers) => {
                       const css = layers.map((l: any) => `${l.inset? 'inset ': ''}${l.x} ${l.y} ${l.blur} ${l.spread} ${l.color}`).join(', ');
                       addRuntimeStyle({ id: `${component.id}-shadow`, selector: base, property: 'box-shadow', value: css || 'none', element: document.documentElement, type: 'class' });
                     }}
                   />
+                  {initial.length > 1 && (
+                    <button
+                      className="w-full text-xs rounded-md border px-2 py-1"
+                      onClick={(e) => { e.stopPropagation(); setExpandedComponents(prev => ({ ...prev, [component.id + '-shadow']: !prev[component.id + '-shadow'] })); }}
+                    >
+                      {showAllShadows ? 'Show less layers' : `Show ${initial.length - 1} more layers`}
+                    </button>
+                  )}
                 </div>
               );
             })()}

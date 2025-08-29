@@ -63,6 +63,16 @@ export const NumberUnitInput: React.FC<NumberUnitInputProps> = ({
         >
           –
         </Button>
+        <Button
+          type="button"
+          size="icon"
+          variant="outline"
+          className="h-9 w-9"
+          disabled={disabled}
+          onClick={() => emit(clamp(num + step), unit)}
+        >
+          +
+        </Button>
         <Input
           className="h-9 w-20 text-right font-mono text-xs"
           value={Number.isFinite(num) ? String(num) : "0"}
@@ -81,20 +91,9 @@ export const NumberUnitInput: React.FC<NumberUnitInputProps> = ({
           <option value="px">px</option>
           <option value="rem">rem</option>
         </select>
-        <Button
-          type="button"
-          size="icon"
-          variant="outline"
-          className="h-9 w-9"
-          disabled={disabled}
-          onClick={() => emit(clamp(num + step), unit)}
-        >
-          +
-        </Button>
       </div>
     </div>
   );
 };
 
 export default NumberUnitInput;
-
