@@ -84,9 +84,12 @@ const Sidebar = () => {
       data-ui="sidebar"
       className={cn(
         "border-r border-border bg-sidebar text-sidebar-foreground h-dvh sticky top-0",
-        collapsed ? "w-16" : "w-64"
+        collapsed ? undefined : undefined
       )}
-      style={{ visibility: hasHydrated ? undefined : "hidden" }}
+      style={{
+        visibility: hasHydrated ? undefined : "hidden",
+        width: collapsed ? 'var(--sidebar-width-collapsed)' : 'var(--sidebar-width)'
+      }}
       aria-label="Primary"
     >
       <div className="flex h-dvh flex-col">
@@ -213,5 +216,4 @@ const Sidebar = () => {
 };
 
 export default Sidebar;
-
 

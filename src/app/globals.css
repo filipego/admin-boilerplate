@@ -125,6 +125,10 @@
   --info-subtle-foreground: oklch(0.2 0.118 184.704);
   --info-border: oklch(0.8 0.118 184.704);
   --info-ring: oklch(0.6 0.118 184.704);
+  /* Layout variables */
+  --sidebar-width: 16rem; /* default expanded */
+  --sidebar-width-collapsed: 4rem; /* collapsed width */
+  --header-height: 56px;
 }
 
 .dark {

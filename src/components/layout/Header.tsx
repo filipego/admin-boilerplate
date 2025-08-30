@@ -54,8 +54,8 @@ const Header = () => {
   // initials and handleLogout kept previously; remove unused to satisfy linter
 
   return (
-    <header data-ui="header" className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div data-ui="header-container" className="w-full px-2 md:px-4 py-2 md:py-3 flex items-center">
+    <header data-ui="header" className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60" style={{ height: 'var(--header-height)' }}>
+      <div data-ui="header-container" className="w-full px-2 md:px-4 h-full flex items-center">
         <div data-ui="header-mobile-nav" className="md:hidden mr-1">
           <MobileSidebar showProfile={true} showSidebarTheme={true} showBottomActions={true} />
         </div>
@@ -80,5 +80,4 @@ const Header = () => {
 };
 
 export default Header;
-
 

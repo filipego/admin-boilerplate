@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { SliderControl } from '../controls/SliderControl';
+import NumberUnitInput from '../controls/NumberUnitInput';
 import { SelectControl } from '../controls/SelectControl';
 import { UISearchBar } from '../common/UISearchBar';
 import { UIFilterButtons } from '../common/UIFilterButtons';
@@ -54,7 +54,8 @@ interface ResponsiveBreakpoint {
 export function ToolLayoutTab() {
   const { 
     layoutEdits, 
-    updateLayoutEdit
+    updateLayoutEdit,
+    addRuntimeStyle
   } = useThemeTweakerStore();
   
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -85,6 +86,45 @@ export function ToolLayoutTab() {
 
   // Define layout properties
   const layoutProperties: LayoutProperty[] = [
+
+    // Sizing (site chrome)
+    {
+      id: 'sidebar-width',
+      name: 'Sidebar Width',
+      category: 'sizing',
+      property: '--sidebar-width',
+      value: '16rem',
+      unit: 'rem',
+      min: 8,
+      max: 28,
+      step: 0.5,
+      description: 'Width of the left sidebar when expanded'
+    },
+    {
+      id: 'sidebar-width-collapsed',
+      name: 'Sidebar Width (Collapsed)',
+      category: 'sizing',
+      property: '--sidebar-width-collapsed',
+      value: '4rem',
+      unit: 'rem',
+      min: 2,
+      max: 12,
+      step: 0.25,
+      description: 'Width of the left sidebar when collapsed'
+    },
+    {
+      id: 'header-height',
+      name: 'Header Height',
+      category: 'sizing',
+      property: '--header-height',
+      value: '56px',
+      unit: 'px',
+      min: 44,
+      max: 120,
+      step: 2,
+      description: 'Height of the sticky header'
+    },
+
     // Spacing
     {
       id: 'container-padding',
@@ -123,7 +163,7 @@ export function ToolLayoutTab() {
       description: 'Gap between grid items'
     },
     
-    // Sizing
+    // Content sizing
     {
       id: 'container-max-width',
       name: 'Container Max Width',
@@ -137,29 +177,9 @@ export function ToolLayoutTab() {
       description: 'Maximum width of main containers'
     },
     {
-      id: 'sidebar-width',
-      name: 'Sidebar Width',
-      category: 'sizing',
-      property: '--sidebar-width',
-      value: '280px',
-      unit: 'px',
-      min: 200,
-      max: 400,
-      step: 10,
-      description: 'Width of sidebar navigation'
-    },
+      },
     {
-      id: 'header-height',
-      name: 'Header Height',
-      category: 'sizing',
-      property: '--header-height',
-      value: '64px',
-      unit: 'px',
-      min: 48,
-      max: 100,
-      step: 4,
-      description: 'Height of main header'
-    },
+      },
     
     // Display
     {
@@ -228,27 +248,20 @@ export function ToolLayoutTab() {
 
   // Prepare filter options for common component
   const filterOptions = useMemo(() => {
+    const visible = layoutProperties.filter(p => p.category === 'spacing' || p.category === 'sizing');
     const options = [
-      { key: 'all', label: 'All', count: layoutProperties.length }
+      { key: 'all', label: 'All', count: visible.length }
     ];
-
-    (['spacing', 'sizing', 'positioning', 'display'] as const).forEach(category => {
-      const count = layoutProperties.filter(p => p.category === category).length;
-      if (count > 0) {
-        options.push({
-          key: category,
-          label: category,
-          count
-        });
-      }
+    (['spacing', 'sizing'] as const).forEach(category => {
+      const count = visible.filter(p => p.category === category).length;
+      if (count > 0) options.push({ key: category, label: category, count });
     });
-
     return options;
   }, [layoutProperties]);
 
   // Filter properties based on search and category
   const filteredProperties = useMemo(() => {
-    let filtered = layoutProperties;
+    let filtered = layoutProperties.filter(p => p.category === 'spacing' || p.category === 'sizing');
 
     // Filter by category
     if (selectedCategory !== 'all') {
@@ -414,43 +427,20 @@ export function ToolLayoutTab() {
     const currentValue = currentEdit?.value || property.value;
     const hasChanged = currentEdit && currentEdit.value !== currentEdit.originalValue;
 
-    if (property.options) {
-      return (
-        <SelectControl
-          label={property.name}
-          value={currentValue}
-          onChange={(value) => handlePropertyChange(property.id, value)}
-          options={property.options}
-          defaultValue={property.value}
-          description={property.description}
-        />
-      );
-    }
-
-    if (property.min !== undefined && property.max !== undefined) {
-      const numericValue = parseFloat(currentValue.replace(/[^\d.-]/g, ''));
-      return (
-        <SliderControl
-          value={numericValue}
-          originalValue={parseFloat(property.value.replace(/[^\d.-]/g, ''))}
-          onChange={(value) => {
-            const newValue = property.unit ? `${value}${property.unit}` : value.toString();
-            handlePropertyChange(property.id, newValue);
-          }}
-          min={property.min}
-          max={property.max}
-          step={property.step || 1}
-          unit={property.unit}
-          hasChanged={hasChanged}
-        />
-      );
-    }
-
+    // Use the same numeric+unit control as components
+    const onChange = (v: string) => {
+      handlePropertyChange(property.id, v);
+      // Apply runtime variable immediately
+      addRuntimeStyle({ selector: ':root', property: property.property, value: v, element: document.documentElement, type: 'token' });
+    };
     return (
-      <Input
+      <NumberUnitInput
+        label={property.name}
         value={currentValue}
-        onChange={(e) => handlePropertyChange(property.id, e.target.value)}
-        className={hasChanged ? 'ring-2 ring-blue-500' : ''}
+        onChange={onChange}
+        allowNegative={false}
+        stepPx={1}
+        stepRem={0.125}
       />
     );
   };
