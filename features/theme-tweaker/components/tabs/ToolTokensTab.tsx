@@ -14,7 +14,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 // Simplified: use direct HEX inputs instead of ColorPicker
 import { SliderControl } from '../controls/SliderControl';
-import { TextControl } from '../controls/TextControl';
+import NumberUnitInput from '../controls/NumberUnitInput';
 import { getContrastColor } from '../controls/ColorPicker';
 import { UniversalColorInput } from '../common/UniversalColorInput';
 import SimpleShadowEditor from '../controls/SimpleShadowEditor';
@@ -427,6 +427,43 @@ export function ToolTokensTab() {
     }, 150);
   };
 
+  // Generic token change for non-color tokens (e.g., font, radius/spacing values)
+  const handlePlainTokenChangeScoped = (
+    tokenName: string,
+    scope: 'light' | 'dark',
+    newValue: string,
+    originalValue: string
+  ) => {
+    const selector = scope === 'dark' ? '.dark' : ':root';
+    const existing = tokenEdits.find(e => e.token === tokenName && e.scope === scope);
+    const baselineOriginal = existing?.originalValue ?? originalValue;
+    if ((newValue || '').trim() === (baselineOriginal || '').trim()) {
+      removeTokenEdit(tokenName, scope);
+      removeRuntimeStyle(selector, tokenName);
+      return;
+    }
+    addTokenEdit({ token: tokenName, value: newValue, originalValue: baselineOriginal, scope });
+    addRuntimeStyle({ selector, property: tokenName, value: newValue, type: 'token' });
+  };
+
+  // Real-mode only token change (no light/dark split)
+  const handlePlainTokenChange = (
+    tokenName: string,
+    newValue: string,
+    originalValue: string
+  ) => {
+    const selector = ':root';
+    const existing = tokenEdits.find(e => e.token === tokenName && e.scope === 'both');
+    const baselineOriginal = existing?.originalValue ?? originalValue;
+    if ((newValue || '').trim() === (baselineOriginal || '').trim()) {
+      removeTokenEdit(tokenName, 'both');
+      removeRuntimeStyle(selector, tokenName);
+      return;
+    }
+    addTokenEdit({ token: tokenName, value: newValue, originalValue: baselineOriginal, scope: 'both' });
+    addRuntimeStyle({ selector, property: tokenName, value: newValue, type: 'token' });
+  };
+
   const renderTokenItem = (token: CSSToken) => {
     if (token.category === 'shadow') {
       const light = lightDarkMap.get(token.name)?.light || '';
@@ -459,7 +496,7 @@ export function ToolTokensTab() {
         </Card>
       );
     }
-
+    // Common Light/Dark values for non-shadow tokens
     const uniqueKey = `${token.name}`;
     const pair = lightDarkMap.get(token.name);
     const light = pair?.light ?? token.value;
@@ -472,6 +509,60 @@ export function ToolTokensTab() {
     const darkDisplay = userColorInputs[`${token.name}|dark`] ?? (toHEX(darkValue) || darkValue);
     const lightChanged = !!lightEdit && !areColorsEquivalent(lightEdit.value, lightEdit.originalValue);
     const darkChanged = !!darkEdit && !areColorsEquivalent(darkEdit.value, darkEdit.originalValue);
+    // Radius and Spacing: immediate numeric+unit editing (Light/Dark)
+    if (token.category === 'radius' || token.category === 'spacing') {
+      return (
+        <Card key={token.name} className="transition-all">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <code className="text-sm font-mono bg-muted px-2 py-1 rounded">{token.name}</code>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <div className="text-xs text-muted-foreground flex items-center gap-2">
+                  <Badge variant="outline" className="text-xs">Light</Badge>
+                </div>
+                <NumberUnitInput
+                  label={token.category === 'radius' ? 'Radius' : 'Value'}
+                  value={lightValue}
+                  onChange={(v) => handlePlainTokenChangeScoped(token.name, 'light', v, light)}
+                />
+              </div>
+              <div className="space-y-2">
+                <div className="text-xs text-muted-foreground flex items-center gap-2">
+                  <Badge variant="outline" className="text-xs">Dark</Badge>
+                </div>
+                <NumberUnitInput
+                  label={token.category === 'radius' ? 'Radius' : 'Value'}
+                  value={darkValue}
+                  onChange={(v) => handlePlainTokenChangeScoped(token.name, 'dark', v, dark)}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    // Font: display only (no editing yet — dropdown of Google Fonts to come)
+    if (token.category === 'font') {
+      return (
+        <Card key={token.name} className="transition-all">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">
+              <code className="font-mono">{token.name}</code>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-xs text-muted-foreground">
+              Editing fonts coming soon
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
 
     return (
       <Card key={uniqueKey} className="transition-all">
