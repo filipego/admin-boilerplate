@@ -54,9 +54,7 @@ interface ResponsiveBreakpoint {
 export function ToolLayoutTab() {
   const { 
     layoutEdits, 
-    updateLayoutEdit, 
-    activeBreakpoint, 
-    setActiveBreakpoint 
+    updateLayoutEdit
   } = useThemeTweakerStore();
   
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -325,14 +323,60 @@ export function ToolLayoutTab() {
 
   const handleBreakpointChange = (breakpoint: 'desktop' | 'tablet' | 'mobile') => {
     setPreviewMode(breakpoint);
-    setActiveBreakpoint(breakpoint);
-    
-    // Apply viewport simulation
     const viewport = breakpoints.find(bp => bp.name === breakpoint);
-    if (viewport) {
-      // This would typically update a preview iframe or container
-      toast.info(`Switched to ${breakpoint} preview (${viewport.width})`);
-    }
+    if (!viewport) return;
+    try {
+      // Create/update a left-side overlay with an iframe, similar to devtools device mode
+      let overlay = document.getElementById('tt-preview-overlay') as HTMLDivElement | null;
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'tt-preview-overlay';
+        overlay.style.position = 'fixed';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.bottom = '0';
+        overlay.style.zIndex = '9996';
+        overlay.style.background = 'var(--background, #0B0D2A)';
+        const iframe = document.createElement('iframe');
+        iframe.id = 'tt-preview-iframe';
+        iframe.style.display = 'block';
+        iframe.style.height = '100%';
+        iframe.style.border = '0';
+        overlay.appendChild(iframe);
+        document.body.appendChild(overlay);
+
+        // Hide original page content beneath overlay (except the tool UI)
+        let style = document.getElementById('tt-preview-style') as HTMLStyleElement | null;
+        if (!style) {
+          style = document.createElement('style');
+          style.id = 'tt-preview-style';
+          style.textContent = `
+            html[data-tt-preview] body > *:not(#tt-preview-overlay):not([data-theme-tweaker-ui]) { display: none !important; }
+          `;
+          document.head.appendChild(style);
+        }
+      }
+
+      // Compute right edge offset so overlay doesn't cover the tool panel
+      const panel = document.querySelector('[data-theme-tweaker-ui]') as HTMLElement | null;
+      let right = 0;
+      if (panel) {
+        const rect = panel.getBoundingClientRect();
+        right = Math.max(0, window.innerWidth - rect.left);
+      }
+      overlay!.style.right = `${right}px`;
+
+      // Size and load the iframe
+      const iframe = document.getElementById('tt-preview-iframe') as HTMLIFrameElement;
+      iframe.style.width = viewport.width;
+      if (!iframe.src || iframe.getAttribute('data-tt-loaded') !== '1') {
+        iframe.src = window.location.href;
+        iframe.setAttribute('data-tt-loaded', '1');
+      }
+
+      document.documentElement.setAttribute('data-tt-preview', '1');
+      toast.success(`Preview: ${breakpoint} (${viewport.width})`);
+    } catch {}
   };
 
   const resetProperty = (propertyId: string) => {
@@ -488,20 +532,18 @@ export function ToolLayoutTab() {
           <CardTitle className="text-sm">Responsive Preview</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-nowrap">
             {breakpoints.map(breakpoint => (
               <Button
                 key={breakpoint.name}
                 variant={previewMode === breakpoint.name ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => handleBreakpointChange(breakpoint.name as any)}
-                className="flex items-center gap-2 shrink-0"
+                className="flex items-center gap-1 shrink-0"
+                title={`Preview ${breakpoint.name} (${breakpoint.width})`}
               >
                 {breakpoint.icon}
-                <span className="capitalize">{breakpoint.name}</span>
-                <Badge variant="secondary" className="text-xs">
-                  {breakpoint.width}
-                </Badge>
+                <Badge variant="secondary" className="text-xs whitespace-nowrap">{breakpoint.width}</Badge>
               </Button>
             ))}
           </div>
