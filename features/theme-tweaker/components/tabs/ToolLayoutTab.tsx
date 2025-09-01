@@ -21,7 +21,6 @@ import {
   Rows,
   Move,
   Maximize,
-  Minimize,
   RotateCcw,
   Smartphone,
   Tablet,
@@ -61,6 +60,7 @@ export function ToolLayoutTab() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [previewMode, setPreviewMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
+  const [isPreviewing, setIsPreviewing] = useState(false);
 
   // Define responsive breakpoints
   const breakpoints: ResponsiveBreakpoint[] = [
@@ -334,7 +334,24 @@ export function ToolLayoutTab() {
     });
   };
 
+  const exitResponsivePreview = () => {
+    try {
+      const overlay = document.getElementById('tt-preview-overlay');
+      if (overlay) overlay.remove();
+      const style = document.getElementById('tt-preview-style');
+      if (style) style.remove();
+      document.documentElement.removeAttribute('data-tt-preview');
+      setIsPreviewing(false);
+      toast.success('Returned to normal view');
+    } catch {}
+  };
+
   const handleBreakpointChange = (breakpoint: 'desktop' | 'tablet' | 'mobile') => {
+    // If clicking the active breakpoint while preview is on, toggle off to normal view
+    if (previewMode === breakpoint && document.documentElement.hasAttribute('data-tt-preview')) {
+      exitResponsivePreview();
+      return;
+    }
     setPreviewMode(breakpoint);
     const viewport = breakpoints.find(bp => bp.name === breakpoint);
     if (!viewport) return;
@@ -388,6 +405,7 @@ export function ToolLayoutTab() {
       }
 
       document.documentElement.setAttribute('data-tt-preview', '1');
+      setIsPreviewing(true);
       toast.success(`Preview: ${breakpoint} (${viewport.width})`);
     } catch {}
   };
@@ -523,10 +541,20 @@ export function ToolLayoutTab() {
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-2 flex-nowrap">
+            <Button
+              variant={isPreviewing ? 'outline' : 'default'}
+              size="sm"
+              onClick={exitResponsivePreview}
+              className="flex items-center gap-1 shrink-0"
+              title="Reset to normal view"
+              aria-label="Reset to normal view"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </Button>
             {breakpoints.map(breakpoint => (
               <Button
                 key={breakpoint.name}
-                variant={previewMode === breakpoint.name ? 'default' : 'outline'}
+                variant={isPreviewing && previewMode === breakpoint.name ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => handleBreakpointChange(breakpoint.name as any)}
                 className="flex items-center gap-1 shrink-0"

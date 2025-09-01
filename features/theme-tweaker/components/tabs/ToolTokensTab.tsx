@@ -509,8 +509,10 @@ export function ToolTokensTab() {
     const darkDisplay = userColorInputs[`${token.name}|dark`] ?? (toHEX(darkValue) || darkValue);
     const lightChanged = !!lightEdit && !areColorsEquivalent(lightEdit.value, lightEdit.originalValue);
     const darkChanged = !!darkEdit && !areColorsEquivalent(darkEdit.value, darkEdit.originalValue);
-    // Radius and Spacing: immediate numeric+unit editing (Light/Dark)
+    // Radius and Spacing: single input (no light/dark split)
     if (token.category === 'radius' || token.category === 'spacing') {
+      // Use the non-dark (":root") computed value as the baseline
+      const current = lightValue;
       return (
         <Card key={token.name} className="transition-all">
           <CardHeader className="pb-3">
@@ -519,28 +521,11 @@ export function ToolTokensTab() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <div className="text-xs text-muted-foreground flex items-center gap-2">
-                  <Badge variant="outline" className="text-xs">Light</Badge>
-                </div>
-                <NumberUnitInput
-                  label={token.category === 'radius' ? 'Radius' : 'Value'}
-                  value={lightValue}
-                  onChange={(v) => handlePlainTokenChangeScoped(token.name, 'light', v, light)}
-                />
-              </div>
-              <div className="space-y-2">
-                <div className="text-xs text-muted-foreground flex items-center gap-2">
-                  <Badge variant="outline" className="text-xs">Dark</Badge>
-                </div>
-                <NumberUnitInput
-                  label={token.category === 'radius' ? 'Radius' : 'Value'}
-                  value={darkValue}
-                  onChange={(v) => handlePlainTokenChangeScoped(token.name, 'dark', v, dark)}
-                />
-              </div>
-            </div>
+            <NumberUnitInput
+              label={token.category === 'radius' ? 'Radius' : 'Value'}
+              value={current}
+              onChange={(v) => handlePlainTokenChange(token.name, v, light)}
+            />
           </CardContent>
         </Card>
       );
