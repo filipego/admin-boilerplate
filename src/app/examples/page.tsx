@@ -13,6 +13,7 @@ import ViewFilters from "@/components/common/ViewFilters";
 import { useState } from "react";
 import CardsShowcase from "./CardsShowcase";
 import PageHeader from "@/components/common/PageHeader";
+import { Heading } from "@/components/common/Heading";
 import ContentTabs, { type TabItem } from "@/components/common/ContentTabs";
 import DataTable from "@/components/common/DataTable";
 import type { DataTableStateSnapshot } from "@/components/common/DataTable";
@@ -128,6 +129,36 @@ export default function ExamplesPage() {
         onValueChange={setActiveTab}
         className="mb-8"
       />
+
+      {/* Headings demo (no h1s in admin) */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Headings</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <div className="text-sm text-muted-foreground mb-2">Levels (semantic)</div>
+            <div className="space-y-1">
+              <Heading as="h2" size="lg">Heading h2</Heading>
+              <Heading as="h3" size="md">Heading h3</Heading>
+              <Heading as="h4" size="md">Heading h4</Heading>
+              <Heading as="h5" size="sm">Heading h5</Heading>
+              <Heading as="h6" size="xs">Heading h6</Heading>
+            </div>
+          </div>
+          <div>
+            <div className="text-sm text-muted-foreground mb-2">Size scale</div>
+            <div className="space-y-1">
+              <Heading as="h2" size="2xl">Heading size 2xl</Heading>
+              <Heading as="h2" size="xl">Heading size xl</Heading>
+              <Heading as="h2" size="lg">Heading size lg</Heading>
+              <Heading as="h2" size="md">Heading size md</Heading>
+              <Heading as="h2" size="sm">Heading size sm</Heading>
+              <Heading as="h2" size="xs">Heading size xs</Heading>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -481,7 +512,7 @@ export default function ExamplesPage() {
         columnsClassName="md:grid-cols-2"
         left={
           <div className="space-y-3">
-            <h3 className="text-sm font-medium">Navigation</h3>
+            <Heading as="h3" size="sm">Navigation</Heading>
             <ul className="list-disc pl-5 text-sm space-y-1">
               <li>Section A</li>
               <li>Section B</li>
@@ -491,7 +522,7 @@ export default function ExamplesPage() {
         }
         right={
           <div className="space-y-3">
-            <h3 className="text-sm font-medium">Editor</h3>
+            <Heading as="h3" size="sm">Editor</Heading>
             <textarea className="w-full px-3 py-2 rounded-md border bg-background" rows={10} placeholder="Type here..." />
             <div className="flex gap-2 justify-end">
               <UIButton onClick={() => setOpenTwoCol(false)}>Save</UIButton>
@@ -594,7 +625,7 @@ export default function ExamplesPage() {
 
           <div className="grid md:grid-cols-2 gap-5">
             <div className="space-y-3">
-              <h3 className="text-sm font-medium">Details</h3>
+              <Heading as="h3" size="sm">Details</Heading>
               <p className="text-sm">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin gravida, nunc non tristique placerat, urna arcu vulputate erat, id tempor lectus eros vitae ipsum.</p>
               <ul className="list-disc pl-5 text-sm space-y-1">
                 <li>Responsive width up to ~3xl</li>
@@ -603,7 +634,7 @@ export default function ExamplesPage() {
               </ul>
             </div>
             <div className="space-y-3">
-              <h3 className="text-sm font-medium">Quick Form</h3>
+              <Heading as="h3" size="sm">Quick Form</Heading>
               <div className="grid gap-2">
                 <input className="px-3 py-2 rounded-md border bg-background" placeholder="First name" />
                 <input className="px-3 py-2 rounded-md border bg-background" placeholder="Last name" />
@@ -650,7 +681,7 @@ export default function ExamplesPage() {
 
       <SidePanel open={panelOpen} onOpenChange={setPanelOpen}>
         <div className="space-y-2">
-          <h3 className="text-sm font-medium">Details</h3>
+          <Heading as="h3" size="sm">Details</Heading>
           <p className="text-sm text-muted-foreground">This side panel can show row details.</p>
         </div>
       </SidePanel>
@@ -680,5 +711,3 @@ export default function ExamplesPage() {
     </AppLayout>
   );
 }
-
-

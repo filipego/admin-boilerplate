@@ -12,6 +12,7 @@ import {
 import { MoreHorizontal, Edit, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import { Heading } from "@/components/common/Heading";
 
 type UICardProps = {
   title: string;
@@ -69,12 +70,12 @@ export default function UICard({
           {!hasImage ? (
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h3 className="font-semibold leading-tight mt-1">{title}</h3>
+                <Heading as="h3" size="md" className="leading-tight mt-1">{title}</Heading>
               </div>
               <ActionsMenu onEdit={onEdit} onDelete={onDelete} />
             </div>
           ) : (
-            <h3 className="font-semibold leading-tight">{title}</h3>
+            <Heading as="h3" size="md" className="leading-tight">{title}</Heading>
           )}
           {description ? (
             <p className="text-sm text-muted-foreground">{description}</p>
@@ -124,5 +125,4 @@ function ActionsMenu({ onEdit, onDelete }: { onEdit?: () => void; onDelete?: () 
     </DropdownMenu>
   );
 }
-
 

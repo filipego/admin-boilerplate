@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { Heading } from "@/components/common/Heading";
 
 type PageHeaderProps = {
   title: string;
@@ -13,7 +14,7 @@ export default function PageHeader({ title, description, action, className }: Pa
   return (
     <div className={cn("flex items-start justify-between gap-4", className)}>
       <div className="space-y-1">
-        <h1 className="text-xl font-semibold leading-tight">{title}</h1>
+        <Heading as="h2" size="lg" className="leading-tight">{title}</Heading>
         {description ? (
           <p className="text-sm text-muted-foreground">{description}</p>
         ) : null}
@@ -22,5 +23,3 @@ export default function PageHeader({ title, description, action, className }: Pa
     </div>
   );
 }
-
-

@@ -7,7 +7,7 @@ const MainContent = ({ title, children }: MainContentProps) => {
   return (
     <div className="p-4 sm:p-6">
       {title ? (
-        <h1 className="text-xl font-semibold tracking-tight mb-4">{title}</h1>
+        <Heading as="h2" size="lg" className="tracking-tight mb-4">{title}</Heading>
       ) : null}
       {children}
     </div>
@@ -16,4 +16,4 @@ const MainContent = ({ title, children }: MainContentProps) => {
 
 export default MainContent;
 
-
+import { Heading } from "@/components/common/Heading";

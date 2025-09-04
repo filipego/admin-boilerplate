@@ -1,6 +1,7 @@
 "use client";
 
 import UIButton from "@/components/common/UIButton";
+import { Heading } from "@/components/common/Heading";
 import { cn } from "@/lib/utils";
 
 export type Step = {
@@ -25,7 +26,7 @@ export default function Stepper({ steps, active, onActiveChange, className }: { 
         ))}
       </ol>
       <div className="rounded-lg border p-4 min-h-40">
-        <h3 className="text-sm font-medium">{steps[active]?.title}</h3>
+        <Heading as="h3" size="sm">{steps[active]?.title}</Heading>
         {steps[active]?.description ? (
           <p className="text-xs text-muted-foreground mt-1">{steps[active]?.description}</p>
         ) : null}
@@ -38,5 +39,4 @@ export default function Stepper({ steps, active, onActiveChange, className }: { 
     </div>
   );
 }
-
 

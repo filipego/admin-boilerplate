@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { Heading } from "@/components/common/Heading";
 import { showSaved } from "@/lib/toast";
 
 type SettingsSection = {
@@ -93,7 +94,7 @@ export default function SettingsLayout({ sections, storageKey = "settings-autosa
       <div ref={containerRef} className="space-y-8">
         {sections.map((s) => (
           <section key={s.id} id={s.id} data-settings-section className="scroll-mt-24">
-            <h3 className="text-sm font-medium mb-2">{s.title}</h3>
+            <Heading as="h3" size="sm" className="mb-2">{s.title}</Heading>
             <div className="rounded-lg border p-4 bg-card">{s.content}</div>
           </section>
         ))}
@@ -101,5 +102,4 @@ export default function SettingsLayout({ sections, storageKey = "settings-autosa
     </div>
   );
 }
-
 
