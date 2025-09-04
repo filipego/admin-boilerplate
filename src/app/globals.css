@@ -134,20 +134,20 @@
   /* Each size has mobile defaults and lg overrides */
   --h-2xl-size: 2rem;       /* ~32px mobile */
   --h-2xl-line: 2.5rem;     /* ~40px */
-  --h-2xl-size-lg: 2.5rem;  /* ~40px desktop */
+  --h-2xl-size-lg: 3.375rem;  /* ~40px desktop */
   --h-2xl-line-lg: 2.75rem; /* ~44px */
   --h-2xl-weight: 600;      /* semibold */
 
   --h-xl-size: 1.5rem;      /* 24px mobile */
   --h-xl-line: 2rem;        /* 32px */
-  --h-xl-size-lg: 2rem;     /* 32px desktop */
+  --h-xl-size-lg: 3.125rem;     /* 32px desktop */
   --h-xl-line-lg: 2.5rem;   /* 40px */
   --h-xl-weight: 600;
 
   --h-lg-size: 1.25rem;     /* 20px mobile */
   --h-lg-line: 1.75rem;     /* 28px */
-  --h-lg-size-lg: 1.5rem;   /* 24px desktop */
-  --h-lg-line-lg: 2rem;     /* 32px */
+  --h-lg-size-lg: 1.75rem;   /* 24px desktop */
+  --h-lg-line-lg: 1.875rem;     /* 32px */
   --h-lg-weight: 600;
 
   --h-md-size: 1rem;        /* 16px mobile */
@@ -393,10 +393,15 @@
 
 
 
+
+
+
+
 /* BEGIN THEME TWEAKER OVERRIDES - DO NOT EDIT MANUALLY */
-/* Generated: 2025-08-27T03:33:43.553Z */
-html.dark, body.dark, .dark {
-  --background: oklch(0.154 0 89.9) !important;
+/* Generated: 2025-09-04T21:03:16.485Z */
+:root, html:root, body:root {
+  --h-lg-line-lg: 1.875rem !important;
+  --h-lg-size-lg: 1.75rem !important;
 }
 
 /* END THEME TWEAKER OVERRIDES */

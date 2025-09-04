@@ -73,6 +73,25 @@ export function ThemeTweaker() {
       if (target.closest('[data-theme-tweaker-ui]')) {
         return;
       }
+
+      // Alt + Shift + Click on a heading → focus its size in Tokens > Headings
+      if (event.altKey && event.shiftKey) {
+        const el = (target.closest('h1, h2, h3, h4, h5, h6') || target.closest('.ui-h-2xl, .ui-h-xl, .ui-h-lg, .ui-h-md, .ui-h-sm, .ui-h-xs')) as HTMLElement | null;
+        if (el) {
+          event.preventDefault();
+          event.stopPropagation();
+          const sizes = ['2xl','xl','lg','md','sm','xs'] as const;
+          const found = sizes.find(sz => el.classList.contains(`ui-h-${sz}`));
+          const size = found || 'lg';
+          try {
+            const store = useThemeTweakerStore.getState();
+            store.setActiveTab('tokens');
+          } catch {}
+          const ev = new CustomEvent('tt-focus-heading', { detail: { size } });
+          window.dispatchEvent(ev);
+          return;
+        }
+      }
       const closestWithDataUi = target.closest('[data-ui]') as HTMLElement | null;
       const dataUi = closestWithDataUi?.getAttribute('data-ui') || null;
       
@@ -179,7 +198,7 @@ export function ThemeTweaker() {
       {isToolOpen && (
         <div
           data-theme-tweaker-ui
-          className="fixed bottom-6 left-6 rounded-lg p-3 shadow-lg z-[999999]"
+          className="fixed bottom-6 left-16 md:left-20 rounded-lg p-3 shadow-lg z-[999999]"
           style={{
             // hard-coded palette for isolation; never influenced by site tokens
             backgroundColor: '#0B0D2A',
@@ -199,6 +218,22 @@ export function ThemeTweaker() {
               Alt
             </kbd>{' '}
             + click to edit components
+          </p>
+          <p className="text-sm mt-1" style={{ color: '#C8D0E0' }}>
+            Hold{' '}
+            <kbd
+              className="px-1 py-0.5 rounded text-xs"
+              style={{ backgroundColor: '#11131F', color: '#E8ECF6' }}
+            >
+              Alt
+            </kbd>{' + '}
+            <kbd
+              className="px-1 py-0.5 rounded text-xs"
+              style={{ backgroundColor: '#11131F', color: '#E8ECF6' }}
+            >
+              Shift
+            </kbd>{' '}
+            + click a heading to edit its size
           </p>
         </div>
       )}

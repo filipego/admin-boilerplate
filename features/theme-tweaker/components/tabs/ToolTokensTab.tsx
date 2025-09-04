@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { cn } from '@/lib/utils';
 import { useTheme } from 'next-themes';
 import { useThemeTweakerStore } from '../../store/useThemeTweakerStore';
 import { TokenScanner, CSSToken } from '../../utils/tokenScanner';
@@ -15,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 // Simplified: use direct HEX inputs instead of ColorPicker
 import { SliderControl } from '../controls/SliderControl';
 import NumberUnitInput from '../controls/NumberUnitInput';
+import { SelectControl } from '../controls/SelectControl';
 import { getContrastColor } from '../controls/ColorPicker';
 import { UniversalColorInput } from '../common/UniversalColorInput';
 import SimpleShadowEditor from '../controls/SimpleShadowEditor';
@@ -29,6 +31,7 @@ import {
   RefreshCw,
   Filter
 } from 'lucide-react';
+import { applyRuntimeStyle } from '../../runtime/applyRuntime';
 import { toast } from 'sonner';
 
 interface TokenGroup {
@@ -36,6 +39,7 @@ interface TokenGroup {
   tokens: CSSToken[];
   icon: React.ReactNode;
   color: string;
+  label?: string;
 }
 
 let tokensLoadedOnce = false;
@@ -46,7 +50,7 @@ export function ToolTokensTab() {
   const [tokens, setTokens] = useState<CSSToken[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<CSSToken['category'] | 'all'>('all');
+  const [selectedCategory, setSelectedCategory] = useState<CSSToken['category'] | 'all' | 'headings'>('all');
   const [isScanning, setIsScanning] = useState(false);
   const darkProbeRef = useRef<HTMLDivElement | null>(null);
 
@@ -295,7 +299,11 @@ export function ToolTokensTab() {
     let filtered = allowedTokens;
 
     if (selectedCategory !== 'all') {
-      filtered = filtered.filter(token => token.category === selectedCategory);
+      if (selectedCategory === 'headings') {
+        filtered = filtered.filter(token => token.name.startsWith('--h-'));
+      } else {
+        filtered = filtered.filter(token => token.category === selectedCategory);
+      }
     }
 
     if (searchQuery) {
@@ -318,9 +326,17 @@ export function ToolTokensTab() {
         icon: <Palette className="w-4 h-4" />,
         color: 'bg-red-100 text-red-800'
       },
+      // Typography (Headings) group placed right after colors
       {
         category: 'spacing',
-        tokens: filteredTokens.filter(t => t.category === 'spacing'),
+        label: 'Typography (Headings)',
+        tokens: filteredTokens.filter(t => t.name.startsWith('--h-')),
+        icon: <Type className="w-4 h-4" />,
+        color: 'bg-yellow-100 text-yellow-800',
+      },
+      {
+        category: 'spacing',
+        tokens: filteredTokens.filter(t => t.category === 'spacing' && !t.name.startsWith('--h-')),
         icon: <Ruler className="w-4 h-4" />,
         color: 'bg-blue-100 text-blue-800'
       },
@@ -462,6 +478,10 @@ export function ToolTokensTab() {
     }
     addTokenEdit({ token: tokenName, value: newValue, originalValue: baselineOriginal, scope: 'both' });
     addRuntimeStyle({ selector, property: tokenName, value: newValue, type: 'token' });
+    // Immediate preview even before store effect batches
+    try {
+      applyRuntimeStyle({ selector, property: tokenName, value: newValue, element: document.documentElement, type: 'token', id: `${tokenName}` });
+    } catch {}
   };
 
   const renderTokenItem = (token: CSSToken) => {
@@ -595,6 +615,127 @@ export function ToolTokensTab() {
     );
   };
 
+  // Render grouped heading controls per size (2xl..xs)
+  const [highlightedHeading, setHighlightedHeading] = useState<string | null>(null);
+
+  const renderHeadingGroups = (headingTokens: CSSToken[]) => {
+    const sizes = ['2xl','xl','lg','md','sm','xs'] as const;
+    const byName = new Map(headingTokens.map(t => [t.name, t] as const));
+
+    const getValue = (name: string) => {
+      // Prefer live-edited value from store, then computed, then token default
+      const edit = tokenEdits.find(e => e.token === name && e.scope === 'both');
+      if (edit && typeof edit.value === 'string' && edit.value.trim() !== '') return edit.value.trim();
+      const pair = lightDarkMap.get(name);
+      return (pair?.light ?? byName.get(name)?.value ?? '').trim();
+    };
+
+    const cards = sizes.map((sz) => {
+      const sizeMobileName = `--h-${sz}-size`;
+      const lineMobileName = `--h-${sz}-line`;
+      const sizeDesktopName = `--h-${sz}-size-lg`;
+      const lineDesktopName = `--h-${sz}-line-lg`;
+      const weightName = `--h-${sz}-weight`;
+
+      // Skip if none exist
+      const present = [sizeMobileName, lineMobileName, sizeDesktopName, lineDesktopName, weightName]
+        .some(n => byName.has(n));
+      if (!present) return null;
+
+      const sizeMobile = getValue(sizeMobileName);
+      const lineMobile = getValue(lineMobileName);
+      const sizeDesktop = getValue(sizeDesktopName);
+      const lineDesktop = getValue(lineDesktopName);
+      const weight = getValue(weightName);
+
+      const isHighlighted = highlightedHeading === sz;
+      return (
+        <Card
+          key={`heading-${sz}`}
+          id={`tt-heading-${sz}`}
+          className={cn(isHighlighted && 'ring-2 ring-info border-info/50')}
+          onClick={() => setHighlightedHeading(sz)}
+        >
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Type className="w-4 h-4" />
+              <span>Heading {sz.toUpperCase()}</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 gap-2">
+              <NumberUnitInput
+                label="Desktop size"
+                value={sizeDesktop}
+                onChange={(v) => handlePlainTokenChange(sizeDesktopName, v, sizeDesktop)}
+              />
+              <NumberUnitInput
+                label="Desktop line"
+                value={lineDesktop}
+                onChange={(v) => handlePlainTokenChange(lineDesktopName, v, lineDesktop)}
+              />
+              <NumberUnitInput
+                label="Mobile size"
+                value={sizeMobile}
+                onChange={(v) => handlePlainTokenChange(sizeMobileName, v, sizeMobile)}
+              />
+              <NumberUnitInput
+                label="Mobile line"
+                value={lineMobile}
+                onChange={(v) => handlePlainTokenChange(lineMobileName, v, lineMobile)}
+              />
+              <SelectControl
+                label="Weight"
+                value={weight}
+                onChange={(v) => handlePlainTokenChange(weightName, v, weight)}
+                options={[
+                  { value: '100', label: 'Thin (100)' },
+                  { value: '200', label: 'Extra Light (200)' },
+                  { value: '300', label: 'Light (300)' },
+                  { value: '400', label: 'Normal (400)' },
+                  { value: '500', label: 'Medium (500)' },
+                  { value: '600', label: 'SemiBold (600)' },
+                  { value: '700', label: 'Bold (700)' },
+                  { value: '800', label: 'Extra Bold (800)' },
+                  { value: '900', label: 'Black (900)' },
+                ]}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      );
+    });
+
+    return cards.filter(Boolean);
+  };
+
+  // External focus: listen for requests to focus a specific heading card
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const ce = e as CustomEvent<{ size: string }>;
+      // Switch to headings category and scroll to card
+      setSelectedCategory('headings');
+      setHighlightedHeading((ce.detail?.size || '').toLowerCase());
+      const id = `tt-heading-${(ce.detail?.size || '').toLowerCase()}`;
+      // Wait a tick for layout update
+      window.setTimeout(() => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 50);
+    };
+    window.addEventListener('tt-focus-heading' as any, handler as any);
+    return () => window.removeEventListener('tt-focus-heading' as any, handler as any);
+  }, []);
+
+  // Clear highlight when switching away from headings category
+  useEffect(() => {
+    if (selectedCategory !== 'headings') {
+      setHighlightedHeading(null);
+    }
+  }, [selectedCategory]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -649,19 +790,24 @@ export function ToolTokensTab() {
           >
             All
           </Button>
-          {(['color', 'spacing', 'radius', 'shadow', 'font'] as const).map(category => {
+          {/* Ordered categories with Headings right after Colors */}
+          {(['color', 'headings', 'spacing', 'radius', 'shadow', 'font'] as const).map(category => {
             const count = allowedTokens.filter(t => t.category === category).length;
-            if (count === 0) return null;
+            // For synthetic 'headings', count based on token name prefix
+            const displayCount = category === 'headings' 
+              ? allowedTokens.filter(t => t.name.startsWith('--h-')).length 
+              : count;
+            if (displayCount === 0) return null;
             
             return (
               <Button
                 key={category}
                 variant={selectedCategory === category ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => setSelectedCategory(category)}
+                onClick={() => setSelectedCategory(category as any)}
                 className="h-10"
               >
-                {category} ({count})
+                {category} ({displayCount})
               </Button>
             );
           })}
@@ -682,18 +828,24 @@ export function ToolTokensTab() {
       ) : (
         <div className="w-full mt-4">
           <div className="space-y-6">
-            {tokenGroups.map(group => (
-              <div key={group.category}>
+            {tokenGroups.map((group, idx) => (
+              <div key={`group-${group.label ?? group.category}-${idx}`}>
                 <div className="flex items-center gap-2 mb-3">
                   {group.icon}
-                  <h4 className="font-medium capitalize">{group.category}</h4>
+                  <h4 className="font-medium capitalize">{group.label ?? group.category}</h4>
                   <Badge className={group.color}>
                     {group.tokens.length}
                   </Badge>
                 </div>
-                <div className="space-y-3">
-                  {group.tokens.map(token => renderTokenItem(token))}
-                </div>
+                {group.label === 'Typography (Headings)' ? (
+                  <div className="grid grid-cols-1 gap-3">
+                    {renderHeadingGroups(group.tokens)}
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {group.tokens.map(token => renderTokenItem(token))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
