@@ -393,8 +393,8 @@ import TagInput from "@/components/common/TagInput";
 `src/components/common/Notifications.tsx`
 
 ```tsx
-import NotificationBell from "@/components/common/Notifications";
-<NotificationBell items={[{ id: '1', title: 'Welcome', time: 'Just now' }]} />
+import Notifications from "@/components/common/Notifications";
+<Notifications items={[{ id: '1', title: 'Welcome', time: 'Just now' }]} />
 ```
 
 ### Tooltip Helpers

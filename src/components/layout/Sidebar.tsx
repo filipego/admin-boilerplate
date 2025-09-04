@@ -8,7 +8,7 @@ import SidebarThemeControl from "@/components/sidebar/SidebarThemeControl";
 import { useEffect, useMemo, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { usePathname, useRouter } from "next/navigation";
-import { cn } from "@/utils/cn";
+import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight, LogOut } from "lucide-react";
 import { mainItems as configMainItems, personalItems as configPersonalItems } from "@/components/layout/sidebar.config";
 
@@ -216,4 +216,3 @@ const Sidebar = () => {
 };
 
 export default Sidebar;
-

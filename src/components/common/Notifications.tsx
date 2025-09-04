@@ -6,12 +6,14 @@ import { useState } from "react";
 
 export type NotificationItem = { id: string; title: string; time: string; read?: boolean };
 
-export default function NotificationBell({ items = [] }: { items?: NotificationItem[] }) {
+export type NotificationsProps = { items?: NotificationItem[]; className?: string };
+
+export default function Notifications({ items = [], className }: NotificationsProps) {
   const unread = items.filter((i) => !i.read).length;
   const [open, setOpen] = useState(false);
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} aria-label="Open notifications" className="relative inline-flex items-center justify-center h-8 w-8 rounded-full hover:bg-accent cursor-pointer">
+      <button type="button" onClick={() => setOpen(true)} aria-label="Open notifications" className={"relative inline-flex items-center justify-center h-8 w-8 rounded-full hover:bg-accent cursor-pointer" + (className ? ` ${className}` : "") }>
         <Bell className="h-4 w-4" />
         {unread > 0 ? (
           <span className="absolute inline-flex h-3 w-3 items-center justify-center rounded-full bg-info [top:4px] [right:4px]" />
@@ -38,5 +40,4 @@ export default function NotificationBell({ items = [] }: { items?: NotificationI
     </>
   );
 }
-
 

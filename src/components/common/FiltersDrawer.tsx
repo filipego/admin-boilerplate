@@ -2,11 +2,14 @@
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
 import UIButton from "@/components/common/UIButton";
+import { cn } from "@/lib/utils";
 
-export default function FiltersDrawer({ open, onOpenChange, children, onApply, onReset }: { open: boolean; onOpenChange: (o: boolean) => void; children: React.ReactNode; onApply: () => void; onReset: () => void }) {
+export type FiltersDrawerProps = { open: boolean; onOpenChange: (o: boolean) => void; children: React.ReactNode; onApply: () => void; onReset: () => void; className?: string };
+
+export default function FiltersDrawer({ open, onOpenChange, children, onApply, onReset, className }: FiltersDrawerProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-[360px] sm:w-[420px]">
+      <SheetContent side="right" className={cn("w-[360px] sm:w-[420px]", className)}>
         <SheetHeader>
           <SheetTitle>Filters</SheetTitle>
         </SheetHeader>
@@ -23,5 +26,4 @@ export default function FiltersDrawer({ open, onOpenChange, children, onApply, o
     </Sheet>
   );
 }
-
 

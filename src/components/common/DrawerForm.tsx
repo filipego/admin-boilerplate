@@ -3,12 +3,24 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
 import UIButton from "@/components/common/UIButton";
 import { RHFForm } from "@/components/common/form/Form";
+import { cn } from "@/lib/utils";
 import { z } from "zod";
 
-export default function DrawerForm<TSchema extends z.ZodTypeAny>({ open, onOpenChange, title, schema, defaultValues, onSubmit, children }: { open: boolean; onOpenChange: (o: boolean) => void; title: string; schema: TSchema; defaultValues: z.infer<TSchema>; onSubmit: (v: z.infer<TSchema>) => Promise<void>; children: React.ReactNode }) {
+export type DrawerFormProps<TSchema extends z.ZodTypeAny> = {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  title: string;
+  schema: TSchema;
+  defaultValues: z.infer<TSchema>;
+  onSubmit: (v: z.infer<TSchema>) => Promise<void>;
+  children: React.ReactNode;
+  className?: string;
+};
+
+export default function DrawerForm<TSchema extends z.ZodTypeAny>({ open, onOpenChange, title, schema, defaultValues, onSubmit, children, className }: DrawerFormProps<TSchema>) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-[420px]">
+      <SheetContent side="right" className={cn("w-[420px]", className)}>
         <SheetHeader>
           <SheetTitle>{title}</SheetTitle>
         </SheetHeader>
@@ -27,5 +39,4 @@ export default function DrawerForm<TSchema extends z.ZodTypeAny>({ open, onOpenC
     </Sheet>
   );
 }
-
 

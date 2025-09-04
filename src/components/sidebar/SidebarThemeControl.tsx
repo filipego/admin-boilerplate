@@ -9,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { cn } from "@/utils/cn";
+import { cn } from "@/lib/utils";
 
 type SidebarThemeControlProps = { collapsed: boolean };
 
@@ -55,5 +55,4 @@ const SidebarThemeControl = ({ collapsed }: SidebarThemeControlProps) => {
 };
 
 export default SidebarThemeControl;
-
 

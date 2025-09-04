@@ -30,13 +30,15 @@ Key directories:
 
 Do's:
 - Reuse `src/components/common/*` wrappers for UI; prefer composition.
+- Use `cn` from `@/lib/utils` exclusively (no re-exports).
 - Route notifications and confirmations via `src/lib/toast.ts` and `src/lib/messages.ts`.
 - Use Supabase clients from `src/lib/supabase/{client,server,admin}.ts` (pick the right one).
 - Keep colors/styles tokenized; edit `globals.css` tokens, not hard-coded values.
 - Add navigation via `src/components/layout/sidebar.config.ts`.
 
 Don'ts:
-- Do not import primitives directly from `src/components/ui/*` in pages; wrap or use `common/*`.
+- Avoid importing primitives directly from `src/components/ui/*` in pages; prefer `common/*`.
+- Exception: primitives are acceptable in low-level layout chrome (Header/Sidebar) or when building new shared wrappers.
 - Do not inline dialogs/toasts/messages in pages.
 - Do not hardcode routes/tabs inside pages; use the sidebar config.
 - Do not bypass RLS; prefer RPC or server handlers when elevated access is needed.
@@ -182,6 +184,8 @@ Recommended CI steps:
 
 - Imports use path aliases: `@/components/...`, `@/lib/...`.
 - Common UI should come from `src/components/common/*`; prefer wrappers over raw primitives.
+- Buttons: use `UIButton` by default. Use the shadcn `Button` primitive only for low-level layout/icon-only controls or advanced `asChild` cases. Consider adding a `UIIconButton` wrapper if you need many icon-only buttons.
+- `cn` helper: always `import { cn } from "@/lib/utils"`.
 - Centralize user-facing copy in `src/lib/messages.ts` and notifications in `src/lib/toast.ts`.
 - Pages should avoid hardcoding nav; use `src/components/layout/sidebar.config.ts`.
 - Role/permission checks via `src/components/auth/Access.tsx` helpers (`AbilityProvider`, `Can`, `RequireRole`).

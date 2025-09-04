@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { cn } from "@/utils/cn";
+import { cn } from "@/lib/utils";
 
 type Tab = { id: string; label: string };
 
@@ -76,5 +76,4 @@ export default function InnerSidebar({ tabs, activeTab, onTabChange, initialWidt
     </aside>
   );
 }
-
 

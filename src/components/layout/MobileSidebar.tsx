@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Menu, LogOut } from "lucide-react";
-import { cn } from "@/utils/cn";
+import { cn } from "@/lib/utils";
 import { mainItems, personalItems, bottomItems } from "@/components/layout/sidebar.config";
 import SidebarThemeControl from "@/components/sidebar/SidebarThemeControl";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -192,5 +192,4 @@ const MobileSidebar = ({ showProfile, showSidebarTheme, showBottomActions }: Mob
 };
 
 export default MobileSidebar;
-
 

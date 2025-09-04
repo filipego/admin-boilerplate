@@ -1,22 +1,21 @@
 "use client";
 
-import { DayPicker } from "react-day-picker";
+import { DayPicker, type DateRange as RdpDateRange } from "react-day-picker";
 import "react-day-picker/dist/style.css";
 import { useState } from "react";
 import UIButton from "@/components/common/UIButton";
+import { cn } from "@/lib/utils";
 
-type Range = { from?: Date; to?: Date };
+export type DateRangePickerProps = { value?: RdpDateRange | undefined; onChange?: (r: RdpDateRange | undefined) => void; className?: string };
 
-export default function DateRangePicker({ value, onChange }: { value?: Range; onChange?: (r: Range) => void }) {
-  const [range, setRange] = useState<Range>(value ?? {});
+export default function DateRangePicker({ value, onChange, className }: DateRangePickerProps) {
+  const [range, setRange] = useState<RdpDateRange | undefined>(value);
   return (
-    <div className="rounded-lg border p-2">
-      <DayPicker mode="range" selected={range} onSelect={(r) => { setRange(r ?? {}); onChange?.(r ?? {}); }} />
+    <div className={cn("rounded-lg border p-2", className)}>
+      <DayPicker mode="range" selected={range} onSelect={(r) => { setRange(r); onChange?.(r); }} />
       <div className="flex justify-end">
-        <UIButton uiSize="sm" variant="outline" onClick={() => { setRange({}); onChange?.({}); }}>Reset</UIButton>
+        <UIButton uiSize="sm" variant="outline" onClick={() => { setRange(undefined); onChange?.(undefined); }}>Reset</UIButton>
       </div>
     </div>
   );
 }
-
-
