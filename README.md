@@ -119,7 +119,7 @@ import { MESSAGES } from "@/lib/messages";
 
 Content card with optional full-bleed top image, 3-dots menu (edit/delete), and linking options.
 
-Props: `{ title, description?, imageUrl?, onEdit?, onDelete?, href?, buttonHref?, buttonLabel? }`
+Props: `{ title, description?, imageUrl?, className?, unoptimizedImage?, onEdit?, onDelete?, href?, buttonHref?, buttonLabel? }`
 
 Rules:
 - If `imageUrl` is present, the image fills full width at the top with no padding; the card automatically removes its default top padding (`pt-0`) so the image is truly flush. Menu appears over the image.

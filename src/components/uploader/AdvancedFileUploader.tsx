@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import UIModalTwoColumn from "@/components/common/UIModalTwoColumn";
 import UIButton from "@/components/common/UIButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -63,6 +63,13 @@ export default function AdvancedFileUploader({
       return prev;
     });
   }, []);
+
+  // Cleanup any created ObjectURLs if the component unmounts without closing/uploading
+  useEffect(() => {
+    return () => {
+      revokePreviews();
+    };
+  }, [revokePreviews]);
 
   const estimateCompressedSize = async (file: File): Promise<number> => CompressionService.estimateCompressedSize(file, options);
 
@@ -289,5 +296,4 @@ export default function AdvancedFileUploader({
     />
   );
 }
-
 
