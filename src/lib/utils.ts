@@ -1,9 +1,21 @@
 export function checkOrigin(req: Request, allowedOrigins: string[] = []): boolean {
   try {
-    const origin = req.headers.get('origin') || req.headers.get('referer') || '';
-    if (!origin) return true; // allow same-origin/fetch from server
+    const headerValue = req.headers.get('origin') || req.headers.get('referer') || '';
+    if (!headerValue) return true; // allow same-origin/fetch from server
     if (allowedOrigins.length === 0) return true;
-    return allowedOrigins.some((o) => origin.startsWith(o));
+
+    // Normalize to strict origin (scheme + host + port)
+    const toOrigin = (value: string): string => {
+      try {
+        return new URL(value).origin;
+      } catch {
+        return value; // fallback to raw string if already origin-like
+      }
+    };
+
+    const requestOrigin = toOrigin(headerValue);
+    const allowed = allowedOrigins.map(toOrigin);
+    return allowed.some((o) => o === requestOrigin);
   } catch {
     return false;
   }

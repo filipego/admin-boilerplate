@@ -1,4 +1,3 @@
----
 description: For ANY selected component, show the actual token variables it already uses (light/dark) on the existing component card. When a user-defined class is present, enable inputs that override the SAME token names locally (or set the direct property if not token-driven). No new variables. No new panels.
 globs: src/**/*.{tsx,ts,css}
 alwaysApply: false

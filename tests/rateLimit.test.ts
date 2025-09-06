@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { rateLimit } from '@/lib/utils'
+import { rateLimit } from '../src/lib/utils'
 
 function reqWithIP(ip: string) {
   return new Request('http://test.local', {
@@ -39,5 +39,21 @@ describe('rateLimit', () => {
     vi.setSystemTime(new Date(windowMs + 1))
     expect(rateLimit(req, limit, windowMs)).toBe(true)
   })
-})
 
+  it('tracks different IPs independently', () => {
+    const limit = 2
+    const windowMs = 1_000
+    const ipA = reqWithIP('10.0.0.1')
+    const ipB = reqWithIP('10.0.0.2')
+
+    // Consume IP A quota
+    expect(rateLimit(ipA, limit, windowMs)).toBe(true)
+    expect(rateLimit(ipA, limit, windowMs)).toBe(true)
+    expect(rateLimit(ipA, limit, windowMs)).toBe(false)
+
+    // IP B should have its own counter
+    expect(rateLimit(ipB, limit, windowMs)).toBe(true)
+    expect(rateLimit(ipB, limit, windowMs)).toBe(true)
+    expect(rateLimit(ipB, limit, windowMs)).toBe(false)
+  })
+})

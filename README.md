@@ -762,4 +762,4 @@ Check the hosted demo here: [admin-boilerplate demo](https://admin-boilerplate-b
 
 ### Roadmap
 
-See the running list of planned components and status in [`md files/components-roadmap.md`](md%20files/components-roadmap.md).
+See the running list of planned components and status in [`md/archived/components-roadmap.md`](md/archived/components-roadmap.md).
