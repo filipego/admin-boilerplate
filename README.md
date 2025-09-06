@@ -76,7 +76,7 @@ Accessibility: internally uses `DialogTitle`/`DialogDescription`. Overlay has bl
 
 Two columns inside a modal. Columns scroll independently.
 
-Props: `{ open, onOpenChange, title, description?, size?, hideTitleVisually?, className?, columnsClassName?, gapClassName?, left, right, leftClassName?, rightClassName? }`
+Props: `{ open, onOpenChange, title, description?, size?, hideTitleVisually?, className?, columnsClassName?, gapClassName?, left, right, leftClassName?, rightClassName?, footer? }`
 
 ```tsx
 import UIModalTwoColumn from "@/components/common/UIModalTwoColumn";
@@ -89,6 +89,7 @@ import UIModalTwoColumn from "@/components/common/UIModalTwoColumn";
   columnsClassName="md:grid-cols-2"
   left={<div>Left content</div>}
   right={<div>Right content</div>}
+  footer={<div>Footer actions go here</div>}
 /> 
 ```
 

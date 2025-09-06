@@ -67,7 +67,7 @@ export default function FileListItem({
           </div>
           <div className="shrink-0">
             <UIButton uiSize="sm" variant="outline" onClick={() => onToggleCompression(!compressionEnabled)}>
-              {compressionEnabled ? "Compress" : "No Compress"}
+              {compressionEnabled ? "Disable Compression" : "Enable Compression"}
             </UIButton>
           </div>
           <div className="shrink-0">
@@ -101,5 +101,4 @@ export default function FileListItem({
     </Card>
   );
 }
-
 
