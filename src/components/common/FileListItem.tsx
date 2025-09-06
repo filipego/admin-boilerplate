@@ -75,7 +75,10 @@ export default function FileListItem({
           </div>
         </div>
         <div className="h-1 rounded bg-muted overflow-hidden">
-          <div className="h-full bg-primary" style={{ width: `${progress}%` }} />
+          <div
+            className="h-full bg-primary"
+            style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
+          />
         </div>
         {isCompressing ? (
           <div className="text-[11px] text-muted-foreground">Compressing... {compressionProgress}%</div>
@@ -101,4 +104,3 @@ export default function FileListItem({
     </Card>
   );
 }
-

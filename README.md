@@ -186,7 +186,7 @@ const [active, setActive] = useState("all");
 const tabs: TabItem[] = [
   { id: "all", label: "All Notes", count: 13, content: <div>All notes</div> },
   { id: "pinned", label: "Pinned Notes", count: 3, content: <div>Pinned</div> },
-  { id: "uncategorised", label: "Uncategorised", count: 1, content: <div>Misc</div> },
+  { id: "uncategorized", label: "Uncategorized", count: 1, content: <div>Misc</div> },
   { id: "shared", label: "Shared with Me", count: 1, content: <div>Shared</div> },
 ];
 
@@ -198,7 +198,7 @@ const tabs: TabItem[] = [
 
 Wrapper around TanStack Table with search, sort, pagination, and an export button. Designed to be themeable and extended with bulk actions.
 
-Props: `{ columns, data, searchPlaceholder?, initialPageSize?, className? }`
+Props: `{ columns, data, searchPlaceholder?, initialPageSize?, className?, initialSorting?, initialGlobalFilter?, initialColumnVisibility?, onStateChange? }`
 
 ```tsx
 import DataTable from "@/components/common/DataTable";
@@ -212,6 +212,18 @@ const columns: ColumnDef<Person>[] = [
 ];
 
 <DataTable columns={columns} data={[{ name: "Alice", email: "a@x.com", role: "Admin" }]} />
+
+// With initial state + onStateChange observer
+import type { DataTableStateSnapshot } from "@/components/common/DataTable";
+const handleState = (s: DataTableStateSnapshot) => console.log("table state:", s);
+<DataTable
+  columns={columns}
+  data={data}
+  initialSorting={[{ id: "name", desc: false }]}
+  initialGlobalFilter="alice"
+  initialColumnVisibility={{ email: true, role: true }}
+  onStateChange={handleState}
+/> 
 ```
 
 ### Form System (RHF + Zod)

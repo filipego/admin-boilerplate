@@ -69,7 +69,7 @@ export default function ExamplesPage() {
   const tabs: TabItem[] = [
     { id: "all", label: "All Notes", count: 13, content: <div className="text-sm text-muted-foreground">All notes content</div> },
     { id: "pinned", label: "Pinned Notes", count: 3, content: <div className="text-sm text-muted-foreground">Pinned notes content</div> },
-    { id: "uncategorised", label: "Uncategorised", count: 1, content: <div className="text-sm text-muted-foreground">Uncategorised content</div> },
+    { id: "uncategorized", label: "Uncategorized", count: 1, content: <div className="text-sm text-muted-foreground">Uncategorized content</div> },
     { id: "shared", label: "Shared with Me", count: 1, content: <div className="text-sm text-muted-foreground">Shared content</div> },
   ];
 
