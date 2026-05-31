@@ -40,6 +40,8 @@ Update this file after every meaningful implementation change.
 - Replaced the temporary local smoke user with a sanitized production-like local auth/profile import containing only users, identities, profiles, permissions, and role permissions.
 - Excluded production sessions, refresh tokens, audit entries, one-time tokens, OAuth, MFA, SSO, SAML, and WebAuthn data from the local import.
 - Ignored `supabase/.snapshots/` so local production-derived auth snapshots are not committed.
+- Improved starter-friendly component wrappers after a shadcn alignment review: form fields now use the shared input primitive with label/error accessibility, DataTable now composes the shadcn table primitive with optional export and empty states, UICard avoids full-card link overlays when nested actions exist, icon buttons work through `UIButton`, and sidebar profile avatars use a common avatar wrapper.
+- Removed generated `src/components/.DS_Store`.
 
 ## In Progress
 
@@ -89,3 +91,4 @@ Update this file after every meaningful implementation change.
 - Verification after the Supabase auth hardening and local-dev setup pass: `npm run test -- --run`, `npm run lint`, and `npm run build` all pass. A targeted `npx tsc --noEmit` check showed no errors in changed auth files, while full typecheck still reports pre-existing Theme Tweaker, R2 upload, CSV import, and shared form typing debt.
 - Local runtime check: Supabase local stack started, migrations applied successfully, Next dev server started at `http://localhost:3000`, and `/login` returns HTTP 200.
 - Local Supabase data check after production-like import: 2 auth users, 2 identities, 2 profiles, 4 permissions, and 4 role permissions.
+- Verification after the component wrapper pass: `npm run lint` exits with 0 errors and 237 existing warnings. A filtered `npx tsc --noEmit --pretty false` check showed no errors in the touched component files; full typecheck still fails in known Theme Tweaker, R2 upload, and CSV import areas that were outside this task.

@@ -67,6 +67,7 @@ Common wrappers include:
 
 - `UIButton`
 - `UICard`
+- `UIAvatar`
 - `UIModal`
 - `UIModalTwoColumn`
 - `UIConfirm`
@@ -94,6 +95,8 @@ Common wrappers include:
 - `NotesBoard`
 - `CompressionSettings`
 - `form/Form` and `form/Fields`
+
+`DataTable` composes the shadcn table primitive through the common wrapper layer and supports sortable headers, empty states, and optional export actions. Form fields should use `form/Form` and `form/Fields` so labels, invalid states, and shared input styling stay consistent across starter projects. Use `UIAvatar` for profile/avatar display outside the common layer instead of importing avatar primitives directly.
 
 ## Layout Patterns
 

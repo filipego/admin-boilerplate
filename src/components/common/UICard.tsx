@@ -42,23 +42,44 @@ export default function UICard({
   buttonLabel = "Open",
 }: UICardProps) {
   const hasImage = Boolean(imageUrl);
+  const hasActions = Boolean(onEdit || onDelete);
+  const useCardOverlay = Boolean(href && !buttonHref && !hasActions);
+  const titleContent = href && !useCardOverlay ? (
+    <Link href={href!} className="hover:underline">
+      {title}
+    </Link>
+  ) : title;
 
   return (
     <div className={cn("relative group", className)}>
-      <Card className={cn("overflow-hidden", hasImage && "pt-0")}> 
+      <Card className={cn("relative overflow-hidden", hasImage && "pt-0")}>
         {/* Image block (edge-to-edge) */}
         {hasImage ? (
           <div className="relative">
-            <Image
-              src={imageUrl!}
-              alt=""
-              width={1200}
-              height={400}
-              sizes="100vw"
-              className="block w-full h-40 object-cover"
-              unoptimized={Boolean(unoptimizedImage)}
-            />
-            <div className="absolute top-2 right-2">
+            {href && !useCardOverlay ? (
+              <Link href={href!} aria-label={title}>
+                <Image
+                  src={imageUrl!}
+                  alt=""
+                  width={1200}
+                  height={400}
+                  sizes="100vw"
+                  className="block w-full h-40 object-cover"
+                  unoptimized={Boolean(unoptimizedImage)}
+                />
+              </Link>
+            ) : (
+              <Image
+                src={imageUrl!}
+                alt=""
+                width={1200}
+                height={400}
+                sizes="100vw"
+                className="block w-full h-40 object-cover"
+                unoptimized={Boolean(unoptimizedImage)}
+              />
+            )}
+            <div className="absolute top-2 right-2 z-10">
               <ActionsMenu onEdit={onEdit} onDelete={onDelete} />
             </div>
           </div>
@@ -70,12 +91,12 @@ export default function UICard({
           {!hasImage ? (
             <div className="flex items-start justify-between gap-3">
               <div>
-                <Heading as="h3" size="md" className="leading-tight mt-1">{title}</Heading>
+                <Heading as="h3" size="md" className="leading-tight mt-1">{titleContent}</Heading>
               </div>
               <ActionsMenu onEdit={onEdit} onDelete={onDelete} />
             </div>
           ) : (
-            <Heading as="h3" size="md" className="leading-tight">{title}</Heading>
+            <Heading as="h3" size="md" className="leading-tight">{titleContent}</Heading>
           )}
           {description ? (
             <p className="text-sm text-muted-foreground">{description}</p>
@@ -91,8 +112,8 @@ export default function UICard({
         </div>
 
         {/* Full-card link overlay */}
-        {href ? (
-          <Link href={href} className="absolute inset-0" aria-label={title} />
+        {useCardOverlay ? (
+          <Link href={href!} className="absolute inset-0" aria-label={title} />
         ) : null}
       </Card>
     </div>
@@ -125,4 +146,3 @@ function ActionsMenu({ onEdit, onDelete }: { onEdit?: () => void; onDelete?: () 
     </DropdownMenu>
   );
 }
-

@@ -2,25 +2,25 @@
 
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, FormProvider, type SubmitHandler } from "react-hook-form";
+import { useForm, FormProvider, type DefaultValues, type FieldValues, type Resolver, type SubmitHandler } from "react-hook-form";
 import { cn } from "@/lib/utils";
 
-export type FormProps<TSchema extends z.ZodTypeAny> = {
-  schema: TSchema;
-  defaultValues: z.infer<TSchema>;
-  onSubmit: (values: z.infer<TSchema>) => Promise<void> | void;
+export type FormProps<TValues extends FieldValues> = {
+  schema: z.ZodType<TValues, FieldValues>;
+  defaultValues: DefaultValues<TValues>;
+  onSubmit: (values: TValues) => Promise<void> | void;
   className?: string;
   children: React.ReactNode;
 };
 
-export function RHFForm<TSchema extends z.ZodTypeAny>({ schema, defaultValues, onSubmit, className, children }: FormProps<TSchema>) {
-  const methods = useForm<z.infer<TSchema>>({
-    resolver: zodResolver(schema),
+export function RHFForm<TValues extends FieldValues>({ schema, defaultValues, onSubmit, className, children }: FormProps<TValues>) {
+  const methods = useForm<TValues>({
+    resolver: zodResolver(schema) as Resolver<TValues>,
     defaultValues,
     mode: "onSubmit",
   });
 
-  const handleSubmit: SubmitHandler<z.infer<TSchema>> = async (values) => {
+  const handleSubmit: SubmitHandler<TValues> = async (values) => {
     await onSubmit(values);
   };
 
@@ -32,5 +32,3 @@ export function RHFForm<TSchema extends z.ZodTypeAny>({ schema, defaultValues, o
     </FormProvider>
   );
 }
-
-

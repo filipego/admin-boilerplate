@@ -4,12 +4,12 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
+import UIButton from "@/components/common/UIButton";
 import { Menu, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { mainItems, personalItems, bottomItems } from "@/components/layout/sidebar.config";
 import SidebarThemeControl from "@/components/sidebar/SidebarThemeControl";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import UIAvatar from "@/components/common/UIAvatar";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type MobileSidebarProps = {
@@ -56,7 +56,7 @@ const MobileSidebar = ({ showProfile, showSidebarTheme, showBottomActions }: Mob
           .select("username, email, avatar_url")
           .eq("id", currentUserId)
           .maybeSingle()
-          .then(({ data: p }) => { if (p) setProfile(p); });
+          .then(({ data: p }: { data: Profile | null }) => { if (p) setProfile(p); });
       })
       .subscribe();
     return () => { channel.unsubscribe(); };
@@ -77,9 +77,9 @@ const MobileSidebar = ({ showProfile, showSidebarTheme, showBottomActions }: Mob
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="md:hidden" aria-label="Open menu">
+        <UIButton variant="ghost" size="icon" className="md:hidden" aria-label="Open menu">
           <Menu className="h-5 w-5" />
-        </Button>
+        </UIButton>
       </SheetTrigger>
       <SheetContent side="left" className="w-3/4 sm:max-w-[320px] p-0">
         <div className="sr-only">
@@ -138,12 +138,7 @@ const MobileSidebar = ({ showProfile, showSidebarTheme, showBottomActions }: Mob
             <div className="mt-auto border-t border-sidebar-border pt-2">
               {showProfile ? (
                 <div className="flex items-center gap-3 rounded-md px-3 py-2">
-                  <Avatar className="h-8 w-8">
-                    {profile?.avatar_url ? (
-                      <AvatarImage src={profile.avatar_url} alt={profile?.username ?? profile?.email ?? ""} />
-                    ) : null}
-                    <AvatarFallback>{initials}</AvatarFallback>
-                  </Avatar>
+                  <UIAvatar src={profile?.avatar_url} alt={profile?.username ?? profile?.email ?? ""} fallback={initials} />
                   <div className="text-sm">
                     <div className="font-medium">{profile?.username || "Profile"}</div>
                     <div className="text-xs text-muted-foreground">{profile?.email || ""}</div>
@@ -192,4 +187,3 @@ const MobileSidebar = ({ showProfile, showSidebarTheme, showBottomActions }: Mob
 };
 
 export default MobileSidebar;
-
