@@ -42,6 +42,8 @@ Update this file after every meaningful implementation change.
 - Ignored `supabase/.snapshots/` so local production-derived auth snapshots are not committed.
 - Improved starter-friendly component wrappers after a shadcn alignment review: form fields now use the shared input primitive with label/error accessibility, DataTable now composes the shadcn table primitive with optional export and empty states, UICard avoids full-card link overlays when nested actions exist, icon buttons work through `UIButton`, and sidebar profile avatars use a common avatar wrapper.
 - Removed generated `src/components/.DS_Store`.
+- Fixed the common `KanbanBoard` drag behavior so cards can move between columns by dropping onto another card or the target column.
+- Improved `KanbanBoard` drag feedback so the destination column stays highlighted when hovering over cards in populated columns, with a visible dragging state on the active card.
 
 ## In Progress
 
@@ -92,3 +94,5 @@ Update this file after every meaningful implementation change.
 - Local runtime check: Supabase local stack started, migrations applied successfully, Next dev server started at `http://localhost:3000`, and `/login` returns HTTP 200.
 - Local Supabase data check after production-like import: 2 auth users, 2 identities, 2 profiles, 4 permissions, and 4 role permissions.
 - Verification after the component wrapper pass: `npm run lint` exits with 0 errors and 237 existing warnings. A filtered `npx tsc --noEmit --pretty false` check showed no errors in the touched component files; full typecheck still fails in known Theme Tweaker, R2 upload, and CSV import areas that were outside this task.
+- Verification after the Kanban drag fix: `npm run lint` exits with 0 errors and 237 existing warnings. Browser check on `http://localhost:3000/examples` confirmed dragging a To Do card into In Progress and an In Progress card into Done. Full `npx tsc --noEmit --pretty false` still fails in pre-existing Theme Tweaker, R2 upload, CSV import, form typing, and users modal areas; no `KanbanBoard` type errors were reported.
+- Verification after the Kanban drag feedback fix: `npm run lint` exits with 0 errors and 237 existing warnings. A targeted `npx tsc --noEmit --pretty false` filter showed no `KanbanBoard` errors. Browser check on `http://localhost:3000/examples` confirmed dragging into a populated column still moves the card correctly and logged no console errors.
