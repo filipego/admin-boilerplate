@@ -28,15 +28,9 @@ export async function POST() {
       .eq("id", user.id)
       .maybeSingle();
 
-    const res = NextResponse.json({ profile });
-    if (profile?.role) {
-      // Cache role in an HttpOnly cookie to avoid repeated DB checks on each page
-      res.cookies.set("role", String(profile.role), { httpOnly: true, sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 });
-    }
-    return res;
+    return NextResponse.json({ profile });
   } catch {
     return NextResponse.json({ error: "failed" }, { status: 500 });
   }
 }
-
 

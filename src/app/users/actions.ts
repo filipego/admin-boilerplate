@@ -1,6 +1,8 @@
 "use server";
 
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getSupabaseServerClient } from "@/lib/supabase/server";
+import { assertHasPermission } from "@/lib/permissions.server";
 
 export type CreateUserInput = {
 	email: string;
@@ -11,6 +13,13 @@ export type CreateUserInput = {
 };
 
 export async function createUserAdmin(input: CreateUserInput) {
+	const supabase = getSupabaseServerClient();
+	const {
+		data: { user },
+	} = await supabase.auth.getUser();
+	if (!user) throw new Error("Not authenticated");
+	await assertHasPermission(user.id, "users.edit");
+
 	const admin = getSupabaseAdminClient();
 	const { data: created, error } = await admin.auth.admin.createUser({ email: input.email, password: input.password, email_confirm: true });
 	if (error || !created.user) throw new Error(error?.message || "Failed to create user");
@@ -24,5 +33,4 @@ export async function createUserAdmin(input: CreateUserInput) {
 	await admin.from("profiles").update({ updated_at: new Date().toISOString() }).eq("id", userId);
 	return { ok: true, userId } as const;
 }
-
 

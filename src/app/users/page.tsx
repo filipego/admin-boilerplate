@@ -7,7 +7,6 @@ import { redirect } from "next/navigation";
 // import UIButton from "@/components/common/UIButton";
 import CreateUserButton from "./CreateUserButton";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
-import { cookies } from "next/headers";
 export const dynamic = "force-dynamic";
 
 export default async function UsersPage() {
@@ -15,18 +14,12 @@ export default async function UsersPage() {
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) redirect("/login");
   const admin = getSupabaseAdminClient();
-  // Use cookie if available to avoid repeat DB checks (await per Next dynamic API)
-  const cookieStore = await cookies();
-  const roleCookie = cookieStore.get("role")?.value;
-  let effectiveRole = roleCookie || "";
-  if (!effectiveRole) {
-    const { data: meRowAdmin } = await admin
-      .from("profiles")
-      .select("id, role")
-      .eq("id", auth.user.id)
-      .maybeSingle();
-    effectiveRole = meRowAdmin?.role ?? "client";
-  }
+  const { data: meRowAdmin } = await admin
+    .from("profiles")
+    .select("id, role")
+    .eq("id", auth.user.id)
+    .maybeSingle();
+  const effectiveRole = meRowAdmin?.role ?? "client";
 
   if (effectiveRole !== "admin") redirect("/dashboard");
 
@@ -55,5 +48,4 @@ export default async function UsersPage() {
     </AppLayout>
   );
 }
-
 

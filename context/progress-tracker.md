@@ -4,11 +4,11 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Dependency upgrade pass completed on branch `dev`.
+- Supabase auth hardening pass completed on branch `dev`.
 
 ## Current Goal
 
-- Upgrade the boilerplate to Next.js 16 and apply low-risk dependency updates without changing app behavior.
+- Harden the existing Supabase authentication and authorization surface without rewriting the login flow.
 
 ## Completed
 
@@ -25,6 +25,21 @@ Update this file after every meaningful implementation change.
 - Migrated shadcn/Radix primitives to the current unified `radix-ui` package using `npx shadcn@latest migrate radix -y`.
 - Removed direct dependencies on the old individual `@radix-ui/react-*` packages after confirming app source no longer imports them.
 - Upgraded additional non-Supabase packages after isolated checks: `vitest` 4.1.7, `lucide-react` 1.17.0, `sonner` 2.0.7, `react-day-picker` 10.0.1, and `tailwind-variants` 3.2.2.
+- Corrected the Supabase project context to local project ref `bwlskocvvspbaltihfvo`; MCP access to that project is currently blocked by permissions, so no remote migrations or schema changes were applied.
+- Added Supabase SSR proxy session refresh wiring for Next.js 16.
+- Removed unsafe dev/admin seed routes that could create or promote admin users.
+- Stopped using the cached `role` cookie for admin authorization and removed role cookie writes from profile ensure logic.
+- Added server-side auth and permission checks inside user creation server actions before using the service-role client.
+- Added a Supabase migration that revokes broad client-side profile updates and grants authenticated users update access only to editable profile columns.
+- Initialized local Supabase CLI configuration for future `supabase start` usage once Docker is available.
+- Added project-scoped Supabase MCP configuration in `.mcp.json` for project ref `bwlskocvvspbaltihfvo`.
+- Added project-local Supabase CLI dependency, npm scripts, local env template, and local Supabase dev workflow documentation.
+- Installed Docker Desktop manually from the downloaded app bundle and started the local Supabase dev stack.
+- Switched ignored `.env.local` to local Supabase values after backing up the remote env locally.
+- Linked the Supabase CLI to production project `bwlskocvvspbaltihfvo`.
+- Replaced the temporary local smoke user with a sanitized production-like local auth/profile import containing only users, identities, profiles, permissions, and role permissions.
+- Excluded production sessions, refresh tokens, audit entries, one-time tokens, OAuth, MFA, SSO, SAML, and WebAuthn data from the local import.
+- Ignored `supabase/.snapshots/` so local production-derived auth snapshots are not committed.
 
 ## In Progress
 
@@ -36,6 +51,8 @@ Update this file after every meaningful implementation change.
 - Later, plan the dedicated Supabase login/auth rewrite using Supabase-specific guidance.
 - Consider a separate cleanup pass for lint warnings surfaced by the Next 16 ESLint config.
 - Supabase package upgrades remain deferred for the dedicated Supabase auth rewrite.
+- Supabase MCP authentication needs to be completed from the local project MCP config after reloading the agent session.
+- Docker Desktop is running, but the `docker` CLI is not linked into shell `PATH` because the Homebrew cask's sudo symlink step could not run non-interactively.
 
 ## Open Questions
 
@@ -69,3 +86,6 @@ Update this file after every meaningful implementation change.
 - Supabase login rewrite is intentionally deferred.
 - Verification after the Next.js 16 upgrade: `npm run test -- --run`, `npm run lint`, and `npm run build` all pass.
 - Verification after the non-Supabase dependency upgrades: `npm run test -- --run`, `npm run lint`, and `npm run build` all pass.
+- Verification after the Supabase auth hardening and local-dev setup pass: `npm run test -- --run`, `npm run lint`, and `npm run build` all pass. A targeted `npx tsc --noEmit` check showed no errors in changed auth files, while full typecheck still reports pre-existing Theme Tweaker, R2 upload, CSV import, and shared form typing debt.
+- Local runtime check: Supabase local stack started, migrations applied successfully, Next dev server started at `http://localhost:3000`, and `/login` returns HTTP 200.
+- Local Supabase data check after production-like import: 2 auth users, 2 identities, 2 profiles, 4 permissions, and 4 role permissions.
