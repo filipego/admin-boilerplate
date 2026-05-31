@@ -4,11 +4,11 @@
 
 | Layer | Technology | Role |
 | --- | --- | --- |
-| Framework | Next.js 15 App Router | Server components, layouts, pages, route handlers, and server actions |
+| Framework | Next.js 16 App Router | Server components, layouts, pages, route handlers, and server actions |
 | Language | TypeScript strict mode | Typed application and feature code |
-| Runtime UI | React 19 | Component model and client interactivity |
+| Runtime UI | React 19.2 | Component model and client interactivity |
 | Styling | Tailwind CSS v4 + CSS custom properties | Token-based styling and utility classes |
-| UI primitives | shadcn-style Radix components | Low-level accessible primitives in `src/components/ui` |
+| UI primitives | shadcn v4 Radix components | Low-level accessible primitives in `src/components/ui` backed by the unified `radix-ui` package |
 | Shared UI | Project wrappers | App-facing components in `src/components/common` |
 | Auth/Database | Supabase | Current auth, profiles, roles, permissions, RLS, and storage policies |
 | Storage | Supabase Storage + optional Cloudflare R2 routes | Avatar and file upload support |
@@ -80,3 +80,4 @@ Use environment variables and existing helpers. Do not hardcode keys, URLs, loca
 8. Avoid parallel systems for auth, navigation, notifications, confirmations, forms, or base UI.
 9. Keep files under 300 LOC for new work; split new components before they exceed that limit.
 10. Existing Supabase login is current-state infrastructure and should not be rewritten until explicitly requested.
+11. Next.js dynamic request APIs must use the async API shape required by Next 16.
