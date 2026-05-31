@@ -1,55 +1,29 @@
-# Prompting Guidelines for Codex Tasks (Starter – New Projects)
+## Application Building Context
 
-## Guardrails
+Read the following files in order before implementing
+or making any architectural decision:
 
-* **No Hardcoding:** Never hardcode colors, API keys, or paths. Use tokens, environment variables, or existing helpers.
-* **Scope Control:** Only edit files/directories explicitly listed in the task.
-* **Consistency:** Follow existing patterns, naming conventions, and component structures.
+1. `context/project-overview.md` - product definition,
+   goals, features, scope, and current out-of-scope work
+2. `context/architecture.md` - system structure,
+   boundaries, storage model, auth model, and invariants
+3. `context/ui-context.md` - theme, tokens, typography,
+   component wrappers, layout, and icon conventions
+4. `context/code-standards.md` - implementation rules,
+   TypeScript, Next.js, styling, API, and file organization
+5. `context/ai-workflow-rules.md` - development workflow,
+   scoping rules, protected files, and delivery approach
+6. `context/progress-tracker.md` - current phase,
+   completed work, known technical debt, and next steps
 
-## Tool Preambles
+Update `context/progress-tracker.md` after each
+meaningful implementation change.
 
-Always begin by:
+If implementation changes the architecture, scope, UI
+system, or standards documented in the context files,
+update the relevant file before continuing.
 
-1. Restating the user’s goal in one sentence.
-2. Listing the files/functions you will touch (keep it short).
-3. After changes, summarize what was changed (paths + line counts).
-
-## Reasoning Effort
-
-* **Low effort:** Quick fixes, one-line imports, or minor style changes.
-* **Medium effort (default):** Multi-file tasks or moderate features.
-* **High effort:** Large features, complex debugging, or migrations.
-
-## Persistence
-
-* Keep going until the task is complete, unless instructed otherwise.
-* If uncertain, pick the most reasonable assumption, act on it, and note it at the end.
-
-## Style & Standards
-
-* Match the codebase’s standards (imports, file structure, comments).
-* Keep files under **300 LOC**; split components if larger.
-* Use **globals.css tokens** for colors/spacing/borders. If missing, add tokens rather than hardcoding.
-
-## Component Wrappers & Imports (Layering Rules)
-
-* **Always check `components/common`** (or the designated “common” folder) **for an existing wrapper** before creating or importing anything new.
-* **Do not import third-party UI primitives directly in pages or features.** Use the project’s **wrapper components** instead.
-* If a wrapper doesn’t exist, **create a small wrapper in `components/common`** and use that—rather than importing the library component directly.
-* Apply this to common UI needs (notifications/toasts, cards, buttons, inputs, tabs, etc.) **without naming specific third-party components** here.
-* Use the **Heading** component for headings.
-* **Enforcement rule:** Never import from `@/components/ui/*` outside of `components/common/*` or the `components/ui/*` layer itself.
-
-## Wording & Copy Preservation
-
-* **Preserve exact user-visible wording** (titles, labels, button text, help text, descriptions) from provided specs, mockups, or existing screens.
-* **Do not paraphrase or “improve”** copy unless explicitly instructed.
-* When extracting to components, **pass existing strings via props unchanged**.
-
-## Reset Line (for new chats)
-
-```
-Context reset: This is a new project setup. Follow the project’s layering rules:
-pages/features → components/common (wrappers) → components/ui (base primitives).
-Do not import from @/components/ui/* outside the common/ui layers.
-```
+Context reset: Work inside the admin boilerplate structure.
+Follow the layering rules:
+pages/features -> components/common wrappers -> components/ui primitives.
+Do not import from `@/components/ui/*` outside the common/ui layers.
