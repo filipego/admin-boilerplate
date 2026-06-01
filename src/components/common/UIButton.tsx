@@ -18,7 +18,8 @@ const sizeToClass: Record<UIButtonSize, string> = {
 export default function UIButton({ uiSize = "md", className, ...props }: UIButtonProps) {
   const buttonProps = props as React.ComponentProps<typeof ShadButton>;
   const type = (buttonProps.type as React.ButtonHTMLAttributes<HTMLButtonElement>["type"]) ?? "button";
-  return <ShadButton {...buttonProps} type={type} className={cn(sizeToClass[uiSize], className)} />;
-}
+  const sizeClass = buttonProps.size ? undefined : sizeToClass[uiSize];
 
+  return <ShadButton {...buttonProps} type={type} className={cn(sizeClass, className)} />;
+}
 

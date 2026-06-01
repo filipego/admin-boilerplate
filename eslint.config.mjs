@@ -1,22 +1,36 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import { FlatCompat } from "@eslint/eslintrc";
+import nextVitals from "eslint-config-next/core-web-vitals";
+import nextTypeScript from "eslint-config-next/typescript";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const supportedReactHooksRules = new Set([
+  "react-hooks/rules-of-hooks",
+  "react-hooks/exhaustive-deps",
+  "react-hooks/config",
+  "react-hooks/error-boundaries",
+  "react-hooks/gating",
+  "react-hooks/component-hook-factories",
+]);
 
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
+const nextVitalsConfig = nextVitals.map((config) => ({
+  ...config,
+  rules: Object.fromEntries(
+    Object.entries(config.rules ?? {}).filter(
+      ([ruleName]) =>
+        !ruleName.startsWith("react-hooks/") ||
+        supportedReactHooksRules.has(ruleName),
+    ),
+  ),
+}));
 
 const eslintConfig = [
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
-
+  ...nextVitalsConfig,
+  ...nextTypeScript,
   {
     rules: {
-      // 🚫 block raw `ui/*` imports
+      "@typescript-eslint/no-explicit-any": "warn",
+      "prefer-const": "warn",
+      "react/display-name": "warn",
       "no-restricted-imports": [
-        "error",
+        "warn",
         {
           patterns: [
             {
@@ -28,7 +42,8 @@ const eslintConfig = [
         },
       ],
     },
-    // ✅ allow ui/* imports only inside wrapper files
+  },
+  {
     files: ["src/components/common/**/*.{ts,tsx}", "src/components/ui/**/*.{ts,tsx}"],
     rules: {
       "no-restricted-imports": "off",

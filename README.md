@@ -7,6 +7,28 @@ npm i
 npm run dev
 ```
 
+### Local Supabase Development
+
+Start the local Supabase stack before running the app against local auth and database services:
+
+```bash
+npm run supabase:start
+```
+
+Then print the local Supabase environment values and copy them into `.env.local`:
+
+```bash
+npm run supabase:status
+```
+
+Run the app in local development mode:
+
+```bash
+npm run dev:local
+```
+
+Docker Desktop must be running for `npm run supabase:start`. See `context/local-supabase-dev.md` for the full local workflow, including reset and production-like local data import notes.
+
 ### Environment Variables
 
 Create `.env.local` with:

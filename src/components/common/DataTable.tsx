@@ -14,8 +14,16 @@ import {
 } from "@tanstack/react-table";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import UIButton from "@/components/common/UIButton";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronsUpDown, ChevronLeft, ChevronRight } from "lucide-react";
 
 export type DataTableStateSnapshot = {
   sorting: SortingState;
@@ -35,9 +43,11 @@ export type DataTableProps<TData, TValue> = {
   initialColumnVisibility?: VisibilityState;
   // Observe state changes
   onStateChange?: (s: DataTableStateSnapshot) => void;
+  onExport?: () => void;
+  emptyMessage?: string;
 };
 
-export default function DataTable<TData, TValue>({ columns, data, searchPlaceholder = "Search...", initialPageSize = 10, className, initialSorting = [], initialGlobalFilter = "", initialColumnVisibility = {}, onStateChange }: DataTableProps<TData, TValue>) {
+export default function DataTable<TData, TValue>({ columns, data, searchPlaceholder = "Search...", initialPageSize = 10, className, initialSorting = [], initialGlobalFilter = "", initialColumnVisibility = {}, onStateChange, onExport, emptyMessage = "No results." }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>(initialSorting);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(initialColumnVisibility);
@@ -75,42 +85,58 @@ export default function DataTable<TData, TValue>({ columns, data, searchPlacehol
           className="h-9 w-56"
         />
         <div className="grow" />
-        <UIButton uiSize="sm" variant="outline">Export</UIButton>
+        {onExport ? (
+          <UIButton uiSize="sm" variant="outline" onClick={onExport}>Export</UIButton>
+        ) : null}
       </div>
 
       {/* Table */}
       <div className="rounded-md border">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/50">
+        <Table>
+          <TableHeader className="bg-muted/50">
             {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
+              <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <th key={header.id} className="text-left font-medium px-3 py-2">
+                  <TableHead key={header.id} className="px-3">
                     {header.isPlaceholder ? null : (
-                      <div className={cn(header.column.getCanSort() && "cursor-pointer select-none")}
-                        onClick={header.column.getToggleSortingHandler()}
-                      >
-                        {flexRender(header.column.columnDef.header, header.getContext())}
-                        {{ asc: " ▲", desc: " ▼" }[header.column.getIsSorted() as string] ?? null}
-                      </div>
+                      header.column.getCanSort() ? (
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-1.5 text-left font-medium"
+                          onClick={header.column.getToggleSortingHandler()}
+                        >
+                          {flexRender(header.column.columnDef.header, header.getContext())}
+                          <SortIcon direction={header.column.getIsSorted()} />
+                        </button>
+                      ) : (
+                        flexRender(header.column.columnDef.header, header.getContext())
+                      )
                     )}
-                  </th>
+                  </TableHead>
                 ))}
-              </tr>
+              </TableRow>
             ))}
-          </thead>
-          <tbody>
-            {table.getRowModel().rows.map((row) => (
-              <tr key={row.id} className="border-t">
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="px-3 py-2">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id} className="px-3">
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={table.getVisibleLeafColumns().length} className="h-24 text-center text-muted-foreground">
+                  {emptyMessage}
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </div>
 
       {/* Pagination */}
@@ -132,4 +158,8 @@ export default function DataTable<TData, TValue>({ columns, data, searchPlacehol
   );
 }
 
-
+function SortIcon({ direction }: { direction: false | "asc" | "desc" }) {
+  if (direction === "asc") return <ArrowUp className="h-3.5 w-3.5" aria-hidden />;
+  if (direction === "desc") return <ArrowDown className="h-3.5 w-3.5" aria-hidden />;
+  return <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />;
+}

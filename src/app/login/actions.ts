@@ -1,4 +1,5 @@
 "use server";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getSupabaseServerClientWritable } from "@/lib/supabase/server";
 
 export type LoginResult = {
@@ -48,7 +49,8 @@ export async function loginAction(_: LoginResult, formData: FormData): Promise<L
     data: { user: signedInUser },
   } = await supabase.auth.getUser();
   if (signedInUser) {
-    await supabase
+    const admin = getSupabaseAdminClient();
+    await admin
       .from("profiles")
       .upsert({ id: signedInUser.id, email: signedInUser.email ?? email }, { onConflict: "id" });
 
@@ -57,11 +59,10 @@ export async function loginAction(_: LoginResult, formData: FormData): Promise<L
       .map((e) => e.trim().toLowerCase())
       .filter(Boolean);
     if (adminEmails.includes((signedInUser.email ?? email).toLowerCase())) {
-      await supabase.from("profiles").update({ role: "admin" }).eq("id", signedInUser.id);
+      await admin.from("profiles").update({ role: "admin" }).eq("id", signedInUser.id);
     }
   }
 
   return { success: true };
 }
-
 

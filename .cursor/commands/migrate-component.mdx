@@ -1,0 +1,17 @@
+# 🔀 Migrate Component to Shared Library
+
+## Goal
+
+Move the specified component to the shared components library (e.g., `components/ui/` or `components/common/`) and update all imports across the codebase.
+
+## Instructions
+
+- Ensure the component is self-contained and doesn’t rely on page-specific context.
+- Move utility functions it needs into `lib/` or `utils/` if appropriate.
+- Update all usages to import from the new location.
+- Add a short README comment block if it’s a core shared component.
+
+## Output
+
+1. Updated component file in its new location.
+2. List of files you updated with new imports.

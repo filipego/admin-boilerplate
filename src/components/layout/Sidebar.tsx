@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useSidebarStore } from "@/store/sidebar";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import UIButton from "@/components/common/UIButton";
+import UIAvatar from "@/components/common/UIAvatar";
 import SidebarThemeControl from "@/components/sidebar/SidebarThemeControl";
 import { useEffect, useMemo, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -61,7 +61,7 @@ const Sidebar = () => {
           .select("username, email, avatar_url")
           .eq("id", currentUserId)
           .maybeSingle()
-          .then(({ data: p }) => { if (p) setProfile(p); });
+          .then(({ data: p }: { data: Profile | null }) => { if (p) setProfile(p); });
       })
       .subscribe();
     return () => { channel.unsubscribe(); };
@@ -104,7 +104,7 @@ const Sidebar = () => {
           >
             Studio Admin
           </Link>
-          <Button
+          <UIButton
             variant="ghost"
             size="icon"
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
@@ -112,7 +112,7 @@ const Sidebar = () => {
             onClick={handleToggle}
           >
             {collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
-          </Button>
+          </UIButton>
         </div>
 
         <nav data-ui="sidebar-nav" className="px-2 py-2 flex-1 flex flex-col">
@@ -176,12 +176,7 @@ const Sidebar = () => {
                   collapsed && "justify-center"
                 )}
               >
-                <Avatar className="h-8 w-8">
-                  {profile?.avatar_url ? (
-                    <AvatarImage src={profile.avatar_url} alt={profile?.username ?? profile?.email ?? ""} />
-                  ) : null}
-                  <AvatarFallback>{initials}</AvatarFallback>
-                </Avatar>
+                <UIAvatar src={profile?.avatar_url} alt={profile?.username ?? profile?.email ?? ""} fallback={initials} />
                 <div className={cn("text-sm", collapsed && "sr-only")}>
                   <div className="font-medium">{profile?.username || "Profile"}</div>
                   <div className="text-xs text-muted-foreground">{profile?.email || ""}</div>
