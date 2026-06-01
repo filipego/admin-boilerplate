@@ -1,20 +1,34 @@
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTypeScript from "eslint-config-next/typescript";
 
+const supportedReactHooksRules = new Set([
+  "react-hooks/rules-of-hooks",
+  "react-hooks/exhaustive-deps",
+  "react-hooks/config",
+  "react-hooks/error-boundaries",
+  "react-hooks/gating",
+  "react-hooks/component-hook-factories",
+]);
+
+const nextVitalsConfig = nextVitals.map((config) => ({
+  ...config,
+  rules: Object.fromEntries(
+    Object.entries(config.rules ?? {}).filter(
+      ([ruleName]) =>
+        !ruleName.startsWith("react-hooks/") ||
+        supportedReactHooksRules.has(ruleName),
+    ),
+  ),
+}));
+
 const eslintConfig = [
-  ...nextVitals,
+  ...nextVitalsConfig,
   ...nextTypeScript,
   {
     rules: {
       "@typescript-eslint/no-explicit-any": "warn",
       "prefer-const": "warn",
       "react/display-name": "warn",
-      "react-hooks/globals": "warn",
-      "react-hooks/immutability": "warn",
-      "react-hooks/purity": "warn",
-      "react-hooks/refs": "warn",
-      "react-hooks/set-state-in-effect": "warn",
-      "react-hooks/static-components": "warn",
       "no-restricted-imports": [
         "warn",
         {

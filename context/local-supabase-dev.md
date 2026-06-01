@@ -6,7 +6,7 @@ Use this workflow to test auth and database changes before applying anything to 
 
 1. Docker Desktop must be installed and running.
 2. Supabase CLI is installed as a project dev dependency.
-3. The CLI must be logged in to the Supabase account that owns project `bwlskocvvspbaltihfvo` before remote link/pull/push commands.
+3. The CLI must be logged in to the Supabase account that owns your Supabase project before remote link/pull/push commands.
 
 ## Commands
 
@@ -15,6 +15,12 @@ npm run supabase:login
 npm run supabase:link
 npm run supabase:start
 npm run supabase:status
+```
+
+`npm run supabase:link` runs `supabase link` interactively. For non-interactive linking, pass your own project reference without committing it:
+
+```bash
+npm run supabase:link -- --project-ref your-project-ref
 ```
 
 `supabase:status` prints local environment values. Copy those values into `.env.local` when testing locally. Use `supabase/local.env.example` as the template.
@@ -35,11 +41,11 @@ npm run dev:local
 
 - Docker Desktop was installed manually from the downloaded Docker app bundle because the Homebrew cask requires an interactive sudo password for CLI symlinks.
 - Docker CLI is available at `/Applications/Docker.app/Contents/Resources/bin/docker`; it is not currently linked into the shell `PATH`.
-- The MCP tools still show the old global Supabase connector and do not have access to project `bwlskocvvspbaltihfvo`.
+- The MCP tools may still show a global Supabase connector that does not have access to your linked project.
 
 ## Production-like Local Data
 
-- Local auth/profile data is synced from project `bwlskocvvspbaltihfvo` through the Supabase CLI, not the currently connected global MCP account.
+- Local auth/profile data can be synced from your linked Supabase project through the Supabase CLI, not the currently connected global MCP account.
 - Snapshot files live under `supabase/.snapshots/`, which is gitignored because auth dumps include sensitive user data such as password hashes.
 - The local import intentionally includes only `auth.users`, `auth.identities`, `public.profiles`, `public.permissions`, and `public.role_permissions`.
 - Session, refresh token, audit, OAuth, MFA, SSO, SAML, and WebAuthn tables are excluded from local imports.

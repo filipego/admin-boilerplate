@@ -25,18 +25,18 @@ Update this file after every meaningful implementation change.
 - Migrated shadcn/Radix primitives to the current unified `radix-ui` package using `npx shadcn@latest migrate radix -y`.
 - Removed direct dependencies on the old individual `@radix-ui/react-*` packages after confirming app source no longer imports them.
 - Upgraded additional non-Supabase packages after isolated checks: `vitest` 4.1.7, `lucide-react` 1.17.0, `sonner` 2.0.7, `react-day-picker` 10.0.1, and `tailwind-variants` 3.2.2.
-- Corrected the Supabase project context to local project ref `bwlskocvvspbaltihfvo`; MCP access to that project is currently blocked by permissions, so no remote migrations or schema changes were applied.
+- Corrected the Supabase project context to the local project ref from uncommitted environment values; MCP access to that project is currently blocked by permissions, so no remote migrations or schema changes were applied.
 - Added Supabase SSR proxy session refresh wiring for Next.js 16.
 - Removed unsafe dev/admin seed routes that could create or promote admin users.
 - Stopped using the cached `role` cookie for admin authorization and removed role cookie writes from profile ensure logic.
 - Added server-side auth and permission checks inside user creation server actions before using the service-role client.
 - Added a Supabase migration that revokes broad client-side profile updates and grants authenticated users update access only to editable profile columns.
 - Initialized local Supabase CLI configuration for future `supabase start` usage once Docker is available.
-- Added project-scoped Supabase MCP configuration in `.mcp.json` for project ref `bwlskocvvspbaltihfvo`.
+- Added project-scoped Supabase MCP configuration in local `.mcp.json` for the project ref from uncommitted environment values.
 - Added project-local Supabase CLI dependency, npm scripts, local env template, and local Supabase dev workflow documentation.
 - Installed Docker Desktop manually from the downloaded app bundle and started the local Supabase dev stack.
 - Switched ignored `.env.local` to local Supabase values after backing up the remote env locally.
-- Linked the Supabase CLI to production project `bwlskocvvspbaltihfvo`.
+- Linked the Supabase CLI to the production project from local uncommitted configuration.
 - Replaced the temporary local smoke user with a sanitized production-like local auth/profile import containing only users, identities, profiles, permissions, and role permissions.
 - Excluded production sessions, refresh tokens, audit entries, one-time tokens, OAuth, MFA, SSO, SAML, and WebAuthn data from the local import.
 - Ignored `supabase/.snapshots/` so local production-derived auth snapshots are not committed.
@@ -45,6 +45,13 @@ Update this file after every meaningful implementation change.
 - Fixed the common `KanbanBoard` drag behavior so cards can move between columns by dropping onto another card or the target column.
 - Improved `KanbanBoard` drag feedback so the destination column stays highlighted when hovering over cards in populated columns, with a visible dragging state on the active card.
 - Added local Supabase startup instructions to `README.md`, including `npm run supabase:start`, `npm run supabase:status`, and `npm run dev:local`.
+- Replaced the committed project-specific Supabase `.mcp.json` with `.mcp.json.example` and ignored local `.mcp.json` files so forked boilerplates can provide their own Supabase MCP project reference.
+- Sanitized React Hooks rules from the Next ESLint preset so `eslint.config.mjs` keeps only the stable supported React Hooks rules and avoids direct compiler-rule overrides.
+- Removed the hardcoded project reference from `npm run supabase:link`; the script now runs `supabase link` interactively, with docs showing how to pass a local project ref without committing it.
+- Fixed `DataTable` empty-state rendering so the empty row spans the current visible leaf columns instead of all defined columns.
+- Clarified the shared form schema type by moving the `ZodType` usage behind a `FormSchema` alias and removing the misplaced `FieldValues` generic from the schema type.
+- Aligned the local Supabase auth redirect allow-list with the local `site_url` by using `http://127.0.0.1:3000` in `supabase/config.toml`.
+- Restored the Next.js JSX compiler setting in `tsconfig.json` to `"preserve"`.
 
 ## In Progress
 
@@ -56,7 +63,7 @@ Update this file after every meaningful implementation change.
 - Later, plan the dedicated Supabase login/auth rewrite using Supabase-specific guidance.
 - Consider a separate cleanup pass for lint warnings surfaced by the Next 16 ESLint config.
 - Supabase package upgrades remain deferred for the dedicated Supabase auth rewrite.
-- Supabase MCP authentication needs to be completed from the local project MCP config after reloading the agent session.
+- Supabase MCP authentication needs to be completed from a local `.mcp.json` copied from `.mcp.json.example` after reloading the agent session.
 - Docker Desktop is running, but the `docker` CLI is not linked into shell `PATH` because the Homebrew cask's sudo symlink step could not run non-interactively.
 
 ## Open Questions
@@ -98,3 +105,10 @@ Update this file after every meaningful implementation change.
 - Verification after the Kanban drag fix: `npm run lint` exits with 0 errors and 237 existing warnings. Browser check on `http://localhost:3000/examples` confirmed dragging a To Do card into In Progress and an In Progress card into Done. Full `npx tsc --noEmit --pretty false` still fails in pre-existing Theme Tweaker, R2 upload, CSV import, form typing, and users modal areas; no `KanbanBoard` type errors were reported.
 - Verification after the Kanban drag feedback fix: `npm run lint` exits with 0 errors and 237 existing warnings. A targeted `npx tsc --noEmit --pretty false` filter showed no `KanbanBoard` errors. Browser check on `http://localhost:3000/examples` confirmed dragging into a populated column still moves the card correctly and logged no console errors.
 - Verification after the README local Supabase docs update: inspected `package.json` scripts and `context/local-supabase-dev.md`; no runtime verification needed for docs-only changes.
+- Verification after the MCP template update: inspected `.mcp.json.example` and `.gitignore`; no runtime verification needed for config-template-only changes.
+- Verification after the React Hooks ESLint rule cleanup: `npm run lint` exits with 0 errors and 204 existing warnings.
+- Verification after the Supabase link script cleanup: inspected `package.json`, `context/local-supabase-dev.md`, `context/supabase-snapshot.md`, and `context/progress-tracker.md`; no runtime verification needed for script/documentation cleanup.
+- Verification after the `DataTable` empty-state colSpan fix: `npm run lint` exits with 0 errors and 204 existing warnings.
+- Verification after the shared form schema type cleanup: confirmed `z.ZodTypeDef` is not exported by the installed Zod 4.4.3 package; `npm run lint` exits with 0 errors and 204 existing warnings.
+- Verification after the Supabase redirect allow-list fix: inspected `supabase/config.toml` and confirmed `site_url` and `additional_redirect_urls` both use `http://127.0.0.1:3000`.
+- Verification after the JSX compiler setting fix: inspected `tsconfig.json` and confirmed `"jsx": "preserve"`.

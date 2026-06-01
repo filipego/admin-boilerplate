@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "eslint .",
     "supabase:login": "supabase login",
-    "supabase:link": "supabase link --project-ref bwlskocvvspbaltihfvo",
+    "supabase:link": "supabase link",
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",
     "supabase:status": "supabase status -o env",
