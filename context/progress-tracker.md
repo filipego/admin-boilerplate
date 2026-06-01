@@ -52,6 +52,7 @@ Update this file after every meaningful implementation change.
 - Clarified the shared form schema type by moving the `ZodType` usage behind a `FormSchema` alias and removing the misplaced `FieldValues` generic from the schema type.
 - Aligned the local Supabase auth redirect allow-list with the local `site_url` by using `http://127.0.0.1:3000` in `supabase/config.toml`.
 - Restored the Next.js JSX compiler setting in `tsconfig.json` to `"preserve"`.
+- Added `eslint-plugin-react-hooks` as an explicit dev dependency because `eslint.config.mjs` depends on React Hooks rule names.
 
 ## In Progress
 
@@ -112,3 +113,4 @@ Update this file after every meaningful implementation change.
 - Verification after the shared form schema type cleanup: confirmed `z.ZodTypeDef` is not exported by the installed Zod 4.4.3 package; `npm run lint` exits with 0 errors and 204 existing warnings.
 - Verification after the Supabase redirect allow-list fix: inspected `supabase/config.toml` and confirmed `site_url` and `additional_redirect_urls` both use `http://127.0.0.1:3000`.
 - Verification after the JSX compiler setting fix: inspected `tsconfig.json` and confirmed `"jsx": "preserve"`.
+- Verification after adding the React Hooks ESLint plugin dependency: `npm run lint` exits with 0 errors and 204 existing warnings.
